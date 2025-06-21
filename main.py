@@ -55,7 +55,7 @@ def for_canonical(f):
 
 hotkeys = {
     '<ctrl>+q': on_activate_translate,
-    '<ctrl>+w': on_activate_replace
+    '<ctrl>+d': on_activate_replace
 }
 
 class MultiHotKey:
