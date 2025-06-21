@@ -1,7 +1,6 @@
 import sys
 import threading
 import time
-import pyperclip
 from pynput import keyboard, mouse
 from pynput.keyboard import Controller as KeyboardController, Key
 from translator import translate_text
@@ -12,6 +11,17 @@ from tray import create_tray_icon
 
 kb = KeyboardController()
 
+def get_clipboard():
+    try:
+        return root.clipboard_get()
+    except Exception:
+        return ''
+
+def set_clipboard(text):
+    root.clipboard_clear()
+    root.clipboard_append(text)
+    root.update()  # Đảm bảo clipboard được cập nhật
+
 def on_activate_translate():
     # Gửi Ctrl+C để copy text được chọn
     kb.press(Key.ctrl)
@@ -19,7 +29,7 @@ def on_activate_translate():
     kb.release('c')
     kb.release(Key.ctrl)
     time.sleep(0.15)  # Đợi clipboard cập nhật
-    selected_text = pyperclip.paste()
+    selected_text = get_clipboard()
     if selected_text.strip():
         translated = translate_text(selected_text)
         show_popup(translated)
@@ -31,10 +41,10 @@ def on_activate_replace():
     kb.release('c')
     kb.release(Key.ctrl)
     time.sleep(0.15)
-    selected_text = pyperclip.paste()
+    selected_text = get_clipboard()
     if selected_text.strip():
         translated = translate_text(selected_text)
-        pyperclip.copy(translated)
+        set_clipboard(translated)
         time.sleep(0.05)
         # Gửi Ctrl+V để dán kết quả dịch thay thế đoạn bôi đen
         kb.press(Key.ctrl)
@@ -48,7 +58,7 @@ def on_activate_replace():
         kb.release('c')
         kb.release(Key.ctrl)
         time.sleep(0.1)
-        pasted = pyperclip.paste()
+        pasted = get_clipboard()
         if pasted.strip() != translated.strip():
             from popup import show_popup
             show_popup('Không thể thay thế văn bản tự động. Kết quả dịch đã được lưu vào clipboard, bạn hãy dán thủ công.')
