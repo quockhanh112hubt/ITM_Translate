@@ -6,6 +6,9 @@ from pynput import keyboard, mouse
 from pynput.keyboard import Controller as KeyboardController, Key
 from translator import translate_text
 from popup import show_popup
+import tkinter as tk
+from gui import MainGUI
+from tray import create_tray_icon
 
 kb = KeyboardController()
 
@@ -54,7 +57,6 @@ def for_canonical(f):
     return lambda k: f(l.canonical(k))
 
 # Định nghĩa các phím tắt
-
 hotkeys = {
     '<ctrl>+q': on_activate_translate,
     '<ctrl>+d': on_activate_replace
@@ -89,4 +91,8 @@ multi_hotkey = MultiHotKey(hotkeys)
 with keyboard.Listener(
         on_press=for_canonical(multi_hotkey.press),
         on_release=for_canonical(multi_hotkey.release)) as l:
+    root = tk.Tk()
+    app = MainGUI(root)
+    tray = create_tray_icon(root, app)
+    root.mainloop()
     l.join()
