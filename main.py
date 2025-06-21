@@ -53,6 +53,8 @@ def on_activate_replace():
 def for_canonical(f):
     return lambda k: f(l.canonical(k))
 
+# Định nghĩa các phím tắt
+
 hotkeys = {
     '<ctrl>+q': on_activate_translate,
     '<ctrl>+d': on_activate_replace
