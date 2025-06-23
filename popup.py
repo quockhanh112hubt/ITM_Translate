@@ -1,5 +1,30 @@
 import tkinter as tk
 import threading
+import time
+
+def show_loading_popup(root):
+    # Hiện popup nhỏ với hiệu ứng loading tại vị trí con trỏ chuột
+    loading_win = tk.Toplevel(root)
+    loading_win.overrideredirect(True)
+    loading_win.attributes('-topmost', True)
+    x = loading_win.winfo_pointerx()
+    y = loading_win.winfo_pointery()
+    size = 36
+    loading_win.geometry(f"{size}x{size}+{x}+{y}")
+
+    canvas = tk.Canvas(loading_win, width=size, height=size, bg='white', highlightthickness=0)
+    canvas.pack(fill='both', expand=True)
+
+    arc = canvas.create_arc(6, 6, size-6, size-6, start=0, extent=90, style='arc', width=4, outline='#1e90ff')
+
+    loading_win._running = True
+    def animate(angle=0):
+        if getattr(loading_win, "_running", True):
+            canvas.itemconfig(arc, start=angle)
+            angle = (angle + 10) % 360
+            loading_win.after(20, animate, angle)
+    animate()
+    return loading_win
 
 def show_popup(text):
     def popup():

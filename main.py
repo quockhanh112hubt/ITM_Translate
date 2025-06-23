@@ -4,12 +4,25 @@ import time
 from pynput import keyboard, mouse
 from pynput.keyboard import Controller as KeyboardController, Key
 from translator import translate_text
-from popup import show_popup
+from popup import show_popup, show_loading_popup
 import tkinter as tk
 from gui import MainGUI
 from tray import create_tray_icon
 
+import ctypes
+
 kb = KeyboardController()
+
+def set_system_cursor_wait():
+    # Chỉ hỗ trợ Windows
+    if sys.platform.startswith("win"):
+        ctypes.windll.user32.LoadCursorW.restype = ctypes.c_void_p
+        hcursor = ctypes.windll.user32.LoadCursorW(0, 32514)  # IDC_WAIT
+        ctypes.windll.user32.SetSystemCursor(hcursor, 32512)  # OCR_NORMAL
+
+def restore_system_cursor():
+    if sys.platform.startswith("win"):
+        ctypes.windll.user32.SystemParametersInfoW(0x0057, 0, 0, 0)  # SPI_SETCURSORS
 
 def get_clipboard():
     try:
@@ -23,45 +36,63 @@ def set_clipboard(text):
     root.update()  # Đảm bảo clipboard được cập nhật
 
 def on_activate_translate():
-    # Gửi Ctrl+C để copy text được chọn
-    kb.press(Key.ctrl)
-    kb.press('c')
-    kb.release('c')
-    kb.release(Key.ctrl)
-    time.sleep(0.15)  # Đợi clipboard cập nhật
-    selected_text = get_clipboard()
-    if selected_text.strip():
-        translated = translate_text(selected_text)
-        show_popup(translated)
-
-def on_activate_replace():
-    # Gửi Ctrl+C để copy text được chọn
-    kb.press(Key.ctrl)
-    kb.press('c')
-    kb.release('c')
-    kb.release(Key.ctrl)
-    time.sleep(0.15)
-    selected_text = get_clipboard()
-    if selected_text.strip():
-        translated = translate_text(selected_text)
-        set_clipboard(translated)
-        time.sleep(0.05)
-        # Gửi Ctrl+V để dán kết quả dịch thay thế đoạn bôi đen
-        kb.press(Key.ctrl)
-        kb.press('v')
-        kb.release('v')
-        kb.release(Key.ctrl)
-        time.sleep(0.15)
-        # Kiểm tra lại xem đã dán thành công chưa
+    loading = show_loading_popup(root)
+    try:
         kb.press(Key.ctrl)
         kb.press('c')
         kb.release('c')
         kb.release(Key.ctrl)
-        time.sleep(0.1)
-        pasted = get_clipboard()
-        if pasted.strip() != translated.strip():
-            from popup import show_popup
-            show_popup('Không thể thay thế văn bản tự động. Kết quả dịch đã được lưu vào clipboard, bạn hãy dán thủ công.')
+        time.sleep(0.15)  # Đợi clipboard cập nhật
+        selected_text = get_clipboard()
+        if selected_text.strip():
+            translated = translate_text(selected_text)
+            if loading:
+                loading._running = False
+                loading.destroy()
+            show_popup(translated)
+        else:
+            if loading:
+                loading._running = False
+                loading.destroy()
+    finally:
+        restore_system_cursor()
+
+def on_activate_replace():
+    loading = show_loading_popup(root)
+    try:
+        kb.press(Key.ctrl)
+        kb.press('c')
+        kb.release('c')
+        kb.release(Key.ctrl)
+        time.sleep(0.15)
+        selected_text = get_clipboard()
+        if selected_text.strip():
+            translated = translate_text(selected_text)
+            if loading:
+                loading._running = False
+                loading.destroy()
+            set_clipboard(translated)
+            time.sleep(0.05)
+            kb.press(Key.ctrl)
+            kb.press('v')
+            kb.release('v')
+            kb.release(Key.ctrl)
+            time.sleep(0.15)
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            time.sleep(0.1)
+            pasted = get_clipboard()
+            if pasted.strip() != translated.strip():
+                from popup import show_popup
+                show_popup('Không thể thay thế văn bản tự động. Kết quả dịch đã được lưu vào clipboard, bạn hãy dán thủ công.')
+        else:
+            if loading:
+                loading._running = False
+                loading.destroy()
+    finally:
+        restore_system_cursor()
 
 def for_canonical(f):
     return lambda k: f(l.canonical(k))
