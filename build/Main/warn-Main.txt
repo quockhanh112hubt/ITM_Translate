@@ -97,6 +97,7 @@ runtime module named distutils.command.bdist - imported by setuptools.command (t
 runtime module named distutils.errors - imported by setuptools (top-level), setuptools.msvc (top-level), setuptools.errors (top-level), setuptools.dist (top-level), setuptools.config.expand (top-level), setuptools.installer (top-level), setuptools.command.egg_info (top-level), setuptools.command.setopt (top-level), setuptools.extension (top-level), setuptools.archive_util (top-level), cffi._shimmed_dist_utils (optional)
 runtime module named distutils.core - imported by setuptools (top-level), setuptools.dist (top-level), setuptools.extension (top-level), cffi._shimmed_dist_utils (optional), setuptools._distutils.dist (delayed)
 missing module named pyimod02_importers - imported by C:\Users\Admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgres.py (delayed), C:\Users\Admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\PyInstaller\hooks\rthooks\pyi_rth_pkgutil.py (delayed)
+missing module named PIL._imagingagg - imported by PIL (delayed, conditional, optional), PIL.ImageDraw (delayed, conditional, optional)
 missing module named olefile - imported by PIL.FpxImagePlugin (top-level), PIL.MicImagePlugin (top-level)
 missing module named numpy.power - imported by numpy (top-level), scipy.stats._kde (top-level)
 missing module named numpy.sinh - imported by numpy (top-level), scipy.stats._discrete_distns (top-level)
