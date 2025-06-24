@@ -9,6 +9,8 @@ import tkinter as tk
 from ui.gui import MainGUI
 from core.tray import create_tray_icon
 import ctypes
+import os
+import json
 
 kb = KeyboardController()
 
@@ -96,12 +98,72 @@ def on_activate_replace():
 def for_canonical(f):
     return lambda k: f(l.canonical(k))
 
+HOTKEYS_FILE = "hotkeys.json"
+ENV_FILE = ".env"
+
+def load_hotkeys():
+    if os.path.exists(HOTKEYS_FILE):
+        try:
+            with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data
+        except Exception:
+            pass
+    return {
+        "translate_popup": "<ctrl>+q",
+        "replace_translate": "<ctrl>+d"
+    }
+
+def save_hotkeys(hotkeys_dict):
+    with open(HOTKEYS_FILE, "w", encoding="utf-8") as f:
+        json.dump(hotkeys_dict, f, ensure_ascii=False, indent=2)
+
+def load_gemini_api_key():
+    # Ưu tiên biến môi trường, sau đó đọc từ file .env
+    key = os.environ.get("GEMINI_API_KEY")
+    if key:
+        return key
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip().startswith("GEMINI_API_KEY="):
+                    return line.strip().split("=", 1)[1]
+    return ""
+
+def save_gemini_api_key(new_key):
+    # Ghi đè hoặc thêm vào file .env
+    lines = []
+    found = False
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip().startswith("GEMINI_API_KEY="):
+                    lines.append(f"GEMINI_API_KEY={new_key}\n")
+                    found = True
+                else:
+                    lines.append(line)
+    if not found:
+        lines.append(f"GEMINI_API_KEY={new_key}\n")
+    with open(ENV_FILE, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
 # Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
 default_hotkeys = {
     '<ctrl>+q': on_activate_translate,
     '<ctrl>+d': on_activate_replace
 }
-hotkeys = default_hotkeys.copy()
+# Load hotkeys từ file
+user_hotkeys = load_hotkeys()
+hotkeys = {}
+action_map = {
+    'translate_popup': on_activate_translate,
+    'replace_translate': on_activate_replace
+}
+for action, hotkey in user_hotkeys.items():
+    if hotkey and action in action_map:
+        hotkeys[hotkey] = action_map[action]
+if not hotkeys:
+    hotkeys = default_hotkeys.copy()
 
 class MultiHotKey:
     def __init__(self, hotkey_map):
@@ -133,21 +195,18 @@ class MultiHotKey:
 multi_hotkey = MultiHotKey(hotkeys)
 
 def update_gemini_api_key(new_key):
-    import os
     os.environ["GEMINI_API_KEY"] = new_key
+    save_gemini_api_key(new_key)
 
 def update_hotkeys_from_gui(new_hotkeys):
-    # new_hotkeys: dict {hotkey_str: action_str}
-    action_map = {
-        'translate_popup': on_activate_translate,
-        'replace_translate': on_activate_replace
-    }
+    # new_hotkeys: dict {action: hotkey_str}
     mapped = {}
     for action, hotkey in new_hotkeys.items():
         if hotkey and action in action_map:
             mapped[hotkey] = action_map[action]
     if mapped:
         multi_hotkey.update_hotkeys(mapped)
+        save_hotkeys(new_hotkeys)
 
 with keyboard.Listener(
         on_press=for_canonical(multi_hotkey.press),
@@ -158,6 +217,8 @@ with keyboard.Listener(
     app.set_hotkey_manager(multi_hotkey)
     app.set_api_key_updater(update_gemini_api_key)
     app.set_hotkey_updater(update_hotkeys_from_gui)
+    # Truyền giá trị hotkeys và api_key hiện tại cho GUI hiển thị
+    app.set_initial_settings(user_hotkeys, load_gemini_api_key())
     tray = create_tray_icon(root, app)
     root.mainloop()
     l.join()
