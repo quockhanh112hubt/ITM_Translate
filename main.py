@@ -3,12 +3,11 @@ import threading
 import time
 from pynput import keyboard, mouse
 from pynput.keyboard import Controller as KeyboardController, Key
-from translator import translate_text
-from popup import show_popup, show_loading_popup
+from core.translator import translate_text
+from core.popup import show_popup, show_loading_popup
 import tkinter as tk
-from gui import MainGUI
-from tray import create_tray_icon
-
+from ui.gui import MainGUI
+from core.tray import create_tray_icon
 import ctypes
 
 kb = KeyboardController()
@@ -85,7 +84,7 @@ def on_activate_replace():
             time.sleep(0.1)
             pasted = get_clipboard()
             if pasted.strip() != translated.strip():
-                from popup import show_popup
+                from core.popup import show_popup
                 show_popup('Không thể thay thế văn bản tự động. Kết quả dịch đã được lưu vào clipboard, bạn hãy dán thủ công.')
         else:
             if loading:
