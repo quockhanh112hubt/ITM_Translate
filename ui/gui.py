@@ -8,8 +8,16 @@ class MainGUI:
         self.root = root
         self.root.title('ITM Translate')
         self.root.geometry('480x320')
-        self.hotkey_manager = None  # Sẽ được gán từ main.py
+        self.hotkey_manager = None
+        self.api_key_updater = None
+        self.hotkey_updater = None
         self.create_tabs()
+    def set_hotkey_manager(self, manager):
+        self.hotkey_manager = manager
+    def set_api_key_updater(self, updater):
+        self.api_key_updater = updater
+    def set_hotkey_updater(self, updater):
+        self.hotkey_updater = updater
     def create_tabs(self):
         from tkinter import ttk
         tab_control = ttk.Notebook(self.root)
@@ -20,14 +28,28 @@ class MainGUI:
     def create_settings_tab(self):
         tk.Label(self.settings_tab, text='Cài đặt phím tắt:', font=('Segoe UI', 12, 'bold')).pack(pady=10)
         self.entries = {}
-        tk.Label(self.settings_tab, text=' Dịch popup: "<ctrl>+q" \n Dịch & thay thế: "<ctrl>+d"', font=('Segoe UI', 12, 'bold')).pack(pady=10)
-
-        # sửa hotkeys từ file JSON sau
-
-
+        # Các trường nhập hotkey
+        frame = tk.Frame(self.settings_tab)
+        frame.pack(pady=5)
+        tk.Label(frame, text='Dịch popup:').grid(row=0, column=0, sticky='e')
+        self.entries['translate_popup'] = tk.Entry(frame, width=20)
+        self.entries['translate_popup'].insert(0, '<ctrl>+q')
+        self.entries['translate_popup'].grid(row=0, column=1)
+        tk.Label(frame, text='Dịch & thay thế:').grid(row=1, column=0, sticky='e')
+        self.entries['replace_translate'] = tk.Entry(frame, width=20)
+        self.entries['replace_translate'].insert(0, '<ctrl>+d')
+        self.entries['replace_translate'].grid(row=1, column=1)
+        # Trường nhập GEMINI_API_KEY
+        tk.Label(self.settings_tab, text='GEMINI_API_KEY:', font=('Segoe UI', 12, 'bold')).pack(pady=(20, 5))
+        self.api_key_entry = tk.Entry(self.settings_tab, width=50, show='*')
+        self.api_key_entry.pack()
+        # Nút lưu
+        tk.Button(self.settings_tab, text='Lưu', command=self.save_settings).pack(pady=15)
     def save_settings(self):
         new_hotkeys = {action: entry.get() for action, entry in self.entries.items()}
-        # save_hotkeys(new_hotkeys)
-        if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
-            self.hotkey_manager.update_hotkeys(new_hotkeys)
-        messagebox.showinfo('Lưu thành công', 'Đã lưu phím tắt mới!')
+        if hasattr(self, 'hotkey_updater') and self.hotkey_updater:
+            self.hotkey_updater(new_hotkeys)
+        api_key = self.api_key_entry.get()
+        if api_key and hasattr(self, 'api_key_updater') and self.api_key_updater:
+            self.api_key_updater(api_key)
+        messagebox.showinfo('Lưu thành công', 'Đã lưu cài đặt mới!')

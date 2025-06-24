@@ -5,7 +5,7 @@ import google.generativeai as genai
 load_dotenv()
 
 def translate_text(text):
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
         return "Lỗi: Không tìm thấy GEMINI_API_KEY trong file .env"
     genai.configure(api_key=api_key)

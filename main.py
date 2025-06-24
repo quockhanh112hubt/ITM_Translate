@@ -45,12 +45,12 @@ def on_activate_translate():
         selected_text = get_clipboard()
         if selected_text.strip():
             translated = translate_text(selected_text)
-            if loading:
+            if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
             show_popup(translated)
         else:
-            if loading:
+            if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
     finally:
@@ -67,7 +67,7 @@ def on_activate_replace():
         selected_text = get_clipboard()
         if selected_text.strip():
             translated = translate_text(selected_text)
-            if loading:
+            if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
             set_clipboard(translated)
@@ -87,7 +87,7 @@ def on_activate_replace():
                 from ui.popup import show_popup
                 show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.')
         else:
-            if loading:
+            if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
     finally:
@@ -96,18 +96,20 @@ def on_activate_replace():
 def for_canonical(f):
     return lambda k: f(l.canonical(k))
 
-# Định nghĩa các phím tắt
-hotkeys = {
+# Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
+default_hotkeys = {
     '<ctrl>+q': on_activate_translate,
     '<ctrl>+d': on_activate_replace
 }
+hotkeys = default_hotkeys.copy()
 
 class MultiHotKey:
     def __init__(self, hotkey_map):
-        # Lưu hotkeys dưới dạng list các tuple (frozenset phím, callback)
+        self.set_hotkeys(hotkey_map)
+    def set_hotkeys(self, hotkey_map):
         self.hotkeys = [(frozenset(keyboard.HotKey.parse(k)), v) for k, v in hotkey_map.items()]
         self._pressed = set()
-        self._active = set()  # Đánh dấu các combo đang active
+        self._active = set()
     def press(self, key):
         self._pressed.add(key)
         for combo, callback in self.hotkeys:
@@ -116,7 +118,6 @@ class MultiHotKey:
                 threading.Thread(target=self._run_and_reset, args=(combo, callback)).start()
     def release(self, key):
         self._pressed.discard(key)
-        # Khi nhả phím, bỏ active cho các combo không còn đủ phím
         for combo in list(self._active):
             if not combo <= self._pressed:
                 self._active.discard(combo)
@@ -125,14 +126,38 @@ class MultiHotKey:
             callback()
         finally:
             self._active.discard(combo)
+    def update_hotkeys(self, new_hotkey_map):
+        # new_hotkey_map: dict {hotkey_str: callback}
+        self.set_hotkeys(new_hotkey_map)
 
 multi_hotkey = MultiHotKey(hotkeys)
+
+def update_gemini_api_key(new_key):
+    import os
+    os.environ["GEMINI_API_KEY"] = new_key
+
+def update_hotkeys_from_gui(new_hotkeys):
+    # new_hotkeys: dict {hotkey_str: action_str}
+    action_map = {
+        'translate_popup': on_activate_translate,
+        'replace_translate': on_activate_replace
+    }
+    mapped = {}
+    for action, hotkey in new_hotkeys.items():
+        if hotkey and action in action_map:
+            mapped[hotkey] = action_map[action]
+    if mapped:
+        multi_hotkey.update_hotkeys(mapped)
 
 with keyboard.Listener(
         on_press=for_canonical(multi_hotkey.press),
         on_release=for_canonical(multi_hotkey.release)) as l:
     root = tk.Tk()
     app = MainGUI(root)
+    # Giao tiếp với GUI để cập nhật hotkeys và API key
+    app.set_hotkey_manager(multi_hotkey)
+    app.set_api_key_updater(update_gemini_api_key)
+    app.set_hotkey_updater(update_hotkeys_from_gui)
     tray = create_tray_icon(root, app)
     root.mainloop()
     l.join()
