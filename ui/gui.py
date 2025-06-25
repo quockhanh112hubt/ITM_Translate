@@ -61,7 +61,7 @@ class MainGUI:
         # Nút lưu
         tk.Button(self.settings_tab, text='Lưu cấu hình', command=self.save_settings).pack(pady=15)
     def create_advanced_tab(self):
-        # Khởi động cùng Windows (chưa xử lý logic)
+        # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
         tk.Checkbutton(
             self.advanced_tab,
@@ -89,7 +89,7 @@ class MainGUI:
     def show_help(self):
         messagebox.showinfo("Hướng dẫn sử dụng", "1. Chọn đoạn văn bản cần dịch.\n2. Nhấn phím tắt để dịch hoặc thay thế.\n3. Có thể thay đổi phím tắt và API key trong tab Cài Đặt.")
     def show_about(self):
-        messagebox.showinfo("Thông tin", "ITM Translate\nPhiên bản 1.0\nTác giả: ITM Team\nGithub: github.com/ITM_Translate")
+        messagebox.showinfo("Thông tin", "ITM Translate\nPhiên bản 1.0\nTác giả: KhanhIT ITM Team\nGithub: github.com/ITM_Translate")
     def update_program(self):
         messagebox.showinfo("Cập nhật", "Chức năng cập nhật sẽ được bổ sung sau.")
     def save_settings(self):
