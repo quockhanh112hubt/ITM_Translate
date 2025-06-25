@@ -20,13 +20,45 @@ LOCK_FILE = os.path.join(tempfile.gettempdir(), "ITMTranslate.lock")
 def acquire_lock():
     try:
         if os.path.exists(LOCK_FILE):
-            # Kiểm tra file lock còn "sống" không (có thể kiểm tra PID nếu muốn)
-            # Ở đây đơn giản chỉ cần tồn tại là báo lỗi
-            root = tk.Tk()
-            root.withdraw()
-            tk.messagebox.showwarning("Warning", "Chương trình đã được khởi động!")
-            sys.exit()
-        # Ghi file lock
+            # Đọc PID từ file lock
+            try:
+                with open(LOCK_FILE, "r") as f:
+                    old_pid = int(f.read().strip())
+            except Exception:
+                old_pid = None
+            still_running = False
+            if old_pid:
+                try:
+                    if sys.platform.startswith("win"):
+                        import ctypes
+                        PROCESS_QUERY_INFORMATION = 0x0400
+                        process = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_INFORMATION, 0, old_pid)
+                        if process != 0:
+                            exit_code = ctypes.c_ulong()
+                            ctypes.windll.kernel32.GetExitCodeProcess(process, ctypes.byref(exit_code))
+                            ctypes.windll.kernel32.CloseHandle(process)
+                            # 259 = STILL_ACTIVE
+                            if exit_code.value == 259:
+                                still_running = True
+                    else:
+                        os.kill(old_pid, 0)
+                        still_running = True
+                except Exception:
+                    still_running = False
+            if still_running:
+                import tkinter.messagebox as mbox
+                root = tk.Tk()
+                root.withdraw()
+                mbox.showwarning("Warning", "Chương trình đã được khởi động!")
+                root.destroy()
+                sys.exit()
+            else:
+                # Nếu process không còn, xóa file lock cũ
+                try:
+                    os.remove(LOCK_FILE)
+                except Exception:
+                    pass
+        # Ghi file lock mới
         with open(LOCK_FILE, "w") as f:
             f.write(str(os.getpid()))
     except Exception:
@@ -42,6 +74,17 @@ def release_lock():
 acquire_lock()
 import atexit
 atexit.register(release_lock)
+
+# Patch os._exit để luôn gọi release_lock
+import os as _os
+_os_exit = _os._exit
+def safe_exit(code=0):
+    try:
+        release_lock()
+    except Exception:
+        pass
+    _os_exit(code)
+_os._exit = safe_exit
 # --- END LOCK FILE ---
 
 kb = KeyboardController()

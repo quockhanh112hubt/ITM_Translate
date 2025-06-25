@@ -30,6 +30,12 @@ def create_tray_icon(root, app):
     def on_quit():
         root.after(0, root.destroy)
         icon.stop()
+        try:
+            # Gọi release_lock nếu có
+            from main import release_lock
+            release_lock()
+        except Exception:
+            pass
         os._exit(0)  # Đảm bảo thoát hoàn toàn process
     icon = pystray.Icon('ITM Translate', create_image(), menu=pystray.Menu(
         pystray.MenuItem('Hiện cửa sổ', on_show),
