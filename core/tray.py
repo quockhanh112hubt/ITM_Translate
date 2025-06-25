@@ -32,7 +32,7 @@ def create_tray_icon(root, app):
         icon.stop()
         try:
             # Gọi release_lock nếu có
-            from main import release_lock
+            from lockfile import release_lock
             release_lock()
         except Exception:
             pass

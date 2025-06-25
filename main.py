@@ -8,21 +8,14 @@ from ui.popup import show_popup, show_loading_popup
 import tkinter as tk
 from ui.gui import MainGUI
 from core.tray import create_tray_icon
-from core.lockfile import acquire_lock, LOCK_FILE
+from core.lockfile import acquire_lock, release_lock
 import ctypes
 import os
 import json
+import atexit
 
-
-def release_lock():
-    try:
-        if os.path.exists(LOCK_FILE):
-            os.remove(LOCK_FILE)
-    except Exception:
-        pass
 
 acquire_lock()
-import atexit
 atexit.register(release_lock)
 
 # Patch os._exit để luôn gọi release_lock
