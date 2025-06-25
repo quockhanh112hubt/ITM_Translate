@@ -13,7 +13,6 @@ class MainGUI:
         self.hotkey_updater = None
         self.initial_hotkeys = None
         self.initial_api_key = None
-        self.create_tabs()
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
     def set_api_key_updater(self, updater):
@@ -23,6 +22,7 @@ class MainGUI:
     def set_initial_settings(self, hotkeys_dict, api_key):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
+        self.create_tabs()  # Chỉ tạo tabs sau khi đã có dữ liệu
     def create_tabs(self):
         from tkinter import ttk
         tab_control = ttk.Notebook(self.root)
