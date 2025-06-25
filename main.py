@@ -11,6 +11,7 @@ from core.tray import create_tray_icon
 import ctypes
 import os
 import json
+import shutil
 
 kb = KeyboardController()
 
@@ -100,6 +101,7 @@ def for_canonical(f):
 
 HOTKEYS_FILE = "hotkeys.json"
 ENV_FILE = ".env"
+STARTUP_FILE = "startup.json"
 
 def load_hotkeys():
     if os.path.exists(HOTKEYS_FILE):
@@ -146,6 +148,46 @@ def save_gemini_api_key(new_key):
         lines.append(f"GEMINI_API_KEY={new_key}\n")
     with open(ENV_FILE, "w", encoding="utf-8") as f:
         f.writelines(lines)
+
+def load_startup_enabled():
+    if os.path.exists(STARTUP_FILE):
+        try:
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("startup", False))
+        except Exception:
+            pass
+    return False
+
+def set_startup_windows(enable):
+    # Chỉ hỗ trợ Windows
+    if not sys.platform.startswith("win"):
+        return
+    # Đường dẫn file thực thi (hoặc script)
+    exe_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(__file__)
+    # Đường dẫn shortcut trong thư mục Startup
+    startup_dir = os.path.join(os.environ["APPDATA"], r"Microsoft\Windows\Start Menu\Programs\Startup")
+    shortcut_path = os.path.join(startup_dir, "ITM Translate.lnk")
+
+    if enable:
+        try:
+            # Tạo shortcut bằng win32com (yêu cầu pywin32)
+            import pythoncom
+            from win32com.client import Dispatch
+            shell = Dispatch('WScript.Shell')
+            shortcut = shell.CreateShortCut(shortcut_path)
+            shortcut.Targetpath = exe_path
+            shortcut.WorkingDirectory = os.path.dirname(exe_path)
+            shortcut.IconLocation = exe_path
+            shortcut.save()
+        except Exception as e:
+            print("Không thể tạo shortcut khởi động cùng Windows:", e)
+    else:
+        try:
+            if os.path.exists(shortcut_path):
+                os.remove(shortcut_path)
+        except Exception as e:
+            print("Không thể xóa shortcut khởi động cùng Windows:", e)
 
 # Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
 default_hotkeys = {
@@ -213,12 +255,19 @@ with keyboard.Listener(
         on_release=for_canonical(multi_hotkey.release)) as l:
     root = tk.Tk()
     app = MainGUI(root)
-    # Giao tiếp với GUI để cập nhật hotkeys và API key
     app.set_hotkey_manager(multi_hotkey)
     app.set_api_key_updater(update_gemini_api_key)
     app.set_hotkey_updater(update_hotkeys_from_gui)
-    # Truyền giá trị hotkeys và api_key hiện tại cho GUI hiển thị
-    app.set_initial_settings(user_hotkeys, load_gemini_api_key())
+    # Truyền giá trị hotkeys, api_key, startup cho GUI hiển thị
+    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), load_startup_enabled())
+    # Callback khi bật/tắt khởi động cùng Windows
+    app.set_startup_callback(set_startup_windows)
+    tray = create_tray_icon(root, app)
+    root.mainloop()
+    l.join()
+    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), load_startup_enabled())
+    # Callback khi bật/tắt khởi động cùng Windows
+    app.set_startup_callback(set_startup_windows)
     tray = create_tray_icon(root, app)
     root.mainloop()
     l.join()
