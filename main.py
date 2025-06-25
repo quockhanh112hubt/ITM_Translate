@@ -48,6 +48,9 @@ def on_activate_translate():
         selected_text = get_clipboard()
         if selected_text.strip():
             translated = translate_text(selected_text)
+            # Kiểm tra lỗi 429
+            if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
             if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
@@ -70,6 +73,9 @@ def on_activate_replace():
         selected_text = get_clipboard()
         if selected_text.strip():
             translated = translate_text(selected_text)
+            # Kiểm tra lỗi 429
+            if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
             if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
