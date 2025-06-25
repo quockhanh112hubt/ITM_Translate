@@ -7,6 +7,14 @@ import sys
 # --- LOCK FILE: chỉ cho phép chạy 1 instance ---
 LOCK_FILE = os.path.join(tempfile.gettempdir(), "ITMTranslate.lock")
 
+def release_lock():
+    try:
+        if os.path.exists(LOCK_FILE):
+            os.remove(LOCK_FILE)
+    except Exception:
+        pass
+
+
 def acquire_lock():
     try:
         if os.path.exists(LOCK_FILE):
