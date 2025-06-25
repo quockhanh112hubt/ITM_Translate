@@ -27,7 +27,7 @@ class MainGUI:
         from tkinter import ttk
         tab_control = ttk.Notebook(self.root)
         self.settings_tab = ttk.Frame(tab_control)
-        tab_control.add(self.settings_tab, text='Cài đặt')
+        tab_control.add(self.settings_tab, text='Cài Đặt')
         tab_control.pack(expand=1, fill='both')
         self.create_settings_tab()
     def create_settings_tab(self):
@@ -45,13 +45,13 @@ class MainGUI:
         self.entries['replace_translate'].insert(0, self.initial_hotkeys.get('replace_translate', '<ctrl>+d') if self.initial_hotkeys else '<ctrl>+d')
         self.entries['replace_translate'].grid(row=1, column=1)
         # Trường nhập GEMINI_API_KEY
-        tk.Label(self.settings_tab, text='GEMINI_API_KEY:', font=('Segoe UI', 12, 'bold')).pack(pady=(20, 5))
+        tk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold')).pack(pady=(20, 5))
         self.api_key_entry = tk.Entry(self.settings_tab, width=50, show='*')
         if self.initial_api_key:
             self.api_key_entry.insert(0, self.initial_api_key)
         self.api_key_entry.pack()
         # Nút lưu
-        tk.Button(self.settings_tab, text='Lưu', command=self.save_settings).pack(pady=15)
+        tk.Button(self.settings_tab, text='Lưu cấu hình', command=self.save_settings).pack(pady=15)
     def save_settings(self):
         new_hotkeys = {action: entry.get() for action, entry in self.entries.items()}
         if hasattr(self, 'hotkey_updater') and self.hotkey_updater:
