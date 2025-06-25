@@ -12,6 +12,37 @@ import ctypes
 import os
 import json
 import shutil
+import tempfile
+
+# --- LOCK FILE: chỉ cho phép chạy 1 instance ---
+LOCK_FILE = os.path.join(tempfile.gettempdir(), "ITMTranslate.lock")
+
+def acquire_lock():
+    try:
+        if os.path.exists(LOCK_FILE):
+            # Kiểm tra file lock còn "sống" không (có thể kiểm tra PID nếu muốn)
+            # Ở đây đơn giản chỉ cần tồn tại là báo lỗi
+            root = tk.Tk()
+            root.withdraw()
+            tk.messagebox.showwarning("Warning", "Chương trình đã được khởi động!")
+            sys.exit()
+        # Ghi file lock
+        with open(LOCK_FILE, "w") as f:
+            f.write(str(os.getpid()))
+    except Exception:
+        pass
+
+def release_lock():
+    try:
+        if os.path.exists(LOCK_FILE):
+            os.remove(LOCK_FILE)
+    except Exception:
+        pass
+
+acquire_lock()
+import atexit
+atexit.register(release_lock)
+# --- END LOCK FILE ---
 
 kb = KeyboardController()
 
