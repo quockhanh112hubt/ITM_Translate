@@ -5,9 +5,9 @@ import google.generativeai as genai
 load_dotenv()
 
 def translate_text(text):
-    api_key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+    api_key = os.environ.get("ITM_TRANSLATE_KEY") or os.getenv("ITM_TRANSLATE_KEY")
     if not api_key:
-        return "Lỗi: Không tìm thấy GEMINI_API_KEY trong file .env"
+        return "Lỗi: Không tìm thấy ITM_TRANSLATE_KEY"
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
     print(f"Đang dịch đoạn văn: {text}")

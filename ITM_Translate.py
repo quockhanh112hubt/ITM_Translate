@@ -68,6 +68,10 @@ def on_activate_translate():
             # Kiểm tra lỗi 429
             if isinstance(translated, str) and "429" in translated and "quota" in translated:
                 translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+            # Kiểm tra lỗi 400
+            if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+
             if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
@@ -93,6 +97,10 @@ def on_activate_replace():
             # Kiểm tra lỗi 429
             if isinstance(translated, str) and "429" in translated and "quota" in translated:
                 translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+            # Kiểm tra lỗi 400
+            if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+
             if loading and loading.winfo_exists():
                 loading._running = False
                 loading.destroy()
@@ -143,32 +151,32 @@ def save_hotkeys(hotkeys_dict):
     with open(HOTKEYS_FILE, "w", encoding="utf-8") as f:
         json.dump(hotkeys_dict, f, ensure_ascii=False, indent=2)
 
-def load_gemini_api_key():
+def load_ITM_TRANSLATE_KEY():
     # Ưu tiên biến môi trường, sau đó đọc từ file .env
-    key = os.environ.get("GEMINI_API_KEY")
+    key = os.environ.get("ITM_TRANSLATE_KEY")
     if key:
         return key
     if os.path.exists(ENV_FILE):
         with open(ENV_FILE, "r", encoding="utf-8") as f:
             for line in f:
-                if line.strip().startswith("GEMINI_API_KEY="):
+                if line.strip().startswith("ITM_TRANSLATE_KEY="):
                     return line.strip().split("=", 1)[1]
     return ""
 
-def save_gemini_api_key(new_key):
+def save_ITM_TRANSLATE_KEY(new_key):
     # Ghi đè hoặc thêm vào file .env
     lines = []
     found = False
     if os.path.exists(ENV_FILE):
         with open(ENV_FILE, "r", encoding="utf-8") as f:
             for line in f:
-                if line.strip().startswith("GEMINI_API_KEY="):
-                    lines.append(f"GEMINI_API_KEY={new_key}\n")
+                if line.strip().startswith("ITM_TRANSLATE_KEY="):
+                    lines.append(f"ITM_TRANSLATE_KEY={new_key}\n")
                     found = True
                 else:
                     lines.append(line)
     if not found:
-        lines.append(f"GEMINI_API_KEY={new_key}\n")
+        lines.append(f"ITM_TRANSLATE_KEY={new_key}\n")
     with open(ENV_FILE, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
@@ -269,9 +277,9 @@ class MultiHotKey:
 
 multi_hotkey = MultiHotKey(hotkeys)
 
-def update_gemini_api_key(new_key):
-    os.environ["GEMINI_API_KEY"] = new_key
-    save_gemini_api_key(new_key)
+def update_ITM_TRANSLATE_KEY(new_key):
+    os.environ["ITM_TRANSLATE_KEY"] = new_key
+    save_ITM_TRANSLATE_KEY(new_key)
 
 def update_hotkeys_from_gui(new_hotkeys):
     # new_hotkeys: dict {action: hotkey_str}
@@ -312,16 +320,16 @@ with keyboard.Listener(
         root.withdraw()
     app = MainGUI(root)
     app.set_hotkey_manager(multi_hotkey)
-    app.set_api_key_updater(update_gemini_api_key)
+    app.set_api_key_updater(update_ITM_TRANSLATE_KEY)
     app.set_hotkey_updater(update_hotkeys_from_gui)
     # Truyền giá trị hotkeys, api_key, startup, show_on_startup cho GUI hiển thị
-    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), startup_enabled, show_on_startup)
+    app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), startup_enabled, show_on_startup)
     # Callback khi bật/tắt khởi động cùng Windows
     app.set_startup_callback(set_startup_windows)
     tray = create_tray_icon(root, app)
     root.mainloop()
     l.join()
-    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), load_startup_enabled())
+    app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled())
     # Callback khi bật/tắt khởi động cùng Windows
     app.set_startup_callback(set_startup_windows)
     tray = create_tray_icon(root, app)
