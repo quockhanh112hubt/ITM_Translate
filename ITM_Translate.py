@@ -182,6 +182,16 @@ def load_startup_enabled():
             pass
     return False
 
+def load_show_on_startup():
+    if os.path.exists(STARTUP_FILE):
+        try:
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("show_on_startup", True))
+        except Exception:
+            pass
+    return True
+
 def set_startup_windows(enable):
     # Chỉ hỗ trợ Windows
     if not sys.platform.startswith("win"):
@@ -277,12 +287,18 @@ with keyboard.Listener(
         on_press=for_canonical(multi_hotkey.press),
         on_release=for_canonical(multi_hotkey.release)) as l:
     root = tk.Tk()
+    # --- Đọc trạng thái show_on_startup ---
+    show_on_startup = load_show_on_startup()
+    # Nếu đang khởi động cùng Windows và show_on_startup là False thì ẩn giao diện
+    startup_enabled = load_startup_enabled()
+    if startup_enabled and not show_on_startup:
+        root.withdraw()
     app = MainGUI(root)
     app.set_hotkey_manager(multi_hotkey)
     app.set_api_key_updater(update_gemini_api_key)
     app.set_hotkey_updater(update_hotkeys_from_gui)
-    # Truyền giá trị hotkeys, api_key, startup cho GUI hiển thị
-    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), load_startup_enabled())
+    # Truyền giá trị hotkeys, api_key, startup, show_on_startup cho GUI hiển thị
+    app.set_initial_settings(user_hotkeys, load_gemini_api_key(), startup_enabled, show_on_startup)
     # Callback khi bật/tắt khởi động cùng Windows
     app.set_startup_callback(set_startup_windows)
     tray = create_tray_icon(root, app)
