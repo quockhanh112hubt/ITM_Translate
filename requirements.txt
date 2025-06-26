@@ -1,0 +1,6 @@
+pynput
+python-dotenv
+google-generativeai
+pystray
+Pillow
+pywin32
