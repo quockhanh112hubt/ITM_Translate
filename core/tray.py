@@ -9,12 +9,13 @@ def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         base_path = sys._MEIPASS
     else:
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        # Lấy thư mục gốc project (1 cấp trên)
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
 def create_image():
-    # Sử dụng icon từ file Resource/translate.ico, nếu không có thì tạo icon mặc định
-    icon_path = resource_path(os.path.join('Resource', 'translate.ico'))
+    # Sử dụng icon từ file Resource/icon.png, nếu không có thì tạo icon mặc định
+    icon_path = resource_path(os.path.join('Resource', 'icon.png'))
     if os.path.exists(icon_path):
         return Image.open(icon_path)
     # Tạo icon mặc định (32x32, hình tròn xanh dương)

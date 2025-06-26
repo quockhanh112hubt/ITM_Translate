@@ -2261,7 +2261,6 @@
   ('lzma',
    'C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\lzma.py',
    'PYMODULE'),
-  ('main', 'E:\\GitHub\\ITM_Translate\\main.py', 'PYMODULE'),
   ('markupsafe',
    'C:\\Users\\Admin\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\markupsafe\\__init__.py',
    'PYMODULE'),
