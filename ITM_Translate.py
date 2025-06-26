@@ -287,6 +287,23 @@ with keyboard.Listener(
         on_press=for_canonical(multi_hotkey.press),
         on_release=for_canonical(multi_hotkey.release)) as l:
     root = tk.Tk()
+    # Đặt icon cho cửa sổ chính
+    try:
+        import os
+        from tkinter import PhotoImage
+        icon_path = os.path.join(os.path.dirname(__file__), "Resource", "icon.png")
+        if os.path.exists(icon_path):
+            try:
+                # Nếu icon.png là PNG, dùng PIL để chuyển sang PhotoImage
+                from PIL import Image, ImageTk
+                img = Image.open(icon_path)
+                tk_icon = ImageTk.PhotoImage(img)
+            except Exception:
+                # Nếu không có PIL, thử dùng trực tiếp PhotoImage (chỉ hỗ trợ PNG trên một số hệ)
+                tk_icon = PhotoImage(file=icon_path)
+            root.iconphoto(True, tk_icon)
+    except Exception:
+        pass
     # --- Đọc trạng thái show_on_startup ---
     show_on_startup = load_show_on_startup()
     # Nếu đang khởi động cùng Windows và show_on_startup là False thì ẩn giao diện
