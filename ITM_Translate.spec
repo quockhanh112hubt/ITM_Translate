@@ -5,7 +5,7 @@ a = Analysis(
     ['ITM_Translate.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('Resource/icon.png', 'Resource')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
