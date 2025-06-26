@@ -29,22 +29,42 @@ def create_image():
 
 def create_tray_icon(root, app):
     def on_show():
-        root.after(0, root.deiconify)
+        root.after(0, lambda: (root.deiconify(), root.lift()))
     def on_quit():
         root.after(0, root.destroy)
         icon.stop()
         try:
-            # Gọi release_lock nếu có
             from lockfile import release_lock
             release_lock()
         except Exception:
             pass
-        os._exit(0)  # Đảm bảo thoát hoàn toàn process
+        os._exit(0)
+    def on_tray_double_click(icon, item=None):
+        on_show()
     icon = pystray.Icon('ITM Translate', create_image(), menu=pystray.Menu(
         pystray.MenuItem('Hiện cửa sổ', on_show),
         pystray.MenuItem('Thoát', on_quit)
     ))
+    icon._on_double_click = on_tray_double_click
+    def setup_icon_events():
+        # Monkey patch _on_notify để bắt double-click trên Windows
+        def patch_notify(obj):
+            if hasattr(obj, "__call__"):
+                orig = obj
+                def custom(hwnd, msg, wparam, lparam):
+                    if msg == 0x203:  # WM_LBUTTONDBLCLK
+                        icon._on_double_click(icon)
+                    return orig(hwnd, msg, wparam, lparam)
+                return custom
+            return obj
+        # Patch _on_notify
+        if hasattr(icon, "_on_notify"):
+            icon._on_notify = patch_notify(icon._on_notify)
+        # Patch _listener.on_notify nếu có
+        if hasattr(icon, "_listener") and hasattr(icon._listener, "on_notify"):
+            icon._listener.on_notify = patch_notify(icon._listener.on_notify)
     def run():
+        setup_icon_events()
         icon.run()
     threading.Thread(target=run, daemon=True).start()
     root.protocol('WM_DELETE_WINDOW', lambda: root.withdraw())
