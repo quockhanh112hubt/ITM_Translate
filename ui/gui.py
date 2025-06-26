@@ -15,6 +15,7 @@ class MainGUI:
         self.initial_hotkeys = None
         self.initial_api_key = None
         self.initial_startup = False
+        self.initial_show_on_startup = True
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
     def set_api_key_updater(self, updater):
@@ -23,10 +24,11 @@ class MainGUI:
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
         self.startup_callback = callback
-    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False):
+    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
         self.initial_startup = startup_enabled
+        self.initial_show_on_startup = show_on_startup
         self.create_tabs()
     def create_tabs(self):
         from tkinter import ttk
@@ -69,6 +71,14 @@ class MainGUI:
             variable=self.startup_var,
             command=self.on_startup_toggle
         ).pack(anchor='w', padx=20, pady=(20, 5))
+        # Bật hộp thoại khi khởi động
+        self.show_on_startup_var = tk.BooleanVar(value=getattr(self, 'initial_show_on_startup', True))
+        tk.Checkbutton(
+            self.advanced_tab,
+            text="Bật hộp thoại này khi khởi động",
+            variable=self.show_on_startup_var,
+            command=self.on_show_on_startup_toggle
+        ).pack(anchor='w', padx=20, pady=(0, 10))
         # Hướng dẫn sử dụng
         tk.Button(self.advanced_tab, text="Hướng dẫn sử dụng", command=self.show_help).pack(fill='x', padx=20, pady=5)
         # Thông tin về chương trình
@@ -79,13 +89,26 @@ class MainGUI:
         enabled = self.startup_var.get()
         # Lưu trạng thái vào file (để nhớ khi khởi động lại)
         try:
+            # Đọc trạng thái show_on_startup hiện tại
+            show_on_startup = self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
             with open("startup.json", "w", encoding="utf-8") as f:
-                json.dump({"startup": enabled}, f)
+                json.dump({"startup": enabled, "show_on_startup": show_on_startup}, f)
         except Exception:
             pass
         # Gọi callback để main.py xử lý shortcut
         if self.startup_callback:
             self.startup_callback(enabled)
+    def on_show_on_startup_toggle(self):
+        # Lưu cả hai trạng thái vào file
+        try:
+            startup = self.startup_var.get() if hasattr(self, 'startup_var') else False
+            show_on_startup = self.show_on_startup_var.get()
+            with open("startup.json", "w", encoding="utf-8") as f:
+                json.dump({"startup": startup, "show_on_startup": show_on_startup}, f)
+        except Exception:
+            pass
+    def get_show_on_startup(self):
+        return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
     def show_help(self):
         messagebox.showinfo("Hướng dẫn sử dụng", "1. Chọn đoạn văn bản cần dịch.\n2. Nhấn phím tắt để dịch hoặc thay thế.\n3. Có thể thay đổi phím tắt và API key trong tab Cài Đặt.")
     def show_about(self):
