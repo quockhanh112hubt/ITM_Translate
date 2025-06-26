@@ -19,6 +19,8 @@ acquire_lock()
 atexit.register(release_lock)
 
 # Patch os._exit để luôn gọi release_lock
+# Test new banch
+
 import os as _os
 _os_exit = _os._exit
 def safe_exit(code=0):
