@@ -16,6 +16,8 @@ def resource_path(relative_path):
 def create_image():
     # Sử dụng icon từ file Resource/icon.png, nếu không có thì tạo icon mặc định
     icon_path = resource_path(os.path.join('Resource', 'icon.png'))
+    # Debug: in ra đường dẫn icon thực tế
+    # print("Icon path:", icon_path)
     if os.path.exists(icon_path):
         return Image.open(icon_path)
     # Tạo icon mặc định (32x32, hình tròn xanh dương)
