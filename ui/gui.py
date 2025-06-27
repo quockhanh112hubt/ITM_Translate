@@ -54,7 +54,7 @@ class MainGUI:
         self.entries['replace_translate'] = tk.Entry(frame, width=20)
         self.entries['replace_translate'].insert(0, self.initial_hotkeys.get('replace_translate', '<ctrl>+d') if self.initial_hotkeys else '<ctrl>+d')
         self.entries['replace_translate'].grid(row=1, column=1)
-        # Trường nhập GEMINI_API_KEY
+        # Trường nhập ITM_TRANSLATE_KEY
         tk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold')).pack(pady=(20, 5))
         self.api_key_entry = tk.Entry(self.settings_tab, width=50, show='*')
         if self.initial_api_key:
