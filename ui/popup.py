@@ -62,7 +62,7 @@ def show_popup(text, master=None):
     if master is None:
         master = tk._default_root
     win = tk.Toplevel(master)
-    win.withdraw()  # Ẩn ngay khi tạo
+    win.withdraw()
     win.title('ITM Translate')
     win.attributes('-topmost', True)
     # Đặt icon cho popup nếu có icon.ico
@@ -78,31 +78,45 @@ def show_popup(text, master=None):
     # Tạo frame với màu nền nhẹ, viền bo tròn
     frame = tk.Frame(win, bg='#f8f9fa', bd=2, relief='groove')
     frame.pack(fill='both', expand=True, padx=10, pady=10)
-    # Label nội dung dịch với font hiện đại, padding, màu chữ tối
-    label = tk.Label(
+    # Đặt width cho Text widget vừa phải, wrap word
+    num_lines = text.count('\n') + 1
+    text_widget = tk.Text(
         frame,
-        text=text,
-        wraplength=500,
-        justify='left',
+        wrap='word',
         bg='#f8f9fa',
         fg='#222',
         font=('Segoe UI', 12),
-        anchor='w',
-        padx=16,
-        pady=12
+        height=min(max(num_lines, 2), 20),
+        width=50,  # width theo ký tự
+        borderwidth=0,
+        highlightthickness=0
     )
-    label.pack(fill='both', expand=True)
-    # Tính toán kích thước phù hợp
+    text_widget.insert('1.0', text)
+    text_widget.pack(fill='both', expand=True, padx=0, pady=0)
+    text_widget.config(state='normal')
     win.update_idletasks()
-    width = min(max(label.winfo_reqwidth() + 40, 320), 600)
-    height = min(label.winfo_reqheight() + 40, 1200)
+    # Lấy kích thước yêu cầu thực tế
+    req_width = text_widget.winfo_reqwidth()
+    req_height = text_widget.winfo_reqheight()
+    width = min(max(req_width + 20, 320), 600)
+    height = min(max(req_height + 20, 60), 1200)
+    text_widget.config(state='disabled')
+    # Cho phép select/copy, không đóng khi click vào text
+    def enable_select(event):
+        text_widget.config(state='normal')
+    def disable_edit(event):
+        text_widget.config(state='disabled')
+    text_widget.bind('<Button-1>', enable_select)
+    text_widget.bind('<KeyRelease>', disable_edit)
+    text_widget.bind('<FocusOut>', disable_edit)
     x = win.winfo_pointerx()
     y = win.winfo_pointery()
     win.geometry(f"{width}x{height}+{x}+{y}")
-    # Đóng khi click ra ngoài
-    def on_focus_out(event):
-        win.destroy()
-    win.bind('<FocusOut>', on_focus_out)
-    win.deiconify()  # Hiện popup sau khi đã cấu hình xong
+    # Chỉ đóng khi focus ra ngoài toàn bộ popup
+    def on_popup_focus_out(event):
+        # Nếu focus ra ngoài cửa sổ popup (không phải text_widget)
+        if win.focus_get() not in (text_widget, win):
+            win.destroy()
+    win.bind('<FocusOut>', on_popup_focus_out)
+    win.deiconify()
     win.lift()
-    # Không cần mainloop, vì đã có mainloop của root

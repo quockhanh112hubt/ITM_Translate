@@ -59,16 +59,16 @@ class MainGUI:
         self.entries = {}
         self.lang_selects = {}
         lang_list = [
-            ('en', 'English'),
-            ('vi', 'Tiếng Việt'),
-            ('ja', '日本語'),
-            ('zh', '中文'),
-            ('fr', 'Français'),
-            ('de', 'Deutsch'),
-            ('ko', '한국어'),
-            ('ru', 'Русский'),
-            ('es', 'Español'),
-            ('th', 'ไทย'),
+            ('EN', 'English'),
+            ('VI', 'Tiếng Việt'),
+            ('KO', '한국어'),
+            ('ZH', '中文'),
+            ('JA', '日本語'),
+            ('FR', 'Français'),
+            ('DE', 'Deutsch'),
+            ('RU', 'Русский'),
+            ('ES', 'Español'),
+            ('TH', 'ไทย'),
         ]
         # --- Nhóm 1 ---
         group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ nhất:', bootstyle=INFO)
