@@ -62,8 +62,19 @@ def show_popup(text, master=None):
     if master is None:
         master = tk._default_root
     win = tk.Toplevel(master)
+    win.withdraw()  # Ẩn ngay khi tạo
     win.title('ITM Translate')
     win.attributes('-topmost', True)
+    # Đặt icon cho popup nếu có icon.ico
+    try:
+        import os
+        icon_path_ico = os.path.join(os.path.dirname(__file__), "..", "Resource", "icon.ico")
+        icon_path_ico = os.path.abspath(icon_path_ico)
+        if os.path.exists(icon_path_ico):
+            win.iconbitmap(icon_path_ico)
+    except Exception:
+        pass
+    win.transient(master)
     # Tạo frame với màu nền nhẹ, viền bo tròn
     frame = tk.Frame(win, bg='#f8f9fa', bd=2, relief='groove')
     frame.pack(fill='both', expand=True, padx=10, pady=10)
@@ -92,4 +103,6 @@ def show_popup(text, master=None):
     def on_focus_out(event):
         win.destroy()
     win.bind('<FocusOut>', on_focus_out)
+    win.deiconify()  # Hiện popup sau khi đã cấu hình xong
+    win.lift()
     # Không cần mainloop, vì đã có mainloop của root

@@ -78,76 +78,87 @@ def check_queue():
 
 def _on_activate_translate():
     loading = show_loading_popup(root)
-    try:
-        kb.press(Key.ctrl)
-        kb.press('c')
-        kb.release('c')
-        kb.release(Key.ctrl)
-        time.sleep(0.15)  # Đợi clipboard cập nhật
-        selected_text = get_clipboard()
-        if selected_text.strip():
-            translated = translate_text(selected_text)
-            # Kiểm tra lỗi 429
-            if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-            # Kiểm tra lỗi 400
-            if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
-
-            if loading and loading.winfo_exists():
-                loading._running = False
-                loading.destroy()
-            show_popup(translated)
-        else:
-            if loading and loading.winfo_exists():
-                loading._running = False
-                loading.destroy()
-    finally:
-        restore_system_cursor()
-
-def _on_activate_replace():
-    loading = show_loading_popup(root)
-    try:
-        kb.press(Key.ctrl)
-        kb.press('c')
-        kb.release('c')
-        kb.release(Key.ctrl)
-        time.sleep(0.15)
-        selected_text = get_clipboard()
-        if selected_text.strip():
-            translated = translate_text(selected_text)
-            # Kiểm tra lỗi 429
-            if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-            # Kiểm tra lỗi 400
-            if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
-
-            if loading and loading.winfo_exists():
-                loading._running = False
-                loading.destroy()
-            set_clipboard(translated)
-            time.sleep(0.05)
-            kb.press(Key.ctrl)
-            kb.press('v')
-            kb.release('v')
-            kb.release(Key.ctrl)
-            time.sleep(0.15)
+    def do_translate():
+        try:
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
             kb.release(Key.ctrl)
-            time.sleep(0.1)
-            pasted = get_clipboard()
-            if pasted.strip() != translated.strip():
-                from ui.popup import show_popup
-                show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.')
-        else:
-            if loading and loading.winfo_exists():
-                loading._running = False
-                loading.destroy()
-    finally:
-        restore_system_cursor()
+            time.sleep(0.15)  # Đợi clipboard cập nhật
+            selected_text = get_clipboard()
+            if selected_text.strip():
+                translated = translate_text(selected_text, global_language_settings['Ngon_ngu_dau_tien'], global_language_settings['Ngon_ngu_thu_2'], global_language_settings['Ngon_ngu_thu_3'])
+                # Kiểm tra lỗi 429
+                if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+                # Kiểm tra lỗi 400
+                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                def show_result():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                    show_popup(translated, master=root)
+                root.after(0, show_result)
+            else:
+                def close_loading():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                root.after(0, close_loading)
+        finally:
+            root.after(0, restore_system_cursor)
+    threading.Thread(target=do_translate, daemon=True).start()
+
+def _on_activate_replace():
+    loading = show_loading_popup(root)
+    def do_replace():
+        try:
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            time.sleep(0.15)
+            selected_text = get_clipboard()
+            if selected_text.strip():
+                translated = translate_text(selected_text, global_language_settings['Ngon_ngu_dau_tien'], global_language_settings['Ngon_ngu_thu_2'], global_language_settings['Ngon_ngu_thu_3'])
+                # Kiểm tra lỗi 429
+                if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+                # Kiểm tra lỗi 400
+                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                def do_paste():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                    set_clipboard(translated)
+                    time.sleep(0.05)
+                    kb.press(Key.ctrl)
+                    kb.press('v')
+                    kb.release('v')
+                    kb.release(Key.ctrl)
+                    time.sleep(0.15)
+                    kb.press(Key.ctrl)
+                    kb.press('c')
+                    kb.release('c')
+                    kb.release(Key.ctrl)
+                    time.sleep(0.1)
+                    pasted = get_clipboard()
+                    if pasted.strip() != translated.strip():
+                        def show_fail():
+                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', master=root)
+                        root.after(0, show_fail)
+                root.after(0, do_paste)
+            else:
+                def close_loading():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                root.after(0, close_loading)
+        finally:
+            root.after(0, restore_system_cursor)
+    threading.Thread(target=do_replace, daemon=True).start()
 
 def for_canonical(listener, f):
     return lambda *args: f(listener.canonical(args[0]))
@@ -156,17 +167,30 @@ HOTKEYS_FILE = "hotkeys.json"
 ENV_FILE = ".env"
 STARTUP_FILE = "startup.json"
 
+global_language_settings = {
+    'Ngon_ngu_dau_tien': 'Bất kỳ',
+    'Ngon_ngu_thu_2': 'vi - Tiếng Việt',
+    'Ngon_ngu_thu_3': 'en - English',
+}
+
 def load_hotkeys():
     if os.path.exists(HOTKEYS_FILE):
         try:
             with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                # Cập nhật biến ngôn ngữ toàn cục
+                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3']:
+                    if k in data:
+                        global_language_settings[k] = data[k]
                 return data
         except Exception:
             pass
     return {
         "translate_popup": "<ctrl>+q",
-        "replace_translate": "<ctrl>+d"
+        "replace_translate": "<ctrl>+d",
+        "Ngon_ngu_dau_tien": global_language_settings['Ngon_ngu_dau_tien'],
+        "Ngon_ngu_thu_2": global_language_settings['Ngon_ngu_thu_2'],
+        "Ngon_ngu_thu_3": global_language_settings['Ngon_ngu_thu_3'],
     }
 
 def save_hotkeys(hotkeys_dict):
@@ -312,6 +336,16 @@ def update_hotkeys_from_gui(new_hotkeys):
     if mapped:
         multi_hotkey.update_hotkeys(mapped)
         save_hotkeys(new_hotkeys)
+    # Cập nhật lại biến ngôn ngữ toàn cục sau khi lưu cấu hình
+    if os.path.exists(HOTKEYS_FILE):
+        try:
+            with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3']:
+                    if k in data:
+                        global_language_settings[k] = data[k]
+        except Exception:
+            pass
 
 listener = keyboard.Listener()
 listener.on_press = for_canonical(listener, multi_hotkey.press)
@@ -319,18 +353,21 @@ listener.on_release = for_canonical(listener, multi_hotkey.release)
 listener.start()
 
 root = Window(themename="flatly")
-# Đặt icon cho cửa sổ chính
+# Đặt icon cho cửa sổ chính (nên làm ngay sau khi tạo root)
 try:
     import os
-    from tkinter import PhotoImage
-    icon_path = os.path.join(os.path.dirname(__file__), "Resource", "icon.png")
-    if os.path.exists(icon_path):
+    icon_path_ico = os.path.join(os.path.dirname(__file__), "Resource", "icon.ico")
+    icon_path_png = os.path.join(os.path.dirname(__file__), "Resource", "icon.png")
+    if os.path.exists(icon_path_ico):
+        root.iconbitmap(icon_path_ico)
+    elif os.path.exists(icon_path_png):
+        from tkinter import PhotoImage
         try:
             from PIL import Image, ImageTk
-            img = Image.open(icon_path)
+            img = Image.open(icon_path_png)
             tk_icon = ImageTk.PhotoImage(img)
         except Exception:
-            tk_icon = PhotoImage(file=icon_path)
+            tk_icon = PhotoImage(file=icon_path_png)
         root.iconphoto(True, tk_icon)
 except Exception:
     pass
