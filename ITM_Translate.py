@@ -59,19 +59,31 @@ def set_clipboard(text):
 action_queue = queue.Queue()
 
 def on_activate_translate():
-    action_queue.put(('translate',))
+    action_queue.put(('translate', 'group1'))
 
 def on_activate_replace():
-    action_queue.put(('replace',))
+    action_queue.put(('replace', 'group1'))
+
+def on_activate_translate2():
+    action_queue.put(('translate', 'group2'))
+
+def on_activate_replace2():
+    action_queue.put(('replace', 'group2'))
 
 def check_queue():
     try:
         while True:
             action = action_queue.get_nowait()
             if action[0] == 'translate':
-                _on_activate_translate()
+                if len(action) > 1 and action[1] == 'group2':
+                    _on_activate_translate_group2()
+                else:
+                    _on_activate_translate()
             elif action[0] == 'replace':
-                _on_activate_replace()
+                if len(action) > 1 and action[1] == 'group2':
+                    _on_activate_replace_group2()
+                else:
+                    _on_activate_replace()
     except queue.Empty:
         pass
     root.after(50, check_queue)
@@ -160,6 +172,86 @@ def _on_activate_replace():
             root.after(0, restore_system_cursor)
     threading.Thread(target=do_replace, daemon=True).start()
 
+def _on_activate_translate_group2():
+    loading = show_loading_popup(root)
+    def do_translate():
+        try:
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            time.sleep(0.15)
+            selected_text = get_clipboard()
+            if selected_text.strip():
+                translated = translate_text(selected_text, global_language_settings['Nhom2_Ngon_ngu_dau_tien'], global_language_settings['Nhom2_Ngon_ngu_thu_2'], global_language_settings['Nhom2_Ngon_ngu_thu_3'])
+                if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                def show_result():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                    show_popup(translated, master=root)
+                root.after(0, show_result)
+            else:
+                def close_loading():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                root.after(0, close_loading)
+        finally:
+            root.after(0, restore_system_cursor)
+    threading.Thread(target=do_translate, daemon=True).start()
+
+def _on_activate_replace_group2():
+    loading = show_loading_popup(root)
+    def do_replace():
+        try:
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            time.sleep(0.15)
+            selected_text = get_clipboard()
+            if selected_text.strip():
+                translated = translate_text(selected_text, global_language_settings['Nhom2_Ngon_ngu_dau_tien'], global_language_settings['Nhom2_Ngon_ngu_thu_2'], global_language_settings['Nhom2_Ngon_ngu_thu_3'])
+                if isinstance(translated, str) and "429" in translated and "quota" in translated:
+                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
+                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
+                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                def do_paste():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                    set_clipboard(translated)
+                    time.sleep(0.05)
+                    kb.press(Key.ctrl)
+                    kb.press('v')
+                    kb.release('v')
+                    kb.release(Key.ctrl)
+                    time.sleep(0.15)
+                    kb.press(Key.ctrl)
+                    kb.press('c')
+                    kb.release('c')
+                    kb.release(Key.ctrl)
+                    time.sleep(0.1)
+                    pasted = get_clipboard()
+                    if pasted.strip() != translated.strip():
+                        def show_fail():
+                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', master=root)
+                        root.after(0, show_fail)
+                root.after(0, do_paste)
+            else:
+                def close_loading():
+                    if loading and loading.winfo_exists():
+                        loading._running = False
+                        loading.destroy()
+                root.after(0, close_loading)
+        finally:
+            root.after(0, restore_system_cursor)
+    threading.Thread(target=do_replace, daemon=True).start()
+
 def for_canonical(listener, f):
     return lambda *args: f(listener.canonical(args[0]))
 
@@ -171,6 +263,9 @@ global_language_settings = {
     'Ngon_ngu_dau_tien': 'Bất kỳ',
     'Ngon_ngu_thu_2': 'vi - Tiếng Việt',
     'Ngon_ngu_thu_3': 'en - English',
+    'Nhom2_Ngon_ngu_dau_tien': 'Bất kỳ',
+    'Nhom2_Ngon_ngu_thu_2': 'vi - Tiếng Việt',
+    'Nhom2_Ngon_ngu_thu_3': 'en - English',
 }
 
 def load_hotkeys():
@@ -178,8 +273,8 @@ def load_hotkeys():
         try:
             with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # Cập nhật biến ngôn ngữ toàn cục
-                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3']:
+                # Cập nhật biến ngôn ngữ toàn cục cho cả 2 nhóm
+                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3', 'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3']:
                     if k in data:
                         global_language_settings[k] = data[k]
                 return data
@@ -188,9 +283,14 @@ def load_hotkeys():
     return {
         "translate_popup": "<ctrl>+q",
         "replace_translate": "<ctrl>+d",
+        "translate_popup2": "<ctrl>+q",
+        "replace_translate2": "<ctrl>+w",
         "Ngon_ngu_dau_tien": global_language_settings['Ngon_ngu_dau_tien'],
         "Ngon_ngu_thu_2": global_language_settings['Ngon_ngu_thu_2'],
         "Ngon_ngu_thu_3": global_language_settings['Ngon_ngu_thu_3'],
+        "Nhom2_Ngon_ngu_dau_tien": global_language_settings['Nhom2_Ngon_ngu_dau_tien'],
+        "Nhom2_Ngon_ngu_thu_2": global_language_settings['Nhom2_Ngon_ngu_thu_2'],
+        "Nhom2_Ngon_ngu_thu_3": global_language_settings['Nhom2_Ngon_ngu_thu_3'],
     }
 
 def save_hotkeys(hotkeys_dict):
@@ -286,7 +386,9 @@ user_hotkeys = load_hotkeys()
 hotkeys = {}
 action_map = {
     'translate_popup': on_activate_translate,
-    'replace_translate': on_activate_replace
+    'replace_translate': on_activate_replace,
+    'translate_popup2': on_activate_translate2,
+    'replace_translate2': on_activate_replace2
 }
 for action, hotkey in user_hotkeys.items():
     if hotkey and action in action_map:
@@ -341,7 +443,7 @@ def update_hotkeys_from_gui(new_hotkeys):
         try:
             with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3']:
+                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3', 'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3']:
                     if k in data:
                         global_language_settings[k] = data[k]
         except Exception:

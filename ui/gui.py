@@ -36,6 +36,9 @@ class MainGUI:
             'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Bất kỳ'),
             'Ngon_ngu_thu_2': hotkeys_dict.get('Ngon_ngu_thu_2', 'vi - Tiếng Việt'),
             'Ngon_ngu_thu_3': hotkeys_dict.get('Ngon_ngu_thu_3', 'en - English'),
+            'Nhom2_Ngon_ngu_dau_tien': hotkeys_dict.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'),
+            'Nhom2_Ngon_ngu_thu_2': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_2', 'vi - Tiếng Việt'),
+            'Nhom2_Ngon_ngu_thu_3': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_3', 'en - English'),
         }
         self.create_tabs()
     def create_tabs(self):
@@ -110,17 +113,17 @@ class MainGUI:
         self.entries['replace_translate2'].insert(0, self.initial_hotkeys.get('replace_translate2', '<ctrl>+w') if self.initial_hotkeys else '<ctrl>+w')
         self.entries['replace_translate2'].grid(row=3, column=1, sticky='w', pady=2)
         ttk.Label(group2, text='Ngôn ngữ đầu tiên:').grid(row=2, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['group2_src'] = ttk.Combobox(group2, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['group2_src'].set('Bất kỳ')
-        self.lang_selects['group2_src'].grid(row=2, column=3, sticky='w', pady=2)
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].set(self.initial_langs.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'))
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].grid(row=2, column=3, sticky='w', pady=2)
         ttk.Label(group2, text='Ngôn ngữ thứ 2:').grid(row=2, column=4, sticky='e', padx=(8,2), pady=2)
-        self.lang_selects['group2_default'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['group2_default'].set('vi - Tiếng Việt')
-        self.lang_selects['group2_default'].grid(row=2, column=5, sticky='w', pady=2)
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_2', 'vi - Tiếng Việt'))
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].grid(row=2, column=5, sticky='w', pady=2)
         ttk.Label(group2, text='Ngôn ngữ thứ 3:').grid(row=3, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['group2_dest'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['group2_dest'].set('en - English')
-        self.lang_selects['group2_dest'].grid(row=3, column=3, sticky='w', pady=2)
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_3', 'en - English'))
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].grid(row=3, column=3, sticky='w', pady=2)
 
         # Trường nhập ITM_TRANSLATE_KEY
         ttk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(28, 5))
@@ -184,17 +187,21 @@ class MainGUI:
         messagebox.showinfo("Cập nhật", "Chức năng cập nhật sẽ được bổ sung sau.")
     def save_settings(self):
         new_hotkeys = {action: entry.get() for action, entry in self.entries.items()}
-        # Lưu lựa chọn ngôn ngữ
+        # Lưu lựa chọn ngôn ngữ Nhóm 1
         new_langs = {
             'Ngon_ngu_dau_tien': self.lang_selects['Ngon_ngu_dau_tien'].get(),
             'Ngon_ngu_thu_2': self.lang_selects['Ngon_ngu_thu_2'].get(),
             'Ngon_ngu_thu_3': self.lang_selects['Ngon_ngu_thu_3'].get(),
+            # Lưu lựa chọn ngôn ngữ Nhóm 2
+            'Nhom2_Ngon_ngu_dau_tien': self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].get(),
+            'Nhom2_Ngon_ngu_thu_2': self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(),
+            'Nhom2_Ngon_ngu_thu_3': self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get(),
         }
         config = {**new_hotkeys, **new_langs}
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         if hasattr(self, 'hotkey_updater') and self.hotkey_updater:
-            self.hotkey_updater(config)  # Truyền cả hotkey và ngôn ngữ
+            self.hotkey_updater(config)
         api_key = self.api_key_entry.get()
         if api_key and hasattr(self, 'api_key_updater') and self.api_key_updater:
             self.api_key_updater(api_key)
