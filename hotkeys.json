@@ -1,12 +1,12 @@
 {
-  "translate_popup": "<ctrl>+q",
-  "replace_translate": "<ctrl>+d",
+  "translate_popup": "<ctrl><alt>+4",
+  "replace_translate": "<ctrl><alt>+5",
   "translate_popup2": "<ctrl>+1",
   "replace_translate2": "<ctrl>+2",
   "Ngon_ngu_dau_tien": "Bất kỳ",
   "Ngon_ngu_thu_2": "vi - Tiếng Việt",
   "Ngon_ngu_thu_3": "ko - 한국어",
   "Nhom2_Ngon_ngu_dau_tien": "Bất kỳ",
-  "Nhom2_Ngon_ngu_thu_2": "en - English",
+  "Nhom2_Ngon_ngu_thu_2": "vi - Tiếng Việt",
   "Nhom2_Ngon_ngu_thu_3": "zh - 中文"
 }

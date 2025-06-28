@@ -197,6 +197,21 @@ class MainGUI:
             'Nhom2_Ngon_ngu_thu_2': self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(),
             'Nhom2_Ngon_ngu_thu_3': self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get(),
         }
+        # Ràng buộc: 3 ngôn ngữ trong 1 nhóm không được trùng nhau
+        for prefix in ['', 'Nhom2_']:
+            langs = [
+                new_langs.get(f'{prefix}Ngon_ngu_dau_tien'),
+                new_langs.get(f'{prefix}Ngon_ngu_thu_2'),
+                new_langs.get(f'{prefix}Ngon_ngu_thu_3'),
+            ]
+            if len(set(langs)) < 3:
+                messagebox.showerror('Lỗi cấu hình', f'Ba ngôn ngữ trong {"Nhóm 1" if prefix=="" else "Nhóm 2"} không được trùng nhau!')
+                return
+        # Ràng buộc: tất cả phím tắt không được trùng nhau
+        all_hotkeys = [v.strip().lower() for v in new_hotkeys.values() if v.strip()]
+        if len(set(all_hotkeys)) < len(all_hotkeys):
+            messagebox.showerror('Lỗi cấu hình', 'Các phím tắt không được trùng nhau!')
+            return
         config = {**new_hotkeys, **new_langs}
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
