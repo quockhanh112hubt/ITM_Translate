@@ -1,4 +1,6 @@
 {
-  "translate_popup": "<ctrl>+q",
-  "replace_translate": "<ctrl>+d"
+  "translate_popup": "<ctrl>+1",
+  "replace_translate": "<ctrl>+2",
+  "translate_popup2": "<ctrl>+q",
+  "replace_translate2": "<ctrl>+w"
 }

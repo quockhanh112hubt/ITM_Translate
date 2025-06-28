@@ -13,6 +13,8 @@ import ctypes
 import os
 import json
 import atexit
+from ttkbootstrap import Window
+import queue
 
 
 acquire_lock()
@@ -54,7 +56,27 @@ def set_clipboard(text):
     root.clipboard_append(text)
     root.update()  # Đảm bảo clipboard được cập nhật
 
+action_queue = queue.Queue()
+
 def on_activate_translate():
+    action_queue.put(('translate',))
+
+def on_activate_replace():
+    action_queue.put(('replace',))
+
+def check_queue():
+    try:
+        while True:
+            action = action_queue.get_nowait()
+            if action[0] == 'translate':
+                _on_activate_translate()
+            elif action[0] == 'replace':
+                _on_activate_replace()
+    except queue.Empty:
+        pass
+    root.after(50, check_queue)
+
+def _on_activate_translate():
     loading = show_loading_popup(root)
     try:
         kb.press(Key.ctrl)
@@ -83,7 +105,7 @@ def on_activate_translate():
     finally:
         restore_system_cursor()
 
-def on_activate_replace():
+def _on_activate_replace():
     loading = show_loading_popup(root)
     try:
         kb.press(Key.ctrl)
@@ -127,8 +149,8 @@ def on_activate_replace():
     finally:
         restore_system_cursor()
 
-def for_canonical(f):
-    return lambda k: f(l.canonical(k))
+def for_canonical(listener, f):
+    return lambda *args: f(listener.canonical(args[0]))
 
 HOTKEYS_FILE = "hotkeys.json"
 ENV_FILE = ".env"
@@ -260,7 +282,8 @@ class MultiHotKey:
         for combo, callback in self.hotkeys:
             if combo <= self._pressed and combo not in self._active:
                 self._active.add(combo)
-                threading.Thread(target=self._run_and_reset, args=(combo, callback)).start()
+                # Chỉ queue action khi tổ hợp phím thực sự được nhấn và chưa active
+                callback()
     def release(self, key):
         self._pressed.discard(key)
         for combo in list(self._active):
@@ -272,7 +295,6 @@ class MultiHotKey:
         finally:
             self._active.discard(combo)
     def update_hotkeys(self, new_hotkey_map):
-        # new_hotkey_map: dict {hotkey_str: callback}
         self.set_hotkeys(new_hotkey_map)
 
 multi_hotkey = MultiHotKey(hotkeys)
@@ -291,47 +313,38 @@ def update_hotkeys_from_gui(new_hotkeys):
         multi_hotkey.update_hotkeys(mapped)
         save_hotkeys(new_hotkeys)
 
-with keyboard.Listener(
-        on_press=for_canonical(multi_hotkey.press),
-        on_release=for_canonical(multi_hotkey.release)) as l:
-    root = tk.Tk()
-    # Đặt icon cho cửa sổ chính
-    try:
-        import os
-        from tkinter import PhotoImage
-        icon_path = os.path.join(os.path.dirname(__file__), "Resource", "icon.png")
-        if os.path.exists(icon_path):
-            try:
-                # Nếu icon.png là PNG, dùng PIL để chuyển sang PhotoImage
-                from PIL import Image, ImageTk
-                img = Image.open(icon_path)
-                tk_icon = ImageTk.PhotoImage(img)
-            except Exception:
-                # Nếu không có PIL, thử dùng trực tiếp PhotoImage (chỉ hỗ trợ PNG trên một số hệ)
-                tk_icon = PhotoImage(file=icon_path)
-            root.iconphoto(True, tk_icon)
-    except Exception:
-        pass
-    # --- Đọc trạng thái show_on_startup ---
-    show_on_startup = load_show_on_startup()
-    # Nếu đang khởi động cùng Windows và show_on_startup là False thì ẩn giao diện
-    startup_enabled = load_startup_enabled()
-    if startup_enabled and not show_on_startup:
-        root.withdraw()
-    app = MainGUI(root)
-    app.set_hotkey_manager(multi_hotkey)
-    app.set_api_key_updater(update_ITM_TRANSLATE_KEY)
-    app.set_hotkey_updater(update_hotkeys_from_gui)
-    # Truyền giá trị hotkeys, api_key, startup, show_on_startup cho GUI hiển thị
-    app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), startup_enabled, show_on_startup)
-    # Callback khi bật/tắt khởi động cùng Windows
-    app.set_startup_callback(set_startup_windows)
-    tray = create_tray_icon(root, app)
-    root.mainloop()
-    l.join()
-    app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled())
-    # Callback khi bật/tắt khởi động cùng Windows
-    app.set_startup_callback(set_startup_windows)
-    tray = create_tray_icon(root, app)
-    root.mainloop()
-    l.join()
+listener = keyboard.Listener()
+listener.on_press = for_canonical(listener, multi_hotkey.press)
+listener.on_release = for_canonical(listener, multi_hotkey.release)
+listener.start()
+
+root = Window(themename="flatly")
+# Đặt icon cho cửa sổ chính
+try:
+    import os
+    from tkinter import PhotoImage
+    icon_path = os.path.join(os.path.dirname(__file__), "Resource", "icon.png")
+    if os.path.exists(icon_path):
+        try:
+            from PIL import Image, ImageTk
+            img = Image.open(icon_path)
+            tk_icon = ImageTk.PhotoImage(img)
+        except Exception:
+            tk_icon = PhotoImage(file=icon_path)
+        root.iconphoto(True, tk_icon)
+except Exception:
+    pass
+show_on_startup = load_show_on_startup()
+startup_enabled = load_startup_enabled()
+if startup_enabled and not show_on_startup:
+    root.withdraw()
+app = MainGUI(root)
+app.set_hotkey_manager(multi_hotkey)
+app.set_api_key_updater(update_ITM_TRANSLATE_KEY)
+app.set_hotkey_updater(update_hotkeys_from_gui)
+app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), startup_enabled, show_on_startup)
+app.set_startup_callback(set_startup_windows)
+tray = create_tray_icon(root, app)
+check_queue()
+root.mainloop()
+# KHÔNG join listener, KHÔNG dùng with để tránh lỗi thread với Tkinter/ttkbootstrap

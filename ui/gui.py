@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import messagebox
 import json
 import os
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 class MainGUI:
     def __init__(self, root):
         self.root = root
         self.root.title('ITM Translate')
-        self.root.geometry('480x320')
+        self.root.geometry('850x520')
         self.hotkey_manager = None
         self.api_key_updater = None
         self.hotkey_updater = None
@@ -31,8 +33,7 @@ class MainGUI:
         self.initial_show_on_startup = show_on_startup
         self.create_tabs()
     def create_tabs(self):
-        from tkinter import ttk
-        tab_control = ttk.Notebook(self.root)
+        tab_control = ttk.Notebook(self.root, bootstyle=PRIMARY)
         self.settings_tab = ttk.Frame(tab_control)
         self.advanced_tab = ttk.Frame(tab_control)
         tab_control.add(self.settings_tab, text='Cài Đặt')
@@ -41,27 +42,87 @@ class MainGUI:
         self.create_settings_tab()
         self.create_advanced_tab()
     def create_settings_tab(self):
-        tk.Label(self.settings_tab, text='Cài đặt phím tắt:', font=('Segoe UI', 12, 'bold')).pack(pady=10)
+        style = ttk.Style()
+        style.theme_use('flatly')
+        title = ttk.Label(self.settings_tab, text='Cài đặt phím tắt & ngôn ngữ', font=('Segoe UI', 18, 'bold'), bootstyle=PRIMARY)
+        title.pack(pady=(18, 18))
         self.entries = {}
-        # Các trường nhập hotkey
-        frame = tk.Frame(self.settings_tab)
-        frame.pack(pady=5)
-        tk.Label(frame, text='Dịch popup:').grid(row=0, column=0, sticky='e')
-        self.entries['translate_popup'] = tk.Entry(frame, width=20)
-        self.entries['translate_popup'].insert(0, self.initial_hotkeys.get('translate_popup', '<ctrl>+q') if self.initial_hotkeys else '<ctrl>+q')
-        self.entries['translate_popup'].grid(row=0, column=1)
-        tk.Label(frame, text='Dịch & thay thế:').grid(row=1, column=0, sticky='e')
-        self.entries['replace_translate'] = tk.Entry(frame, width=20)
-        self.entries['replace_translate'].insert(0, self.initial_hotkeys.get('replace_translate', '<ctrl>+d') if self.initial_hotkeys else '<ctrl>+d')
-        self.entries['replace_translate'].grid(row=1, column=1)
+        self.lang_selects = {}
+        lang_list = [
+            ('en', 'English'),
+            ('vi', 'Tiếng Việt'),
+            ('ja', '日本語'),
+            ('zh', '中文'),
+            ('fr', 'Français'),
+            ('de', 'Deutsch'),
+            ('ko', '한국어'),
+            ('ru', 'Русский'),
+            ('es', 'Español'),
+            ('th', 'ไทย'),
+        ]
+        # --- Nhóm 1 ---
+        group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ nhất:', bootstyle=INFO)
+        group1.pack(padx=24, pady=12, fill='x', ipadx=6, ipady=6)
+        for i in range(6):
+            group1.columnconfigure(i, weight=1)
+        ttk.Label(group1, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=6, sticky='w', padx=8, pady=(6,2))
+        ttk.Label(group1, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='w', padx=(8,2), pady=(8,2))
+        ttk.Label(group1, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=2)
+        self.entries['translate_popup'] = ttk.Entry(group1, width=15)
+        self.entries['translate_popup'].insert(0, self.initial_hotkeys.get('translate_popup', '<ctrl>+1') if self.initial_hotkeys else '<ctrl>+1')
+        self.entries['translate_popup'].grid(row=2, column=1, sticky='w', pady=2)
+        ttk.Label(group1, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=2)
+        self.entries['replace_translate'] = ttk.Entry(group1, width=15)
+        self.entries['replace_translate'].insert(0, self.initial_hotkeys.get('replace_translate', '<ctrl>+2') if self.initial_hotkeys else '<ctrl>+2')
+        self.entries['replace_translate'].grid(row=3, column=1, sticky='w', pady=2)
+        ttk.Label(group1, text='Ngôn ngữ đầu tiên:').grid(row=2, column=2, sticky='e', padx=(18,2), pady=2)
+        self.lang_selects['group1_src'] = ttk.Combobox(group1, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group1_src'].set('Bất kỳ')
+        self.lang_selects['group1_src'].grid(row=2, column=3, sticky='w', pady=2)
+        ttk.Label(group1, text='Ngôn ngữ thứ 2:').grid(row=2, column=4, sticky='e', padx=(8,2), pady=2)
+        self.lang_selects['group1_default'] = ttk.Combobox(group1, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group1_default'].set('vi - Tiếng Việt')
+        self.lang_selects['group1_default'].grid(row=2, column=5, sticky='w', pady=2)
+        ttk.Label(group1, text='Ngôn ngữ thứ 3:').grid(row=3, column=2, sticky='e', padx=(18,2), pady=2)
+        self.lang_selects['group1_dest'] = ttk.Combobox(group1, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group1_dest'].set('en - English')
+        self.lang_selects['group1_dest'].grid(row=3, column=3, sticky='w', pady=2)
+
+        # --- Nhóm 2 ---
+        group2 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ hai:', bootstyle=INFO)
+        group2.pack(padx=24, pady=12, fill='x', ipadx=6, ipady=6)
+        for i in range(6):
+            group2.columnconfigure(i, weight=1)
+        ttk.Label(group2, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=6, sticky='w', padx=8, pady=(6,2))
+        ttk.Label(group2, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='w', padx=(8,2), pady=(8,2))
+        ttk.Label(group2, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=2)
+        self.entries['translate_popup2'] = ttk.Entry(group2, width=15)
+        self.entries['translate_popup2'].insert(0, self.initial_hotkeys.get('translate_popup2', '<ctrl>+q') if self.initial_hotkeys else '<ctrl>+q')
+        self.entries['translate_popup2'].grid(row=2, column=1, sticky='w', pady=2)
+        ttk.Label(group2, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=2)
+        self.entries['replace_translate2'] = ttk.Entry(group2, width=15)
+        self.entries['replace_translate2'].insert(0, self.initial_hotkeys.get('replace_translate2', '<ctrl>+w') if self.initial_hotkeys else '<ctrl>+w')
+        self.entries['replace_translate2'].grid(row=3, column=1, sticky='w', pady=2)
+        ttk.Label(group2, text='Ngôn ngữ đầu tiên:').grid(row=2, column=2, sticky='e', padx=(18,2), pady=2)
+        self.lang_selects['group2_src'] = ttk.Combobox(group2, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group2_src'].set('Bất kỳ')
+        self.lang_selects['group2_src'].grid(row=2, column=3, sticky='w', pady=2)
+        ttk.Label(group2, text='Ngôn ngữ thứ 2:').grid(row=2, column=4, sticky='e', padx=(8,2), pady=2)
+        self.lang_selects['group2_default'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group2_default'].set('vi - Tiếng Việt')
+        self.lang_selects['group2_default'].grid(row=2, column=5, sticky='w', pady=2)
+        ttk.Label(group2, text='Ngôn ngữ thứ 3:').grid(row=3, column=2, sticky='e', padx=(18,2), pady=2)
+        self.lang_selects['group2_dest'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        self.lang_selects['group2_dest'].set('en - English')
+        self.lang_selects['group2_dest'].grid(row=3, column=3, sticky='w', pady=2)
+
         # Trường nhập ITM_TRANSLATE_KEY
-        tk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold')).pack(pady=(20, 5))
-        self.api_key_entry = tk.Entry(self.settings_tab, width=50, show='*')
+        ttk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(28, 5))
+        self.api_key_entry = ttk.Entry(self.settings_tab, width=50, show='*')
         if self.initial_api_key:
             self.api_key_entry.insert(0, self.initial_api_key)
         self.api_key_entry.pack()
-        # Nút lưu
-        tk.Button(self.settings_tab, text='Lưu cấu hình', command=self.save_settings).pack(pady=15)
+        ttk.Button(self.settings_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
     def create_advanced_tab(self):
         # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
