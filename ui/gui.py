@@ -4,6 +4,7 @@ import json
 import os
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
+import keyboard
 
 class MainGUI:
     def __init__(self, root):
@@ -132,6 +133,69 @@ class MainGUI:
             self.api_key_entry.insert(0, self.initial_api_key)
         self.api_key_entry.pack()
         ttk.Button(self.settings_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
+        def on_hotkey_entry_focus_in(event):
+            entry = event.widget
+            entry.delete(0, tk.END)
+            entry._pressed_mods = set()
+            entry._main_key = None
+            if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
+                self.hotkey_manager.enabled = False
+            def on_key_press(e):
+                mod_map = {'Control_L': 'ctrl', 'Control_R': 'ctrl', 'Shift_L': 'shift', 'Shift_R': 'shift', 'Alt_L': 'alt', 'Alt_R': 'alt'}
+                if e.keysym in mod_map:
+                    entry._pressed_mods.add(mod_map[e.keysym])
+                    return
+                if e.keysym == 'Escape':
+                    entry.delete(0, tk.END)
+                    entry.unbind('<KeyPress>')
+                    entry.unbind('<KeyRelease>')
+                    if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
+                        self.hotkey_manager.enabled = True
+                    return
+                mods = sorted(entry._pressed_mods)
+                key = e.keysym.lower()
+                if key in mods:
+                    return
+                entry._main_key = key
+                # Chỉ cho phép duy nhất Ctrl + 1 phím chính
+                if len(mods) == 1 and mods[0] == 'ctrl':
+                    hotkey = '<ctrl>+' + key
+                    entry.delete(0, tk.END)
+                    entry.insert(0, hotkey)
+                else:
+                    entry.delete(0, tk.END)
+                    messagebox.showerror('Lỗi phím tắt', 'Chỉ cho phép phím tắt dạng Ctrl + 1 phím bất kỳ!')
+                entry.unbind('<KeyPress>')
+                entry.unbind('<KeyRelease>')
+                if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
+                    self.hotkey_manager.enabled = True
+            def on_key_release(e):
+                mod_map = {'Control_L': 'ctrl', 'Control_R': 'ctrl', 'Shift_L': 'shift', 'Shift_R': 'shift', 'Alt_L': 'alt', 'Alt_R': 'alt'}
+                if e.keysym in mod_map and mod_map[e.keysym] in entry._pressed_mods:
+                    entry._pressed_mods.remove(mod_map[e.keysym])
+            def on_focus_out(e):
+                if not getattr(entry, '_main_key', None):
+                    entry.delete(0, tk.END)
+                entry.unbind('<KeyPress>')
+                entry.unbind('<KeyRelease>')
+                if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
+                    self.hotkey_manager.enabled = True
+            entry.bind('<KeyPress>', on_key_press)
+            entry.bind('<KeyRelease>', on_key_release)
+            entry.bind('<FocusOut>', on_focus_out)
+        for entry in self.entries.values():
+            entry.config(state='readonly')
+            def enable_entry(e, ent=entry):
+                ent.config(state='normal')
+            def disable_entry(e, ent=entry):
+                ent.config(state='readonly')
+            entry.bind('<FocusIn>', on_hotkey_entry_focus_in)
+            entry.bind('<FocusIn>', enable_entry, add='+')
+            entry.bind('<FocusOut>', disable_entry, add='+')
+            # Đảm bảo luôn readonly sau khi nhập phím tắt
+            def readonly_after_key(e, ent=entry):
+                ent.config(state='readonly')
+            entry.bind('<KeyRelease>', readonly_after_key, add='+')
     def create_advanced_tab(self):
         # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
@@ -221,3 +285,27 @@ class MainGUI:
         if api_key and hasattr(self, 'api_key_updater') and self.api_key_updater:
             self.api_key_updater(api_key)
         messagebox.showinfo('Lưu thành công', 'Đã lưu cài đặt mới!')
+
+class MultiHotKey:
+    def __init__(self, hotkey_map):
+        self.set_hotkeys(hotkey_map)
+        self.enabled = True
+    def set_hotkeys(self, hotkey_map):
+        self.hotkeys = [(frozenset(keyboard.HotKey.parse(k)), v) for k, v in hotkey_map.items()]
+        self._pressed = set()
+        self._active = set()
+    def press(self, key):
+        if not getattr(self, 'enabled', True):
+            return
+        self._pressed.add(key)
+        for combo, callback in self.hotkeys:
+            if combo <= self._pressed and combo not in self._active:
+                self._active.add(combo)
+                callback()
+    def release(self, key):
+        if not getattr(self, 'enabled', True):
+            return
+        self._pressed.discard(key)
+        for combo in list(self._active):
+            if not combo <= self._pressed:
+                self._active.discard(combo)
