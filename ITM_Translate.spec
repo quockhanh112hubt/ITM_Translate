@@ -5,8 +5,8 @@ a = Analysis(
     ['ITM_Translate.py'],
     pathex=[],
     binaries=[],
-    datas=[('Resource/icon.png', 'Resource')],
-    hiddenimports=[],
+    datas=[('Resource/icon.ico', 'Resource')],
+    hiddenimports=['ttkbootstrap'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['Resource\\icon.png'],
+    icon=['Resource\\icon.ico'],
 )
