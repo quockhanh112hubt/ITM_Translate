@@ -94,7 +94,7 @@ def show_popup(text, master=None):
         fg='#222',
         font=('Segoe UI', 12),
         width=max_chars_per_line,
-        height=height_lines,
+        height=height_lines+1,
         borderwidth=0,
         highlightthickness=0
     )

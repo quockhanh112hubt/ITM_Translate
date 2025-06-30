@@ -10,7 +10,7 @@ class MainGUI:
     def __init__(self, root):
         self.root = root
         self.root.title('ITM Translate')
-        self.root.geometry('1050x620')
+        self.root.geometry('1050x720')
         self.hotkey_manager = None
         self.api_key_updater = None
         self.hotkey_updater = None
@@ -34,10 +34,10 @@ class MainGUI:
         self.initial_show_on_startup = show_on_startup
         # Đọc lại ngôn ngữ nếu có
         self.initial_langs = {
-            'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Bất kỳ'),
+            'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Any Language'),
             'Ngon_ngu_thu_2': hotkeys_dict.get('Ngon_ngu_thu_2', 'Tiếng Việt'),
             'Ngon_ngu_thu_3': hotkeys_dict.get('Ngon_ngu_thu_3', 'English'),
-            'Nhom2_Ngon_ngu_dau_tien': hotkeys_dict.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'),
+            'Nhom2_Ngon_ngu_dau_tien': hotkeys_dict.get('Nhom2_Ngon_ngu_dau_tien', 'Any Language'),
             'Nhom2_Ngon_ngu_thu_2': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_2', 'Tiếng Việt'),
             'Nhom2_Ngon_ngu_thu_3': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_3', 'English'),
         }
@@ -109,8 +109,8 @@ class MainGUI:
         self.entries['translate_popup_key'] = ttk.Combobox(group1, values=main_keys, width=7, state='readonly')
         self.entries['translate_popup_key'].set(key.upper())
         self.entries['translate_popup_key'].grid(row=2, column=3, padx=2, pady=8)
-        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=['Bất kỳ']+lang_list, width=15, state='readonly')
-        self.lang_selects['Ngon_ngu_dau_tien'].set(self.initial_langs.get('Ngon_ngu_dau_tien', 'Bất kỳ'))
+        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=['Any Language']+lang_list, width=15, state='readonly')
+        self.lang_selects['Ngon_ngu_dau_tien'].set(self.initial_langs.get('Ngon_ngu_dau_tien', 'Any Language'))
         self.lang_selects['Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
         self.lang_selects['Ngon_ngu_thu_2'] = ttk.Combobox(group1, values=lang_list, width=15, state='readonly')
         self.lang_selects['Ngon_ngu_thu_2'].set(self.initial_langs.get('Ngon_ngu_thu_2', 'Tiếng Việt'))
@@ -157,8 +157,8 @@ class MainGUI:
         self.entries['translate_popup2_key'] = ttk.Combobox(group2, values=main_keys, width=7, state='readonly')
         self.entries['translate_popup2_key'].set(key.upper())
         self.entries['translate_popup2_key'].grid(row=2, column=3, padx=2, pady=8)
-        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Bất kỳ']+lang_list, width=15, state='readonly')
-        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].set(self.initial_langs.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'))
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Any Language']+lang_list, width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].set(self.initial_langs.get('Nhom2_Ngon_ngu_dau_tien', 'Any Language'))
         self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
         self.lang_selects['Nhom2_Ngon_ngu_thu_2'] = ttk.Combobox(group2, values=lang_list, width=15, state='readonly')
         self.lang_selects['Nhom2_Ngon_ngu_thu_2'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_2', 'Tiếng Việt'))
@@ -252,7 +252,6 @@ class MainGUI:
     def update_program(self):
         messagebox.showinfo("Cập nhật", "Chức năng cập nhật sẽ được bổ sung sau.")
     def save_settings(self):
-        # Lấy hotkey từ các combobox
         def join_hotkey(mod1, mod2, key):
             mods = []
             if mod1 != '<none>':
@@ -260,6 +259,32 @@ class MainGUI:
             if mod2 != '<none>' and mod2 != mod1:
                 mods.append(mod2)
             return '+'.join(mods + [key.lower()])
+        # Lấy giá trị các phím tắt
+        combos = [
+            (self.entries['translate_popup_mod1'].get(), self.entries['translate_popup_mod2'].get(), self.entries['translate_popup_key'].get()),
+            (self.entries['replace_translate_mod1'].get(), self.entries['replace_translate_mod2'].get(), self.entries['replace_translate_key'].get()),
+            (self.entries['translate_popup2_mod1'].get(), self.entries['translate_popup2_mod2'].get(), self.entries['translate_popup2_key'].get()),
+            (self.entries['replace_translate2_mod1'].get(), self.entries['replace_translate2_mod2'].get(), self.entries['replace_translate2_key'].get()),
+        ]
+        # 1. Kiểm tra Modifier 1 và Modifier 2 không được giống nhau
+        for idx, (mod1, mod2, key) in enumerate(combos):
+            if mod1 != '<none>' and mod1 == mod2:
+                messagebox.showerror("Lỗi cấu hình", f"Modifier 1 và Modifier 2 không được giống nhau (ở dòng {idx+1})!")
+                return
+        # 2. Kiểm tra tổ hợp phím tắt không trùng nhau
+        hotkey_strs = [join_hotkey(*c) for c in combos]
+        if len(set(hotkey_strs)) < len(hotkey_strs):
+            messagebox.showerror("Lỗi cấu hình", "Các tổ hợp phím tắt không được trùng nhau!")
+            return
+        # 3. Kiểm tra ngôn ngữ trong từng nhóm không trùng nhau
+        group1_langs = [self.lang_selects['Ngon_ngu_dau_tien'].get(), self.lang_selects['Ngon_ngu_thu_2'].get(), self.lang_selects['Ngon_ngu_thu_3'].get()]
+        group2_langs = [self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get()]
+        if len(set(group1_langs)) < 3:
+            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn thứ nhất không được trùng nhau!")
+            return
+        if len(set(group2_langs)) < 3:
+            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn thứ hai không được trùng nhau!")
+            return
         new_hotkeys = {
             'translate_popup': join_hotkey(self.entries['translate_popup_mod1'].get(), self.entries['translate_popup_mod2'].get(), self.entries['translate_popup_key'].get()),
             'replace_translate': join_hotkey(self.entries['replace_translate_mod1'].get(), self.entries['replace_translate_mod2'].get(), self.entries['replace_translate_key'].get()),

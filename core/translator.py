@@ -13,7 +13,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3):
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
     # Tạo prompt phù hợp với ngôn ngữ đầu vào
-    if Ngon_ngu_dau_tien.strip().lower() in ["Any", "Bất kỳ"]:
+    if Ngon_ngu_dau_tien.strip().lower() in ["Any Language", "Bất kỳ"]:
         prompt = f"""
                 You are a translation model.
 
