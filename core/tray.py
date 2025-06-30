@@ -14,8 +14,8 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 def create_image():
-    # Sử dụng icon từ file Resource/icon.png, nếu không có thì tạo icon mặc định
-    icon_path = resource_path(os.path.join('Resource', 'icon.png'))
+    # Sử dụng icon từ file Resource/icon.ico, nếu không có thì tạo icon mặc định
+    icon_path = resource_path(os.path.join('Resource', 'icon.ico'))
     # Debug: in ra đường dẫn icon thực tế
     # print("Icon path:", icon_path)
     if os.path.exists(icon_path):

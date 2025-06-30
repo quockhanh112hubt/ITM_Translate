@@ -78,16 +78,23 @@ def show_popup(text, master=None):
     # Tạo frame với màu nền nhẹ, viền bo tròn
     frame = tk.Frame(win, bg='#f8f9fa', bd=2, relief='groove')
     frame.pack(fill='both', expand=True, padx=10, pady=10)
-    # Đặt width cho Text widget vừa phải, wrap word
-    num_lines = text.count('\n') + 1
+    # Đặt width cố định cho Text widget để text tự động xuống dòng
+    max_chars_per_line = 70
+    # Tính số dòng thực tế dựa trên số ký tự mỗi dòng (wrap word)
+    import textwrap
+    wrapped_lines = []
+    for line in text.splitlines() or ['']:
+        wrapped_lines.extend(textwrap.wrap(line, width=max_chars_per_line) or [''])
+    num_lines = len(wrapped_lines)
+    height_lines = min(max(num_lines, 2), 20)  # min 2, max 20 dòng
     text_widget = tk.Text(
         frame,
         wrap='word',
         bg='#f8f9fa',
         fg='#222',
         font=('Segoe UI', 12),
-        height=min(max(num_lines, 2), 20),
-        width=50,  # width theo ký tự
+        width=max_chars_per_line,
+        height=height_lines,
         borderwidth=0,
         highlightthickness=0
     )
@@ -95,11 +102,11 @@ def show_popup(text, master=None):
     text_widget.pack(fill='both', expand=True, padx=0, pady=0)
     text_widget.config(state='normal')
     win.update_idletasks()
-    # Lấy kích thước yêu cầu thực tế
+    # Đặt width/height cố định dựa trên widget
     req_width = text_widget.winfo_reqwidth()
     req_height = text_widget.winfo_reqheight()
-    width = min(max(req_width + 20, 320), 600)
-    height = min(max(req_height + 20, 60), 1200)
+    width = req_width + 20
+    height = req_height + 20
     text_widget.config(state='disabled')
     # Cho phép select/copy, không đóng khi click vào text
     def enable_select(event):
