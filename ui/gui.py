@@ -10,7 +10,7 @@ class MainGUI:
     def __init__(self, root):
         self.root = root
         self.root.title('ITM Translate')
-        self.root.geometry('1050x720')
+        self.root.geometry('1050x420')
         self.hotkey_manager = None
         self.api_key_updater = None
         self.hotkey_updater = None
@@ -84,7 +84,7 @@ class MainGUI:
             else:
                 return mods[0], mods[1], key
         # --- Nhóm 1 ---
-        group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ nhất:', bootstyle=INFO)
+        group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn mặc định:', bootstyle=INFO)
         group1.pack(padx=40, pady=(16, 20), fill='x', ipadx=10, ipady=10)
         for i in range(8):
             group1.columnconfigure(i, weight=1)
@@ -132,8 +132,21 @@ class MainGUI:
         self.entries['replace_translate_key'].grid(row=3, column=3, padx=2, pady=8)
 
         # --- Nhóm 2 ---
-        group2 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ hai:', bootstyle=INFO)
-        group2.pack(padx=40, pady=(12, 18), fill='x', ipadx=10, ipady=10)
+        self.group2_visible = False
+        def toggle_group2():
+            if self.group2_visible:
+                group2.pack_forget()
+                toggle_btn.config(text='Hiện Tuỳ chọn tuỳ chỉnh')
+                self.root.geometry('1050x420')
+                self.group2_visible = False
+            else:
+                group2.pack(padx=40, pady=(12, 18), fill='x', ipadx=10, ipady=10)
+                toggle_btn.config(text='Ẩn Tuỳ chọn tuỳ chỉnh')
+                self.root.geometry('1050x650')
+                self.group2_visible = True
+        toggle_btn = ttk.Button(self.settings_tab, text='Hiện Tuỳ chọn tuỳ chỉnh', command=toggle_group2, bootstyle=SECONDARY)
+        toggle_btn.pack(pady=(0, 2))
+        group2 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn tuỳ chỉnh:', bootstyle=INFO)
         for i in range(8):
             group2.columnconfigure(i, weight=1)
         ttk.Label(group2, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=8, sticky='w', padx=8, pady=(10,6))
@@ -180,24 +193,6 @@ class MainGUI:
         self.entries['replace_translate2_key'].grid(row=3, column=3, padx=2, pady=8)
 
 
-        # Trường nhập ITM_TRANSLATE_KEY
-        ttk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(28, 5))
-        self.api_key_entry = ttk.Entry(self.settings_tab, width=50, show='*')
-        if self.initial_api_key:
-            self.api_key_entry.insert(0, self.initial_api_key)
-        self.api_key_entry.pack()
-        ttk.Button(self.settings_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
-        def on_hotkey_entry_focus_in(event):
-            pass  # Không còn dùng nữa
-        # Không cần xử lý readonly cho combobox phím tắt
-        for entry in self.entries.values():
-            entry.config(state='readonly')
-            def enable_entry(e, ent=entry):
-                ent.config(state='normal')
-            def disable_entry(e, ent=entry):
-                ent.config(state='readonly')
-            entry.bind('<FocusIn>', enable_entry, add='+')
-            entry.bind('<FocusOut>', disable_entry, add='+')
     def create_advanced_tab(self):
         # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
@@ -221,6 +216,14 @@ class MainGUI:
         tk.Button(self.advanced_tab, text="Thông tin về chương trình", command=self.show_about).pack(fill='x', padx=20, pady=5)
         # Nút cập nhật chương trình (chưa xử lý logic)
         tk.Button(self.advanced_tab, text="Cập nhật chương trình", command=self.update_program).pack(fill='x', padx=20, pady=5)
+        # Thêm phần nhập ITM_TRANSLATE_KEY vào đầu tab Nâng Cao
+        ttk.Label(self.advanced_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(18, 5))
+        self.api_key_entry = ttk.Entry(self.advanced_tab, width=50, show='*')
+        if self.initial_api_key:
+            self.api_key_entry.insert(0, self.initial_api_key)
+        self.api_key_entry.pack()
+        ttk.Button(self.advanced_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
+
     def on_startup_toggle(self):
         enabled = self.startup_var.get()
         # Lưu trạng thái vào file (để nhớ khi khởi động lại)
@@ -280,10 +283,10 @@ class MainGUI:
         group1_langs = [self.lang_selects['Ngon_ngu_dau_tien'].get(), self.lang_selects['Ngon_ngu_thu_2'].get(), self.lang_selects['Ngon_ngu_thu_3'].get()]
         group2_langs = [self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get()]
         if len(set(group1_langs)) < 3:
-            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn thứ nhất không được trùng nhau!")
+            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn mặc định không được trùng nhau!")
             return
         if len(set(group2_langs)) < 3:
-            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn thứ hai không được trùng nhau!")
+            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn tuỳ chỉnh không được trùng nhau!")
             return
         new_hotkeys = {
             'translate_popup': join_hotkey(self.entries['translate_popup_mod1'].get(), self.entries['translate_popup_mod2'].get(), self.entries['translate_popup_key'].get()),
