@@ -88,10 +88,22 @@ def check_queue():
         pass
     root.after(50, check_queue)
 
+def load_language_settings_from_file():
+    if os.path.exists(HOTKEYS_FILE):
+        try:
+            with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3', 'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3']:
+                    if k in data:
+                        global_language_settings[k] = data[k]
+        except Exception:
+            pass
+
 def _on_activate_translate():
     loading = show_loading_popup(root)
     def do_translate():
         try:
+            load_language_settings_from_file()
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
@@ -126,6 +138,7 @@ def _on_activate_replace():
     loading = show_loading_popup(root)
     def do_replace():
         try:
+            load_language_settings_from_file()
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
@@ -176,6 +189,7 @@ def _on_activate_translate_group2():
     loading = show_loading_popup(root)
     def do_translate():
         try:
+            load_language_settings_from_file()
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
@@ -208,6 +222,7 @@ def _on_activate_replace_group2():
     loading = show_loading_popup(root)
     def do_replace():
         try:
+            load_language_settings_from_file()
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
@@ -261,11 +276,11 @@ STARTUP_FILE = "startup.json"
 
 global_language_settings = {
     'Ngon_ngu_dau_tien': 'Bất kỳ',
-    'Ngon_ngu_thu_2': 'vi - Tiếng Việt',
-    'Ngon_ngu_thu_3': 'en - English',
+    'Ngon_ngu_thu_2': 'Tiếng Việt',
+    'Ngon_ngu_thu_3': 'English',
     'Nhom2_Ngon_ngu_dau_tien': 'Bất kỳ',
-    'Nhom2_Ngon_ngu_thu_2': 'vi - Tiếng Việt',
-    'Nhom2_Ngon_ngu_thu_3': 'en - English',
+    'Nhom2_Ngon_ngu_thu_2': 'Tiếng Việt',
+    'Nhom2_Ngon_ngu_thu_3': 'English',
 }
 
 def load_hotkeys():
@@ -403,12 +418,14 @@ class MultiHotKey:
         self.hotkeys = [(frozenset(keyboard.HotKey.parse(k)), v) for k, v in hotkey_map.items()]
         self._pressed = set()
         self._active = set()
+    def reset_state(self):
+        self._pressed.clear()
+        self._active.clear()
     def press(self, key):
         self._pressed.add(key)
         for combo, callback in self.hotkeys:
             if combo <= self._pressed and combo not in self._active:
                 self._active.add(combo)
-                # Chỉ queue action khi tổ hợp phím thực sự được nhấn và chưa active
                 callback()
     def release(self, key):
         self._pressed.discard(key)
@@ -422,6 +439,7 @@ class MultiHotKey:
             self._active.discard(combo)
     def update_hotkeys(self, new_hotkey_map):
         self.set_hotkeys(new_hotkey_map)
+        self.reset_state()
 
 multi_hotkey = MultiHotKey(hotkeys)
 
@@ -429,8 +447,21 @@ def update_ITM_TRANSLATE_KEY(new_key):
     os.environ["ITM_TRANSLATE_KEY"] = new_key
     save_ITM_TRANSLATE_KEY(new_key)
 
-def update_hotkeys_from_gui(new_hotkeys):
-    # new_hotkeys: dict {action: hotkey_str}
+def load_hotkey_actions_from_file():
+    if os.path.exists(HOTKEYS_FILE):
+        try:
+            with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                mapped = {}
+                for action, hotkey in data.items():
+                    if action in action_map and hotkey:
+                        mapped[hotkey] = action_map[action]
+                if mapped:
+                    multi_hotkey.update_hotkeys(mapped)
+        except Exception:
+            pass
+
+def update_hotkeys_from_gui(new_hotkeys, app=None):
     mapped = {}
     for action, hotkey in new_hotkeys.items():
         if hotkey and action in action_map:
@@ -438,20 +469,19 @@ def update_hotkeys_from_gui(new_hotkeys):
     if mapped:
         multi_hotkey.update_hotkeys(mapped)
         save_hotkeys(new_hotkeys)
-    # Cập nhật lại biến ngôn ngữ toàn cục sau khi lưu cấu hình
-    if os.path.exists(HOTKEYS_FILE):
-        try:
-            with open(HOTKEYS_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3', 'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3']:
-                    if k in data:
-                        global_language_settings[k] = data[k]
-        except Exception:
-            pass
+    # Cập nhật lại biến ngôn ngữ toàn cục ngay lập tức
+    for k in ['Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3', 'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3']:
+        if k in new_hotkeys:
+            global_language_settings[k] = new_hotkeys[k]
+    load_hotkey_actions_from_file()
+    # Không cần khởi động lại listener
+    if app is not None:
+        app.set_initial_settings(new_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled(), load_show_on_startup())
 
+# Khởi tạo listener một lần duy nhất
 listener = keyboard.Listener()
-listener.on_press = for_canonical(listener, multi_hotkey.press)
-listener.on_release = for_canonical(listener, multi_hotkey.release)
+listener.on_press = for_canonical(listener, lambda key, *args: multi_hotkey.press(key))
+listener.on_release = for_canonical(listener, lambda key, *args: multi_hotkey.release(key))
 listener.start()
 
 root = Window(themename="flatly")

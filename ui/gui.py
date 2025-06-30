@@ -10,7 +10,7 @@ class MainGUI:
     def __init__(self, root):
         self.root = root
         self.root.title('ITM Translate')
-        self.root.geometry('850x620')
+        self.root.geometry('1050x620')
         self.hotkey_manager = None
         self.api_key_updater = None
         self.hotkey_updater = None
@@ -35,11 +35,11 @@ class MainGUI:
         # Đọc lại ngôn ngữ nếu có
         self.initial_langs = {
             'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Bất kỳ'),
-            'Ngon_ngu_thu_2': hotkeys_dict.get('Ngon_ngu_thu_2', 'vi - Tiếng Việt'),
-            'Ngon_ngu_thu_3': hotkeys_dict.get('Ngon_ngu_thu_3', 'en - English'),
+            'Ngon_ngu_thu_2': hotkeys_dict.get('Ngon_ngu_thu_2', 'Tiếng Việt'),
+            'Ngon_ngu_thu_3': hotkeys_dict.get('Ngon_ngu_thu_3', 'English'),
             'Nhom2_Ngon_ngu_dau_tien': hotkeys_dict.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'),
-            'Nhom2_Ngon_ngu_thu_2': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_2', 'vi - Tiếng Việt'),
-            'Nhom2_Ngon_ngu_thu_3': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_3', 'en - English'),
+            'Nhom2_Ngon_ngu_thu_2': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_2', 'Tiếng Việt'),
+            'Nhom2_Ngon_ngu_thu_3': hotkeys_dict.get('Nhom2_Ngon_ngu_thu_3', 'English'),
         }
         self.create_tabs()
     def create_tabs(self):
@@ -59,72 +59,126 @@ class MainGUI:
         self.entries = {}
         self.lang_selects = {}
         lang_list = [
-            ('EN', 'English'),
-            ('VI', 'Tiếng Việt'),
-            ('KO', '한국어'),
-            ('ZH', '中文'),
-            ('JA', '日本語'),
-            ('FR', 'Français'),
-            ('DE', 'Deutsch'),
-            ('RU', 'Русский'),
-            ('ES', 'Español'),
-            ('TH', 'ไทย'),
+            'English',
+            'Tiếng Việt',
+            '한국어',
+            '中文',
+            '日本語',
+            'Français',
+            'Deutsch',
+            'Русский',
+            'Español',
+            'ไทย',
         ]
+        # Khai báo lại modifiers, main_keys, split_hotkey
+        modifiers = ['<none>', '<ctrl>', '<alt>', '<shift>']
+        main_keys = [chr(i) for i in range(65, 91)] + [str(i) for i in range(0, 10)]  # A-Z, 0-9
+        def split_hotkey(hotkey):
+            parts = hotkey.split('+')
+            mods = [p for p in parts if p.startswith('<') and p.endswith('>')]
+            key = parts[-1] if parts else 'q'
+            if len(mods) == 0:
+                return '<none>', '<none>', key
+            elif len(mods) == 1:
+                return mods[0], '<none>', key
+            else:
+                return mods[0], mods[1], key
         # --- Nhóm 1 ---
         group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ nhất:', bootstyle=INFO)
-        group1.pack(padx=24, pady=12, fill='x', ipadx=6, ipady=6)
-        for i in range(6):
+        group1.pack(padx=40, pady=(16, 20), fill='x', ipadx=10, ipady=10)
+        for i in range(8):
             group1.columnconfigure(i, weight=1)
-        ttk.Label(group1, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=6, sticky='w', padx=8, pady=(6,2))
-        ttk.Label(group1, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='w', padx=(8,2), pady=(8,2))
-        ttk.Label(group1, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=2)
-        self.entries['translate_popup'] = ttk.Entry(group1, width=15)
-        self.entries['translate_popup'].insert(0, self.initial_hotkeys.get('translate_popup', '<ctrl>+1') if self.initial_hotkeys else '<ctrl>+1')
-        self.entries['translate_popup'].grid(row=2, column=1, sticky='w', pady=2)
-        ttk.Label(group1, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=2)
-        self.entries['replace_translate'] = ttk.Entry(group1, width=15)
-        self.entries['replace_translate'].insert(0, self.initial_hotkeys.get('replace_translate', '<ctrl>+2') if self.initial_hotkeys else '<ctrl>+2')
-        self.entries['replace_translate'].grid(row=3, column=1, sticky='w', pady=2)
-        ttk.Label(group1, text='Ngôn ngữ đầu tiên:').grid(row=2, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        ttk.Label(group1, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=8, sticky='w', padx=8, pady=(10,6))
+        # Tiêu đề các cột
+        ttk.Label(group1, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
+        ttk.Label(group1, text='Modifier 1').grid(row=1, column=1, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text='Modifier 2').grid(row=1, column=2, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text='Phím chính').grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text='Ngôn ngữ đầu tiên:').grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
+        ttk.Label(group1, text='Ngôn ngữ thứ 2:').grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group1, text='Ngôn ngữ thứ 3:').grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
+        # Dịch popup
+        ttk.Label(group1, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
+        mod1, mod2, key = split_hotkey(self.initial_hotkeys.get('translate_popup', '<ctrl>+q'))
+        self.entries['translate_popup_mod1'] = ttk.Combobox(group1, values=modifiers, width=7, state='readonly')
+        self.entries['translate_popup_mod1'].set(mod1)
+        self.entries['translate_popup_mod1'].grid(row=2, column=1, padx=2, pady=8)
+        self.entries['translate_popup_mod2'] = ttk.Combobox(group1, values=modifiers, width=7, state='readonly')
+        self.entries['translate_popup_mod2'].set(mod2)
+        self.entries['translate_popup_mod2'].grid(row=2, column=2, padx=2, pady=8)
+        self.entries['translate_popup_key'] = ttk.Combobox(group1, values=main_keys, width=7, state='readonly')
+        self.entries['translate_popup_key'].set(key.upper())
+        self.entries['translate_popup_key'].grid(row=2, column=3, padx=2, pady=8)
+        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=['Bất kỳ']+lang_list, width=15, state='readonly')
         self.lang_selects['Ngon_ngu_dau_tien'].set(self.initial_langs.get('Ngon_ngu_dau_tien', 'Bất kỳ'))
-        self.lang_selects['Ngon_ngu_dau_tien'].grid(row=2, column=3, sticky='w', pady=2)
-        ttk.Label(group1, text='Ngôn ngữ thứ 2:').grid(row=2, column=4, sticky='e', padx=(8,2), pady=2)
-        self.lang_selects['Ngon_ngu_thu_2'] = ttk.Combobox(group1, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['Ngon_ngu_thu_2'].set(self.initial_langs.get('Ngon_ngu_thu_2', 'vi - Tiếng Việt'))
-        self.lang_selects['Ngon_ngu_thu_2'].grid(row=2, column=5, sticky='w', pady=2)
-        ttk.Label(group1, text='Ngôn ngữ thứ 3:').grid(row=3, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['Ngon_ngu_thu_3'] = ttk.Combobox(group1, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['Ngon_ngu_thu_3'].set(self.initial_langs.get('Ngon_ngu_thu_3', 'en - English'))
-        self.lang_selects['Ngon_ngu_thu_3'].grid(row=3, column=3, sticky='w', pady=2)
+        self.lang_selects['Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
+        self.lang_selects['Ngon_ngu_thu_2'] = ttk.Combobox(group1, values=lang_list, width=15, state='readonly')
+        self.lang_selects['Ngon_ngu_thu_2'].set(self.initial_langs.get('Ngon_ngu_thu_2', 'Tiếng Việt'))
+        self.lang_selects['Ngon_ngu_thu_2'].grid(row=2, column=5, padx=2, pady=8)
+        self.lang_selects['Ngon_ngu_thu_3'] = ttk.Combobox(group1, values=lang_list, width=15, state='readonly')
+        self.lang_selects['Ngon_ngu_thu_3'].set(self.initial_langs.get('Ngon_ngu_thu_3', 'English'))
+        self.lang_selects['Ngon_ngu_thu_3'].grid(row=2, column=6, padx=2, pady=8)
+        # Dịch & thay thế
+        ttk.Label(group1, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
+        mod1, mod2, key = split_hotkey(self.initial_hotkeys.get('replace_translate', '<ctrl>+d'))
+        self.entries['replace_translate_mod1'] = ttk.Combobox(group1, values=modifiers, width=7, state='readonly')
+        self.entries['replace_translate_mod1'].set(mod1)
+        self.entries['replace_translate_mod1'].grid(row=3, column=1, padx=2, pady=8)
+        self.entries['replace_translate_mod2'] = ttk.Combobox(group1, values=modifiers, width=7, state='readonly')
+        self.entries['replace_translate_mod2'].set(mod2)
+        self.entries['replace_translate_mod2'].grid(row=3, column=2, padx=2, pady=8)
+        self.entries['replace_translate_key'] = ttk.Combobox(group1, values=main_keys, width=7, state='readonly')
+        self.entries['replace_translate_key'].set(key.upper())
+        self.entries['replace_translate_key'].grid(row=3, column=3, padx=2, pady=8)
 
         # --- Nhóm 2 ---
         group2 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn thứ hai:', bootstyle=INFO)
-        group2.pack(padx=24, pady=12, fill='x', ipadx=6, ipady=6)
-        for i in range(6):
+        group2.pack(padx=40, pady=(12, 18), fill='x', ipadx=10, ipady=10)
+        for i in range(8):
             group2.columnconfigure(i, weight=1)
-        ttk.Label(group2, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=6, sticky='w', padx=8, pady=(6,2))
-        ttk.Label(group2, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='w', padx=(8,2), pady=(8,2))
-        ttk.Label(group2, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=2)
-        self.entries['translate_popup2'] = ttk.Entry(group2, width=15)
-        self.entries['translate_popup2'].insert(0, self.initial_hotkeys.get('translate_popup2', '<ctrl>+q') if self.initial_hotkeys else '<ctrl>+q')
-        self.entries['translate_popup2'].grid(row=2, column=1, sticky='w', pady=2)
-        ttk.Label(group2, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=2)
-        self.entries['replace_translate2'] = ttk.Entry(group2, width=15)
-        self.entries['replace_translate2'].insert(0, self.initial_hotkeys.get('replace_translate2', '<ctrl>+w') if self.initial_hotkeys else '<ctrl>+w')
-        self.entries['replace_translate2'].grid(row=3, column=1, sticky='w', pady=2)
-        ttk.Label(group2, text='Ngôn ngữ đầu tiên:').grid(row=2, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Bất kỳ']+[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
+        ttk.Label(group2, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', font=('Segoe UI', 9, 'italic'), bootstyle=SECONDARY).grid(row=0, column=0, columnspan=8, sticky='w', padx=8, pady=(10,6))
+        # Tiêu đề các cột
+        ttk.Label(group2, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
+        ttk.Label(group2, text='Modifier 1').grid(row=1, column=1, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group2, text='Modifier 2').grid(row=1, column=2, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group2, text='Phím chính').grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group2, text='Ngôn ngữ đầu tiên:').grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
+        ttk.Label(group2, text='Ngôn ngữ thứ 2:').grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group2, text='Ngôn ngữ thứ 3:').grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
+        # Dịch popup 2
+        ttk.Label(group2, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
+        mod1, mod2, key = split_hotkey(self.initial_hotkeys.get('translate_popup2', '<ctrl>+1'))
+        self.entries['translate_popup2_mod1'] = ttk.Combobox(group2, values=modifiers, width=7, state='readonly')
+        self.entries['translate_popup2_mod1'].set(mod1)
+        self.entries['translate_popup2_mod1'].grid(row=2, column=1, padx=2, pady=8)
+        self.entries['translate_popup2_mod2'] = ttk.Combobox(group2, values=modifiers, width=7, state='readonly')
+        self.entries['translate_popup2_mod2'].set(mod2)
+        self.entries['translate_popup2_mod2'].grid(row=2, column=2, padx=2, pady=8)
+        self.entries['translate_popup2_key'] = ttk.Combobox(group2, values=main_keys, width=7, state='readonly')
+        self.entries['translate_popup2_key'].set(key.upper())
+        self.entries['translate_popup2_key'].grid(row=2, column=3, padx=2, pady=8)
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Bất kỳ']+lang_list, width=15, state='readonly')
         self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].set(self.initial_langs.get('Nhom2_Ngon_ngu_dau_tien', 'Bất kỳ'))
-        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].grid(row=2, column=3, sticky='w', pady=2)
-        ttk.Label(group2, text='Ngôn ngữ thứ 2:').grid(row=2, column=4, sticky='e', padx=(8,2), pady=2)
-        self.lang_selects['Nhom2_Ngon_ngu_thu_2'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_2', 'vi - Tiếng Việt'))
-        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].grid(row=2, column=5, sticky='w', pady=2)
-        ttk.Label(group2, text='Ngôn ngữ thứ 3:').grid(row=3, column=2, sticky='e', padx=(18,2), pady=2)
-        self.lang_selects['Nhom2_Ngon_ngu_thu_3'] = ttk.Combobox(group2, values=[f"{code} - {name}" for code, name in lang_list], width=15, state='readonly')
-        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_3', 'en - English'))
-        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].grid(row=3, column=3, sticky='w', pady=2)
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'] = ttk.Combobox(group2, values=lang_list, width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_2', 'Tiếng Việt'))
+        self.lang_selects['Nhom2_Ngon_ngu_thu_2'].grid(row=2, column=5, padx=2, pady=8)
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'] = ttk.Combobox(group2, values=lang_list, width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].set(self.initial_langs.get('Nhom2_Ngon_ngu_thu_3', 'English'))
+        self.lang_selects['Nhom2_Ngon_ngu_thu_3'].grid(row=2, column=6, padx=2, pady=8)
+        # Dịch & thay thế 2
+        ttk.Label(group2, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
+        mod1, mod2, key = split_hotkey(self.initial_hotkeys.get('replace_translate2', '<ctrl>+2'))
+        self.entries['replace_translate2_mod1'] = ttk.Combobox(group2, values=modifiers, width=7, state='readonly')
+        self.entries['replace_translate2_mod1'].set(mod1)
+        self.entries['replace_translate2_mod1'].grid(row=3, column=1, padx=2, pady=8)
+        self.entries['replace_translate2_mod2'] = ttk.Combobox(group2, values=modifiers, width=7, state='readonly')
+        self.entries['replace_translate2_mod2'].set(mod2)
+        self.entries['replace_translate2_mod2'].grid(row=3, column=2, padx=2, pady=8)
+        self.entries['replace_translate2_key'] = ttk.Combobox(group2, values=main_keys, width=7, state='readonly')
+        self.entries['replace_translate2_key'].set(key.upper())
+        self.entries['replace_translate2_key'].grid(row=3, column=3, padx=2, pady=8)
+
 
         # Trường nhập ITM_TRANSLATE_KEY
         ttk.Label(self.settings_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(28, 5))
@@ -134,68 +188,16 @@ class MainGUI:
         self.api_key_entry.pack()
         ttk.Button(self.settings_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
         def on_hotkey_entry_focus_in(event):
-            entry = event.widget
-            entry.delete(0, tk.END)
-            entry._pressed_mods = set()
-            entry._main_key = None
-            if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
-                self.hotkey_manager.enabled = False
-            def on_key_press(e):
-                mod_map = {'Control_L': 'ctrl', 'Control_R': 'ctrl', 'Shift_L': 'shift', 'Shift_R': 'shift', 'Alt_L': 'alt', 'Alt_R': 'alt'}
-                if e.keysym in mod_map:
-                    entry._pressed_mods.add(mod_map[e.keysym])
-                    return
-                if e.keysym == 'Escape':
-                    entry.delete(0, tk.END)
-                    entry.unbind('<KeyPress>')
-                    entry.unbind('<KeyRelease>')
-                    if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
-                        self.hotkey_manager.enabled = True
-                    return
-                mods = sorted(entry._pressed_mods)
-                key = e.keysym.lower()
-                if key in mods:
-                    return
-                entry._main_key = key
-                # Chỉ cho phép duy nhất Ctrl + 1 phím chính
-                if len(mods) == 1 and mods[0] == 'ctrl':
-                    hotkey = '<ctrl>+' + key
-                    entry.delete(0, tk.END)
-                    entry.insert(0, hotkey)
-                else:
-                    entry.delete(0, tk.END)
-                    messagebox.showerror('Lỗi phím tắt', 'Chỉ cho phép phím tắt dạng Ctrl + 1 phím bất kỳ!')
-                entry.unbind('<KeyPress>')
-                entry.unbind('<KeyRelease>')
-                if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
-                    self.hotkey_manager.enabled = True
-            def on_key_release(e):
-                mod_map = {'Control_L': 'ctrl', 'Control_R': 'ctrl', 'Shift_L': 'shift', 'Shift_R': 'shift', 'Alt_L': 'alt', 'Alt_R': 'alt'}
-                if e.keysym in mod_map and mod_map[e.keysym] in entry._pressed_mods:
-                    entry._pressed_mods.remove(mod_map[e.keysym])
-            def on_focus_out(e):
-                if not getattr(entry, '_main_key', None):
-                    entry.delete(0, tk.END)
-                entry.unbind('<KeyPress>')
-                entry.unbind('<KeyRelease>')
-                if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
-                    self.hotkey_manager.enabled = True
-            entry.bind('<KeyPress>', on_key_press)
-            entry.bind('<KeyRelease>', on_key_release)
-            entry.bind('<FocusOut>', on_focus_out)
+            pass  # Không còn dùng nữa
+        # Không cần xử lý readonly cho combobox phím tắt
         for entry in self.entries.values():
             entry.config(state='readonly')
             def enable_entry(e, ent=entry):
                 ent.config(state='normal')
             def disable_entry(e, ent=entry):
                 ent.config(state='readonly')
-            entry.bind('<FocusIn>', on_hotkey_entry_focus_in)
             entry.bind('<FocusIn>', enable_entry, add='+')
             entry.bind('<FocusOut>', disable_entry, add='+')
-            # Đảm bảo luôn readonly sau khi nhập phím tắt
-            def readonly_after_key(e, ent=entry):
-                ent.config(state='readonly')
-            entry.bind('<KeyRelease>', readonly_after_key, add='+')
     def create_advanced_tab(self):
         # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
@@ -250,7 +252,20 @@ class MainGUI:
     def update_program(self):
         messagebox.showinfo("Cập nhật", "Chức năng cập nhật sẽ được bổ sung sau.")
     def save_settings(self):
-        new_hotkeys = {action: entry.get() for action, entry in self.entries.items()}
+        # Lấy hotkey từ các combobox
+        def join_hotkey(mod1, mod2, key):
+            mods = []
+            if mod1 != '<none>':
+                mods.append(mod1)
+            if mod2 != '<none>' and mod2 != mod1:
+                mods.append(mod2)
+            return '+'.join(mods + [key.lower()])
+        new_hotkeys = {
+            'translate_popup': join_hotkey(self.entries['translate_popup_mod1'].get(), self.entries['translate_popup_mod2'].get(), self.entries['translate_popup_key'].get()),
+            'replace_translate': join_hotkey(self.entries['replace_translate_mod1'].get(), self.entries['replace_translate_mod2'].get(), self.entries['replace_translate_key'].get()),
+            'translate_popup2': join_hotkey(self.entries['translate_popup2_mod1'].get(), self.entries['translate_popup2_mod2'].get(), self.entries['translate_popup2_key'].get()),
+            'replace_translate2': join_hotkey(self.entries['replace_translate2_mod1'].get(), self.entries['replace_translate2_mod2'].get(), self.entries['replace_translate2_key'].get()),
+        }
         # Lưu lựa chọn ngôn ngữ Nhóm 1
         new_langs = {
             'Ngon_ngu_dau_tien': self.lang_selects['Ngon_ngu_dau_tien'].get(),
@@ -261,51 +276,59 @@ class MainGUI:
             'Nhom2_Ngon_ngu_thu_2': self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(),
             'Nhom2_Ngon_ngu_thu_3': self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get(),
         }
-        # Ràng buộc: 3 ngôn ngữ trong 1 nhóm không được trùng nhau
-        for prefix in ['', 'Nhom2_']:
-            langs = [
-                new_langs.get(f'{prefix}Ngon_ngu_dau_tien'),
-                new_langs.get(f'{prefix}Ngon_ngu_thu_2'),
-                new_langs.get(f'{prefix}Ngon_ngu_thu_3'),
-            ]
-            if len(set(langs)) < 3:
-                messagebox.showerror('Lỗi cấu hình', f'Ba ngôn ngữ trong {"Nhóm 1" if prefix=="" else "Nhóm 2"} không được trùng nhau!')
-                return
-        # Ràng buộc: tất cả phím tắt không được trùng nhau
-        all_hotkeys = [v.strip().lower() for v in new_hotkeys.values() if v.strip()]
-        if len(set(all_hotkeys)) < len(all_hotkeys):
-            messagebox.showerror('Lỗi cấu hình', 'Các phím tắt không được trùng nhau!')
-            return
+        # Lưu vào file
         config = {**new_hotkeys, **new_langs}
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-        if hasattr(self, 'hotkey_updater') and self.hotkey_updater:
-            self.hotkey_updater(config)
+        # Lưu api key
         api_key = self.api_key_entry.get()
-        if api_key and hasattr(self, 'api_key_updater') and self.api_key_updater:
+        if self.api_key_updater:
             self.api_key_updater(api_key)
-        messagebox.showinfo('Lưu thành công', 'Đã lưu cài đặt mới!')
-
-class MultiHotKey:
-    def __init__(self, hotkey_map):
-        self.set_hotkeys(hotkey_map)
-        self.enabled = True
-    def set_hotkeys(self, hotkey_map):
-        self.hotkeys = [(frozenset(keyboard.HotKey.parse(k)), v) for k, v in hotkey_map.items()]
-        self._pressed = set()
-        self._active = set()
-    def press(self, key):
-        if not getattr(self, 'enabled', True):
-            return
-        self._pressed.add(key)
-        for combo, callback in self.hotkeys:
-            if combo <= self._pressed and combo not in self._active:
-                self._active.add(combo)
-                callback()
-    def release(self, key):
-        if not getattr(self, 'enabled', True):
-            return
-        self._pressed.discard(key)
-        for combo in list(self._active):
-            if not combo <= self._pressed:
-                self._active.discard(combo)
+        # Thông báo thành công
+        messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
+        # Cập nhật lại các thiết lập ban đầu
+        self.initial_hotkeys = new_hotkeys
+        self.initial_api_key = api_key
+    def load_settings(self):
+        # Đọc hotkeys từ file
+        if os.path.exists("hotkeys.json"):
+            try:
+                with open("hotkeys.json", "r", encoding="utf-8") as f:
+                    hotkeys = json.load(f)
+                    self.initial_hotkeys = hotkeys
+            except Exception:
+                pass
+        # Đọc api key từ file
+        if os.path.exists("apikey.txt"):
+            try:
+                with open("apikey.txt", "r", encoding="utf-8") as f:
+                    api_key = f.read().strip()
+                    self.initial_api_key = api_key
+            except Exception:
+                pass
+    def run_hotkey_manager(self):
+        if self.hotkey_manager:
+            self.hotkey_manager.run()
+    def stop_hotkey_manager(self):
+        if self.hotkey_manager:
+            self.hotkey_manager.stop()
+    def restart_hotkey_manager(self):
+        if self.hotkey_manager:
+            self.hotkey_manager.restart()
+    def add_hotkey(self, hotkey, callback):
+        if self.hotkey_manager:
+            self.hotkey_manager.add_hotkey(hotkey, callback)
+    def remove_hotkey(self, hotkey):
+        if self.hotkey_manager:
+            self.hotkey_manager.remove_hotkey(hotkey)
+    def trigger_hotkey(self, hotkey):
+        if self.hotkey_manager:
+            self.hotkey_manager.trigger_hotkey(hotkey)
+    def on_translate_popup(self):
+        print("Translate popup triggered")
+    def on_replace_translate(self):
+        print("Replace translate triggered")
+    def on_translate_popup2(self):
+        print("Translate popup 2 triggered")
+    def on_replace_translate2(self):
+        print("Replace translate 2 triggered")
