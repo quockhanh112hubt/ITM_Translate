@@ -61,7 +61,7 @@ class MainGUI:
         right_btn_frame = ttk.Frame(footer_frame)
         right_btn_frame.pack(side='right', anchor='e', padx=(0, 24), pady=(8, 2))
         def on_cancel():
-            self.root.destroy()
+            self.root.withdraw()
         ttk.Button(right_btn_frame, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
         ttk.Button(right_btn_frame, text='Huỷ bỏ', style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
 

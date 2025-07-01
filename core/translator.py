@@ -19,7 +19,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3):
 
                 Your task is to:
                 1. Detect the language of the user's message.
-                2. If it is NOT in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_2}.
+                2. If the message is mixed with multiple languages, translate it into {Ngon_ngu_thu_2}.
                 3. If it is already in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
                 4. Do not explain, comment, or add anything. Return only the translated content.
 
