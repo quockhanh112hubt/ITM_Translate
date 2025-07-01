@@ -15,17 +15,19 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3):
     # Tạo prompt phù hợp với ngôn ngữ đầu vào
     if Ngon_ngu_dau_tien.strip().lower() in ["Any Language", "Bất kỳ"]:
         prompt = f"""
-                You are a translation model.
+        You are a translation assistant.
 
-                Your task is to:
-                1. Detect the language of the user's message.
-                2. If the message is mixed with multiple languages, translate it into {Ngon_ngu_thu_2}.
-                3. If it is already in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
-                4. Do not explain, comment, or add anything. Return only the translated content.
+        Follow these instructions exactly:
+        1. Detect the main language of the message. If the message is written mostly in one language but contains words or short phrases from others (e.g., "OK tôi sẽ check cái đó"), treat the main language as the dominant one.
+        2. If the message is clearly mixed between multiple languages without a dominant one, translate it into {Ngon_ngu_thu_2}.
+        3. If the main language is {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
+        4. Otherwise, translate the message into {Ngon_ngu_thu_2}.
+        5. Do not explain, comment, or add anything. Return only the translated message.
 
-                User's message:
-                {text}
-                """
+        User's message:
+        {text}
+        """
+
     else:
         prompt = f"""
                 You are a translation model.
