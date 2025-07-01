@@ -51,6 +51,20 @@ class MainGUI:
         tab_control.pack(expand=1, fill='both')
         self.create_settings_tab()
         self.create_advanced_tab()
+        # Footer đẹp: trái là label, phải là 2 nút sát mép phải
+        footer_frame = ttk.Frame(self.root)
+        footer_frame.pack(side='bottom', fill='x', pady=(0, 8), padx=8)
+        # Label bên trái
+        left_label = ttk.Label(footer_frame, text="Powered by ITM Semiconductor Vietnam Company Limited - KhanhIT IT Team. Copyright © 2025 all rights reserved.", font=("Segoe UI", 9, "italic"), bootstyle=SECONDARY)
+        left_label.pack(side='left', anchor='w', padx=(4,0))
+        # Frame phải chứa 2 nút, căn phải, dịch vào một chút
+        right_btn_frame = ttk.Frame(footer_frame)
+        right_btn_frame.pack(side='right', anchor='e', padx=(0, 24), pady=(8, 2))
+        def on_cancel():
+            self.root.destroy()
+        ttk.Button(right_btn_frame, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
+        ttk.Button(right_btn_frame, text='Huỷ bỏ', style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
+
     def create_settings_tab(self):
         style = ttk.Style()
         style.theme_use('flatly')
@@ -222,7 +236,6 @@ class MainGUI:
         if self.initial_api_key:
             self.api_key_entry.insert(0, self.initial_api_key)
         self.api_key_entry.pack()
-        ttk.Button(self.advanced_tab, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(pady=18)
 
     def on_startup_toggle(self):
         enabled = self.startup_var.get()
