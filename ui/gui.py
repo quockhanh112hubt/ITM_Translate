@@ -274,6 +274,8 @@ class MainGUI:
                 mods.append(mod1)
             if mod2 != '<none>' and mod2 != mod1:
                 mods.append(mod2)
+            if key == '' or key == '<none>':
+                return '+'.join(mods)
             return '+'.join(mods + [key.lower()])
         # Lấy giá trị các phím tắt
         combos = [
