@@ -282,52 +282,110 @@ class MainGUI:
             (self.entries['translate_popup2_mod1'].get(), self.entries['translate_popup2_mod2'].get(), self.entries['translate_popup2_key'].get()),
             (self.entries['replace_translate2_mod1'].get(), self.entries['replace_translate2_mod2'].get(), self.entries['replace_translate2_key'].get()),
         ]
-        # 1. Kiểm tra Modifier 1 và Modifier 2 không được giống nhau
-        for idx, (mod1, mod2, key) in enumerate(combos):
-            if mod1 != '<none>' and mod1 == mod2:
-                messagebox.showerror("Lỗi cấu hình", f"Modifier 1 và Modifier 2 không được giống nhau (ở dòng {idx+1})!")
-                return
-        # 2. Kiểm tra tổ hợp phím tắt không trùng nhau
-        hotkey_strs = [join_hotkey(*c) for c in combos]
-        if len(set(hotkey_strs)) < len(hotkey_strs):
-            messagebox.showerror("Lỗi cấu hình", "Các tổ hợp phím tắt không được trùng nhau!")
-            return
-        # 3. Kiểm tra ngôn ngữ trong từng nhóm không trùng nhau
         group1_langs = [self.lang_selects['Ngon_ngu_dau_tien'].get(), self.lang_selects['Ngon_ngu_thu_2'].get(), self.lang_selects['Ngon_ngu_thu_3'].get()]
         group2_langs = [self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(), self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get()]
-        if len(set(group1_langs)) < 3:
-            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn mặc định không được trùng nhau!")
-            return
-        if len(set(group2_langs)) < 3:
-            messagebox.showerror("Lỗi cấu hình", "Ba ngôn ngữ trong Tuỳ chọn tuỳ chỉnh không được trùng nhau!")
-            return
+        lang_groups = [group1_langs, group2_langs]
+        group_names = ['Tuỳ chọn mặc định', 'Tuỳ chọn tuỳ chỉnh']
+        # 1. Kiểm tra ngôn ngữ
+        def check_lang_group(group_langs, group_name):
+            filled = [l for l in group_langs if l != '']
+            if 0 < len(filled) < 3:
+                messagebox.showerror("Lỗi cấu hình", f"Bạn phải chọn đủ 3 ngôn ngữ cho {group_name}!")
+                return False
+            if len(set(group_langs)) < 3 and len(filled) == 3:
+                messagebox.showerror("Lỗi cấu hình", f"Ba ngôn ngữ trong {group_name} không được trùng nhau!")
+                return False
+            return True
+        # 2. Kiểm tra phím tắt
+        def check_hotkey(mod1, mod2, key):
+            # Không cho phép Modifier 1 và Modifier 2 giống nhau (trừ khi đều là <none>)
+            if mod1 != '<none>' and mod1 == mod2:
+                return False, "Phím tắt Modifier 1 và Modifier 2 không được giống nhau!"
+            values = [mod1, mod2, key]
+            none_count = sum([v == '<none>' or v == '' for v in values])
+            if none_count >= 2 and not all(v == '<none>' or v == '' for v in values):
+                return False, "Phím tắt không hợp lệ!"
+            return True, None
+        # 3. Kiểm tra chung: tất cả Modifier là <none>, phím chính là '' và cả 3 ngôn ngữ là '' thì cho lưu bình thường
+        all_none = all((m1 == '<none>' or m1 == '') and (m2 == '<none>' or m2 == '') and (k == '' or k == '<none>') for m1, m2, k in combos)
+        all_langs_empty = all(all(l == '' for l in group) for group in lang_groups)
+        if all_none and all_langs_empty:
+            pass  # Cho lưu bình thường
+        else:
+            # Kiểm tra từng tổ hợp phím tắt
+            for idx, (mod1, mod2, key) in enumerate(combos):
+                valid, msg = check_hotkey(mod1, mod2, key)
+                if not valid:
+                    messagebox.showerror("Lỗi cấu hình", msg)
+                    return
+            # Kiểm tra trùng phím tắt (bất kể thứ tự modifier)
+            def normalize_hotkey(mod1, mod2, key):
+                if all(v == '<none>' or v == '' for v in [mod1, mod2, key]):
+                    return '__empty__'
+                mods = []
+                if mod1 != '<none>':
+                    mods.append(mod1)
+                if mod2 != '<none>' and mod2 != mod1:
+                    mods.append(mod2)
+                mods = sorted(mods)
+                return '+'.join(mods + [key.lower()])
+            normalized_hotkey_strs = [normalize_hotkey(*c) for c in combos]
+            # Loại bỏ các tổ hợp rỗng khỏi kiểm tra trùng lặp
+            filtered_hotkeys = [h for h in normalized_hotkey_strs if h != '__empty__']
+            if len(set(filtered_hotkeys)) < len(filtered_hotkeys):
+                messagebox.showerror("Lỗi cấu hình", "Các tổ hợp phím tắt không được trùng nhau!")
+                return
+            # Kiểm tra ngôn ngữ từng group
+            for group_langs, group_name in zip(lang_groups, group_names):
+                if not check_lang_group(group_langs, group_name):
+                    return
+            # Nếu phím tắt hợp lệ nhưng có bất kỳ ngôn ngữ nào là '' (và không phải cả 3 đều là '') thì không cho lưu, báo rõ group_name
+            for group_langs, group_name in zip(lang_groups, group_names):
+                empty_count = sum([l == '' for l in group_langs])
+                if 0 < empty_count < 3:
+                    messagebox.showerror("Lỗi cấu hình", f"Chưa chọn ngôn ngữ trong {group_name}")
+                    return
+            # Nếu phím tắt là hợp lệ, nhưng chưa chọn đủ ngôn ngữ (kể cả 3 ngôn ngữ đều rỗng), thì báo lỗi rõ group_name
+            for group_idx, (group_langs, group_name) in enumerate(zip(lang_groups, group_names)):
+                # Lấy 2 hotkey của group này
+                hotkey1 = combos[group_idx * 2]
+                hotkey2 = combos[group_idx * 2 + 1]
+                # Nếu bất kỳ hotkey nào trong group này không rỗng hoàn toàn
+                for mod1, mod2, key in [hotkey1, hotkey2]:
+                    if not (mod1 == '<none>' and mod2 == '<none>' and (key == '' or key == '<none>')):
+                        if any(l == '' for l in group_langs):
+                            messagebox.showerror("Lỗi cấu hình", f"Chưa chọn ngôn ngữ trong {group_name}")
+                            return
+            # Nếu ngôn ngữ hợp lệ, thì phải có ít nhất 2 trong 3 phím tắt không phải là '' hoặc <none>
+            for idx, (mod1, mod2, key) in enumerate(combos):
+                group_langs = lang_groups[idx // 2]  # 2 hotkey đầu là group1, 2 hotkey sau là group2
+                if not all(l == '' for l in group_langs):
+                    count_non_empty = sum([1 for v in [mod1, mod2, key] if v != '' and v != '<none>'])
+                    if count_non_empty < 2:
+                        messagebox.showerror("Lỗi cấu hình", "Chưa chọn phím tắt hợp lệ")
+                        return
+        # Nếu qua hết kiểm tra thì lưu
         new_hotkeys = {
             'translate_popup': join_hotkey(self.entries['translate_popup_mod1'].get(), self.entries['translate_popup_mod2'].get(), self.entries['translate_popup_key'].get()),
             'replace_translate': join_hotkey(self.entries['replace_translate_mod1'].get(), self.entries['replace_translate_mod2'].get(), self.entries['replace_translate_key'].get()),
             'translate_popup2': join_hotkey(self.entries['translate_popup2_mod1'].get(), self.entries['translate_popup2_mod2'].get(), self.entries['translate_popup2_key'].get()),
             'replace_translate2': join_hotkey(self.entries['replace_translate2_mod1'].get(), self.entries['replace_translate2_mod2'].get(), self.entries['replace_translate2_key'].get()),
         }
-        # Lưu lựa chọn ngôn ngữ Nhóm 1
         new_langs = {
             'Ngon_ngu_dau_tien': self.lang_selects['Ngon_ngu_dau_tien'].get(),
             'Ngon_ngu_thu_2': self.lang_selects['Ngon_ngu_thu_2'].get(),
             'Ngon_ngu_thu_3': self.lang_selects['Ngon_ngu_thu_3'].get(),
-            # Lưu lựa chọn ngôn ngữ Nhóm 2
             'Nhom2_Ngon_ngu_dau_tien': self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].get(),
             'Nhom2_Ngon_ngu_thu_2': self.lang_selects['Nhom2_Ngon_ngu_thu_2'].get(),
             'Nhom2_Ngon_ngu_thu_3': self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get(),
         }
-        # Lưu vào file
         config = {**new_hotkeys, **new_langs}
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-        # Lưu api key
         api_key = self.api_key_entry.get()
         if self.api_key_updater:
             self.api_key_updater(api_key)
-        # Thông báo thành công
         messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
-        # Cập nhật lại các thiết lập ban đầu
         self.initial_hotkeys = new_hotkeys
         self.initial_api_key = api_key
     def load_settings(self):
