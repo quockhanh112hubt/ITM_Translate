@@ -89,14 +89,17 @@ class MainGUI:
         main_keys = [chr(i) for i in range(65, 91)] + [str(i) for i in range(0, 10)]  # A-Z, 0-9
         def split_hotkey(hotkey):
             parts = hotkey.split('+')
-            mods = [p for p in parts if p.startswith('<') and p.endswith('>')]
-            key = parts[-1] if parts else 'q'
+            modifiers = ['<ctrl>', '<alt>', '<shift>']
+            mods = [p for p in parts if p in modifiers]
+            non_mods = [p for p in parts if p not in modifiers]
             if len(mods) == 0:
-                return '<none>', '<none>', key
+                return '<none>', '<none>', non_mods[0] if non_mods else ''
             elif len(mods) == 1:
-                return mods[0], '<none>', key
+                return mods[0], '<none>', non_mods[0] if non_mods else ''
+            elif len(mods) == 2:
+                return mods[0], mods[1], non_mods[0] if non_mods else ''
             else:
-                return mods[0], mods[1], key
+                return mods[0], mods[1], non_mods[0] if non_mods else ''
         # --- Nhóm 1 ---
         group1 = ttk.Labelframe(self.settings_tab, text='Tuỳ chọn mặc định:', bootstyle=INFO)
         group1.pack(padx=40, pady=(16, 20), fill='x', ipadx=10, ipady=10)
