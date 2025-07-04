@@ -73,6 +73,7 @@ class MainGUI:
         self.entries = {}
         self.lang_selects = {}
         lang_list = [
+            '',
             'English',
             'Tiếng Việt',
             '한국어',
@@ -86,7 +87,7 @@ class MainGUI:
         ]
         # Khai báo lại modifiers, main_keys, split_hotkey
         modifiers = ['<none>', '<ctrl>', '<alt>', '<shift>']
-        main_keys = [chr(i) for i in range(65, 91)] + [str(i) for i in range(0, 10)]  # A-Z, 0-9
+        main_keys = [''] + [chr(i) for i in range(65, 91)] + [str(i) for i in range(0, 10)]  # '', A-Z, 0-9
         def split_hotkey(hotkey):
             parts = hotkey.split('+')
             modifiers = ['<ctrl>', '<alt>', '<shift>']
@@ -126,7 +127,7 @@ class MainGUI:
         self.entries['translate_popup_key'] = ttk.Combobox(group1, values=main_keys, width=7, state='readonly')
         self.entries['translate_popup_key'].set(key.upper())
         self.entries['translate_popup_key'].grid(row=2, column=3, padx=2, pady=8)
-        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=['Any Language']+lang_list, width=15, state='readonly')
+        self.lang_selects['Ngon_ngu_dau_tien'] = ttk.Combobox(group1, values=lang_list+['Any Language'], width=15, state='readonly')
         self.lang_selects['Ngon_ngu_dau_tien'].set(self.initial_langs.get('Ngon_ngu_dau_tien', 'Any Language'))
         self.lang_selects['Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
         self.lang_selects['Ngon_ngu_thu_2'] = ttk.Combobox(group1, values=lang_list, width=15, state='readonly')
@@ -187,7 +188,7 @@ class MainGUI:
         self.entries['translate_popup2_key'] = ttk.Combobox(group2, values=main_keys, width=7, state='readonly')
         self.entries['translate_popup2_key'].set(key.upper())
         self.entries['translate_popup2_key'].grid(row=2, column=3, padx=2, pady=8)
-        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=['Any Language']+lang_list, width=15, state='readonly')
+        self.lang_selects['Nhom2_Ngon_ngu_dau_tien'] = ttk.Combobox(group2, values=lang_list+['Any Language'], width=15, state='readonly')
         self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].set(self.initial_langs.get('Nhom2_Ngon_ngu_dau_tien', 'Any Language'))
         self.lang_selects['Nhom2_Ngon_ngu_dau_tien'].grid(row=2, column=4, padx=2, pady=8)
         self.lang_selects['Nhom2_Ngon_ngu_thu_2'] = ttk.Combobox(group2, values=lang_list, width=15, state='readonly')
@@ -385,12 +386,41 @@ class MainGUI:
             'Nhom2_Ngon_ngu_thu_3': self.lang_selects['Nhom2_Ngon_ngu_thu_3'].get(),
         }
         config = {**new_hotkeys, **new_langs}
+        # So sánh phím tắt mới với ban đầu
+        hotkey_keys = ['translate_popup', 'replace_translate', 'translate_popup2', 'replace_translate2']
+        changed = False
+        if self.initial_hotkeys:
+            for k in hotkey_keys:
+                if self.initial_hotkeys.get(k, '') != new_hotkeys.get(k, ''):
+                    changed = True
+                    break
+        else:
+            changed = True
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
         api_key = self.api_key_entry.get()
         if self.api_key_updater:
             self.api_key_updater(api_key)
-        messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
+        if changed:
+            if messagebox.askokcancel("Thông báo", "Phím tắt đã được thay đổi, hãy khởi động lại chương trình để áp dụng"):
+                try:
+                    # Nếu có icon tray, dừng nó
+                    if hasattr(self, 'tray_icon') and self.tray_icon:
+                        self.tray_icon.stop()
+                except Exception:
+                    pass
+                try:
+                    from core.lockfile import release_lock
+                    release_lock()
+                except Exception:
+                    pass
+                self.root.destroy()
+                import os
+                os._exit(0)   
+            else:
+                return
+        else:
+            messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
         self.initial_hotkeys = new_hotkeys
         self.initial_api_key = api_key
     def load_settings(self):
