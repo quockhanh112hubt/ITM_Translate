@@ -129,6 +129,7 @@ class Updater:
             response = requests.get(self.download_url, stream=True, timeout=30)
             total_size = int(response.headers.get('content-length', 0))
             downloaded = 0
+            last_progress = 0
             
             with open(temp_file_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
@@ -137,7 +138,14 @@ class Updater:
                         downloaded += len(chunk)
                         if progress_callback and total_size > 0:
                             progress = (downloaded / total_size) * 100
-                            progress_callback(progress)
+                            # Chỉ update UI khi progress thay đổi đáng kể (mỗi 1%)
+                            if progress - last_progress >= 1.0:
+                                progress_callback(progress)
+                                last_progress = progress
+            
+            # Đảm bảo progress cuối cùng là 100%
+            if progress_callback:
+                progress_callback(100.0)
             
             return temp_file_path
         except Exception as e:
@@ -146,32 +154,41 @@ class Updater:
             raise e
     
     def apply_update(self, downloaded_file_path):
-        """Áp dụng cập nhật"""
+        """Áp dụng cập nhật một cách an toàn"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             current_dir = os.path.dirname(current_exe_path)
             backup_path = current_exe_path + ".backup"
             new_exe_path = current_exe_path + ".new"
             
-            # Copy file mới với tên tạm thời
-            shutil.copy2(downloaded_file_path, new_exe_path)
+            print(f"Applying update: {downloaded_file_path} -> {new_exe_path}")
             
-            # Tạo backup file hiện tại
+            # Copy file mới với tên tạm thời (.new)
+            shutil.copy2(downloaded_file_path, new_exe_path)
+            print(f"Copied to: {new_exe_path}")
+            
+            # Tạo backup file hiện tại (nếu tồn tại)
             if os.path.exists(current_exe_path):
                 if os.path.exists(backup_path):
                     os.remove(backup_path)
                 shutil.copy2(current_exe_path, backup_path)
+                print(f"Backup created: {backup_path}")
             
             # Cleanup temp directory
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
+                print("Temp directory cleaned up")
             
+            print("Apply update completed successfully")
             return True
+            
         except Exception as e:
+            print(f"Error in apply_update: {e}")
             # Cleanup if failed
             if os.path.exists(new_exe_path):
                 try:
                     os.remove(new_exe_path)
+                    print(f"Cleaned up failed update file: {new_exe_path}")
                 except Exception:
                     pass
             raise e
@@ -332,13 +349,27 @@ class UpdateDialog:
             self.dialog.after(0, lambda: self.status_label.config(text="Đang tải xuống..."))
             downloaded_file = self.updater.download_update(self._update_progress)
             
-            # Apply update
+            # Apply update - Thêm thông báo progress chi tiết hơn
             self.dialog.after(0, lambda: (
-                self.status_label.config(text="Đang cài đặt..."),
-                self.progress_var.set(100)
+                self.status_label.config(text="Đang chuẩn bị cài đặt..."),
+                self.progress_var.set(95)
+            ))
+            
+            # Thêm small delay để UI update
+            import time
+            time.sleep(0.5)
+            
+            self.dialog.after(0, lambda: (
+                self.status_label.config(text="Đang sao chép file..."),
+                self.progress_var.set(98)
             ))
             
             self.updater.apply_update(downloaded_file)
+            
+            self.dialog.after(0, lambda: (
+                self.status_label.config(text="Hoàn tất!"),
+                self.progress_var.set(100)
+            ))
             
             # Success
             self.dialog.after(0, self._update_success)
@@ -347,15 +378,24 @@ class UpdateDialog:
             self.dialog.after(0, lambda: self._update_error(str(e)))
     
     def _update_progress(self, progress):
-        """Cập nhật progress bar"""
-        self.dialog.after(0, lambda: self.progress_var.set(progress))
+        """Cập nhật progress bar một cách an toàn"""
+        try:
+            self.dialog.after(0, lambda: self.progress_var.set(progress))
+        except Exception:
+            # Bỏ qua nếu dialog đã bị đóng
+            pass
     
     def _update_success(self):
         """Xử lý khi cập nhật thành công"""
-        self.status_label.config(text="Cập nhật thành công! Sẵn sàng khởi động lại...")
-        
-        # Đợi 1 giây để user thấy message
-        self.dialog.after(1000, self._show_restart_dialog)
+        try:
+            self.status_label.config(text="Cập nhật thành công! Sẵn sàng khởi động lại...")
+            
+            # Đợi 1 giây để user thấy message
+            self.dialog.after(1000, self._show_restart_dialog)
+        except Exception as e:
+            print(f"Error in _update_success: {e}")
+            # Fallback: hiện message ngay lập tức
+            self._show_restart_dialog()
     
     def _show_restart_dialog(self):
         """Hiển thị dialog khởi động lại"""
