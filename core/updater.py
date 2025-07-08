@@ -194,42 +194,82 @@ class Updater:
             raise e
     
     def restart_application(self):
-        """Khởi động lại ứng dụng với file mới"""
+        """Khởi động lại ứng dụng với file mới - Approach mới an toàn hơn"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             new_exe_path = current_exe_path + ".new"
             backup_path = current_exe_path + ".backup"
             
-            # Tạo batch script để replace file sau khi app thoát
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
-                batch_content = f'''@echo off
-echo Starting update process...
-timeout /t 3 /nobreak >nul
-echo Replacing application file...
-if exist "{new_exe_path}" (
-    if exist "{current_exe_path}" del "{current_exe_path}" >nul 2>&1
-    ren "{new_exe_path}" "{os.path.basename(current_exe_path)}" >nul 2>&1
-    if exist "{backup_path}" del "{backup_path}" >nul 2>&1
-)
-echo Starting updated application...
-timeout /t 1 /nobreak >nul
-cd /d "{os.path.dirname(current_exe_path)}"
-start "" "{current_exe_path}"
-echo Update complete. Cleaning up...
-timeout /t 2 /nobreak >nul
-del "%~f0" >nul 2>&1
+                # Approach 1: Dùng Python script thay vì batch
+                updater_script = f'''
+import os
+import sys
+import time
+import subprocess
+import shutil
+
+def safe_update():
+    time.sleep(3)  # Đợi app cũ thoát hoàn toàn
+    
+    current_exe = r"{current_exe_path}"
+    new_exe = r"{new_exe_path}"
+    backup_exe = r"{backup_path}"
+    
+    try:
+        # Kiểm tra file .new có tồn tại không
+        if os.path.exists(new_exe):
+            # Xóa file cũ
+            if os.path.exists(current_exe):
+                if os.path.exists(backup_exe):
+                    os.remove(backup_exe)
+                shutil.move(current_exe, backup_exe)
+            
+            # Đổi tên file mới
+            shutil.move(new_exe, current_exe)
+            
+            # Khởi động app mới
+            os.chdir(r"{os.path.dirname(current_exe_path)}")
+            subprocess.Popen([current_exe], shell=False)
+            
+            # Cleanup backup sau 5 giây
+            time.sleep(5)
+            if os.path.exists(backup_exe):
+                try:
+                    os.remove(backup_exe)
+                except:
+                    pass
+        
+    except Exception as e:
+        # Nếu có lỗi, khôi phục từ backup
+        if os.path.exists(backup_exe) and not os.path.exists(current_exe):
+            shutil.move(backup_exe, current_exe)
+        raise e
+
+if __name__ == "__main__":
+    safe_update()
 '''
-                batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
-                with open(batch_path, 'w', encoding='utf-8') as f:
-                    f.write(batch_content)
                 
-                # Chạy batch script với elevated permissions nếu cần
-                subprocess.Popen([batch_path], shell=True, cwd=os.path.dirname(current_exe_path))
+                # Tạo updater script
+                updater_path = os.path.join(os.path.dirname(current_exe_path), "updater_temp.py")
+                with open(updater_path, 'w', encoding='utf-8') as f:
+                    f.write(updater_script)
+                
+                # Chạy updater script với Python
+                python_exe = sys.executable
+                subprocess.Popen([python_exe, updater_path], 
+                               shell=False, 
+                               cwd=os.path.dirname(current_exe_path),
+                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                
             else:
                 # Cho development mode
-                subprocess.Popen([sys.executable, os.path.abspath(__file__)], cwd=os.path.dirname(current_exe_path))
+                subprocess.Popen([sys.executable, os.path.abspath(__file__)], 
+                               cwd=os.path.dirname(current_exe_path))
             
+            # Thoát ngay lập tức
             sys.exit(0)
+            
         except Exception as e:
             raise e
 
@@ -409,34 +449,68 @@ class UpdateDialog:
         result = messagebox.askyesnocancel("Cập nhật thành công", 
                                          "Cập nhật đã hoàn tất!\n\n" +
                                          "Chọn cách khởi động lại:\n" +
-                                         "• YES: Tự động khởi động lại (khuyến nghị)\n" +
-                                         "• NO: Thoát và khởi động thủ công\n" +
-                                         "• CANCEL: Tiếp tục với phiên bản cũ",
+                                         "• YES: Tự động khởi động lại (thử nghiệm)\n" +
+                                         "• NO: Khởi động thủ công (khuyến nghị)\n" +
+                                         "• CANCEL: Tiếp tục với phiên bản cũ\n\n" +
+                                         "Lưu ý: Nếu YES gặp lỗi DLL, hãy chọn NO và làm thủ công.",
                                          parent=self.dialog)
-        if result is True:  # YES - Auto restart
+        if result is True:  # YES - Auto restart (experimental)
             try:
                 self.updater.restart_application()
             except Exception as e:
                 messagebox.showerror("Lỗi khởi động lại", 
-                                   f"Không thể khởi động lại tự động:\n{str(e)}\n\n" +
-                                   "Vui lòng:\n" +
-                                   "1. Thoát chương trình hoàn toàn\n" +
-                                   "2. Chạy lại file .exe từ thư mục\n" +
-                                   "3. Nếu gặp lỗi DLL, xóa file .backup và thử lại",
+                                   f"Khởi động tự động thất bại:\n{str(e)}\n\n" +
+                                   "Hãy làm theo hướng dẫn thủ công:\n" +
+                                   "1. Thoát chương trình (Alt+F4)\n" +
+                                   "2. Vào thư mục chương trình\n" +
+                                   "3. Xóa file .backup nếu có\n" +
+                                   "4. Chạy ITM_Translate.exe\n\n" +
+                                   "Nếu vẫn lỗi DLL, restart máy tính và thử lại.",
                                    parent=self.dialog)
-        elif result is False:  # NO - Manual restart
-            messagebox.showinfo("Hướng dẫn khởi động thủ công", 
-                              "Để hoàn tất cập nhật:\n\n" +
-                              "1. Thoát chương trình hoàn toàn (Alt+F4)\n" +
-                              "2. Tìm file ITM_Translate.exe trong thư mục\n" +
-                              "3. Chạy file .exe để khởi động phiên bản mới\n\n" +
-                              "Lưu ý: Nếu gặp lỗi 'Failed to load Python DLL':\n" +
-                              "• Xóa file .backup trong thư mục\n" +
-                              "• Khởi động lại máy tính\n" +
-                              "• Chạy lại chương trình",
-                              parent=self.dialog)
-            self.dialog.destroy()
+        elif result is False:  # NO - Manual restart (recommended)
+            self._show_manual_restart_instructions()
         # result is None (CANCEL) - Do nothing, keep current version
+    
+    def _show_manual_restart_instructions(self):
+        """Hiển thị hướng dẫn khởi động thủ công chi tiết"""
+        instructions = """✅ CẬP NHẬT HOÀN TẤT - Hướng dẫn khởi động thủ công
+
+🔧 BƯỚC 1: Thoát chương trình
+• Nhấn Alt+F4 hoặc đóng tất cả cửa sổ ITM Translate
+• Đảm bảo không còn process nào đang chạy
+
+📁 BƯỚC 2: Vào thư mục chương trình
+• Mở thư mục chứa file ITM_Translate.exe
+• Bạn sẽ thấy các file: .exe, .new, .backup
+
+🔄 BƯỚC 3: Thực hiện cập nhật
+• Xóa file ITM_Translate.exe (file cũ)
+• Đổi tên ITM_Translate.exe.new thành ITM_Translate.exe
+• Xóa file .backup (nếu có)
+
+🚀 BƯỚC 4: Khởi động lại
+• Chạy file ITM_Translate.exe mới
+• Kiểm tra version trong settings
+
+⚠️ NẾU GẶP LỖI "Failed to load Python DLL":
+• Restart máy tính
+• Tạm thời disable antivirus
+• Chạy với quyền Administrator
+• Hoặc download lại file .exe từ GitHub
+
+Bạn có muốn mở thư mục chương trình không?"""
+        
+        response = messagebox.askyesno("Hướng dẫn cập nhật thủ công", instructions, parent=self.dialog)
+        if response:
+            # Mở thư mục chứa executable
+            current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
+            folder_path = os.path.dirname(current_exe_path)
+            try:
+                os.startfile(folder_path)
+            except Exception:
+                pass
+        
+        self.dialog.destroy()
     
     def _update_error(self, error_msg):
         """Xử lý khi cập nhật lỗi"""
