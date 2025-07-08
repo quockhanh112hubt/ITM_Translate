@@ -290,7 +290,7 @@ class UpdateDialog:
         """Hiển thị dialog cập nhật"""
         self.dialog = tk.Toplevel(self.parent)
         self.dialog.title("ITM Translate - Kiểm tra cập nhật")
-        self.dialog.geometry("500x400")
+        self.dialog.geometry("500x500")
         self.dialog.resizable(False, False)
         self.dialog.transient(self.parent)
         self.dialog.grab_set()
@@ -298,8 +298,8 @@ class UpdateDialog:
         # Center the dialog
         self.dialog.update_idletasks()
         x = (self.dialog.winfo_screenwidth() // 2) - (500 // 2)
-        y = (self.dialog.winfo_screenheight() // 2) - (400 // 2)
-        self.dialog.geometry(f"500x400+{x}+{y}")
+        y = (self.dialog.winfo_screenheight() // 2) - (500 // 2)
+        self.dialog.geometry(f"500x500+{x}+{y}")
         
         # Main frame
         main_frame = tk.Frame(self.dialog, padx=20, pady=20)
