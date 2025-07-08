@@ -1,6 +1,6 @@
 {
-    "version": "1.0.9",
-    "build": "2025070816",
+    "version": "1.0.10",
+    "build": "2025070817",
     "release_date": "2025-07-08",
-    "description": "Test update mechanism from v1.0.8 to v1.0.9"
+    "description": "Enhanced update mechanism with improved user experience"
 }
