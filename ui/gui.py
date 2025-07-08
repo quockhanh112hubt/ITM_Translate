@@ -5,6 +5,7 @@ import os
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 import keyboard
+import threading
 
 class MainGUI:
     def __init__(self, root):
@@ -268,9 +269,57 @@ class MainGUI:
     def show_help(self):
         messagebox.showinfo("Hướng dẫn sử dụng", "1. Chọn đoạn văn bản cần dịch.\n2. Nhấn phím tắt để dịch hoặc thay thế.\n3. Có thể thay đổi phím tắt và API key trong tab Cài Đặt.")
     def show_about(self):
-        messagebox.showinfo("Thông tin", "ITM Translate\nPhiên bản 1.0\nTác giả: KhanhIT ITM Team\nGithub: github.com/ITM_Translate")
+        # Đọc version từ file version.json
+        version_info = "1.0.0"
+        try:
+            import json
+            import os
+            version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
+            if os.path.exists(version_file):
+                with open(version_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    version_info = f"v{data.get('version', '1.0.0')} (Build {data.get('build', 'unknown')})"
+        except Exception:
+            pass
+        
+        messagebox.showinfo("Thông tin", 
+                          f"ITM Translate\n"
+                          f"Phiên bản: {version_info}\n"
+                          f"Tác giả: KhanhIT ITM Team\n"
+                          f"Github: github.com/ITM_Translate\n\n"
+                          f"Powered by ITM Semiconductor Vietnam Company Limited\n"
+                          f"Copyright © 2025 all rights reserved.")
     def update_program(self):
-        messagebox.showinfo("Cập nhật", "Chức năng cập nhật sẽ được bổ sung sau.")
+        # Hiển thị loading popup
+        loading_popup = None
+        try:
+            from ui.popup import show_loading_popup
+            loading_popup = show_loading_popup(self.root)
+        except Exception:
+            pass
+        
+        def check_update_worker():
+            try:
+                from core.updater import check_for_updates_async
+                
+                # Close loading popup
+                if loading_popup:
+                    self.root.after(0, loading_popup.destroy)
+                
+                # Show update dialog
+                check_for_updates_async(self.root, show_no_update=True)
+                
+            except ImportError:
+                if loading_popup:
+                    self.root.after(0, loading_popup.destroy)
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", "Không thể tải module cập nhật. Vui lòng kiểm tra kết nối mạng."))
+            except Exception as e:
+                if loading_popup:
+                    self.root.after(0, loading_popup.destroy)
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", f"Lỗi kiểm tra cập nhật: {str(e)}"))
+        
+        # Run check in background thread
+        threading.Thread(target=check_update_worker, daemon=True).start()
     def save_settings(self):
         def join_hotkey(mod1, mod2, key):
             mods = []
