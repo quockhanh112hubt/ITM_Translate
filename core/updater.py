@@ -47,8 +47,25 @@ class Updater:
     def check_for_updates(self):
         """Kiểm tra version mới từ server"""
         try:
-            # Thử với GitHub API trước
-            response = requests.get(self.update_server_url, timeout=10)
+            print(f"Checking for updates at: {self.update_server_url}")  # Debug log
+            
+            # Chuẩn bị headers cho GitHub API
+            headers = {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'ITM-Translate-Updater'
+            }
+            
+            # Thêm GitHub token nếu có (cho private repos)
+            github_token = self.config.get("update_server", {}).get("github_token")
+            if github_token:
+                headers['Authorization'] = f'token {github_token}'
+                print("Using GitHub token for private repository")
+            
+            # Thử với GitHub API
+            response = requests.get(self.update_server_url, headers=headers, timeout=10)
+            
+            print(f"Response status: {response.status_code}")  # Debug log
+            
             if response.status_code == 200:
                 release_data = response.json()
                 self.new_version = release_data['tag_name'].lstrip('v')
@@ -63,13 +80,22 @@ class Updater:
                     return True, self.new_version, release_data.get('body', 'Cập nhật mới có sẵn')
                 else:
                     return False, self.current_version, "Bạn đang sử dụng phiên bản mới nhất"
+            elif response.status_code == 404:
+                # Repository không tồn tại hoặc không có quyền truy cập
+                if github_token:
+                    return False, None, f"Repository private không tìm thấy hoặc token không hợp lệ.\nKiểm tra lại GitHub token và quyền truy cập.\nURL: {self.update_server_url}"
+                else:
+                    return False, None, f"Repository không tồn tại hoặc là private.\nNếu repository là private, cần thêm GitHub token vào config.json.\nURL: {self.update_server_url}"
+            elif response.status_code == 401:
+                return False, None, f"GitHub token không hợp lệ hoặc hết hạn.\nVui lòng tạo token mới với quyền 'repo' access."
             else:
                 return False, None, f"Không thể kết nối server cập nhật (HTTP {response.status_code})"
         except requests.RequestException as e:
             # Fallback: kiểm tra bằng cách khác hoặc thông báo offline
-            if "github.com" in str(e) or "YOUR_USERNAME" in self.update_server_url:
-                return False, None, "Chưa cấu hình server cập nhật. Vui lòng liên hệ nhà phát triển."
-            return False, None, f"Lỗi kết nối: {str(e)}"
+            error_msg = str(e)
+            if "github.com" in error_msg:
+                return False, None, f"Không thể kết nối đến GitHub.\nKiểm tra kết nối internet hoặc GitHub có bị chặn.\nLỗi: {error_msg}"
+            return False, None, f"Lỗi kết nối: {error_msg}"
         except Exception as e:
             return False, None, f"Lỗi kiểm tra cập nhật: {str(e)}"
     

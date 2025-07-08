@@ -2,6 +2,7 @@
     "update_server": {
         "github_repo": "quockhanh112hubt/ITM_Translate",
         "api_url": "https://api.github.com/repos/quockhanh112hubt/ITM_Translate/releases/latest",
+        "github_token": "",
         "check_interval_hours": 24
     },
     "app_info": {
