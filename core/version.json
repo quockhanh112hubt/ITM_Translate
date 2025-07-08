@@ -1,0 +1,6 @@
+{
+    "version": "1.0.7",
+    "build": "2025070814",
+    "release_date": "2025-07-08",
+    "description": "Enhanced PyInstaller build and safer restart mechanism"
+}
