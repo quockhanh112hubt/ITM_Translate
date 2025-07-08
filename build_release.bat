@@ -76,7 +76,14 @@ echo ========================================
 if exist "dist" rmdir /s /q "dist"
 if exist "build" rmdir /s /q "build"
 
-pyinstaller --onefile --windowed --hidden-import=ttkbootstrap --icon="Resource/icon.ico" --add-data "Resource/icon.ico;Resource" --name="ITM_Translate" ITM_Translate.py
+:: Build với PyInstaller (ưu tiên spec file nếu có)
+if exist "ITM_Translate.spec" (
+    echo Sử dụng spec file để build...
+    python -m PyInstaller ITM_Translate.spec
+) else (
+    echo Sử dụng command line để build...
+    python -m PyInstaller --onefile --windowed --hidden-import=ttkbootstrap --icon="Resource/icon.ico" --add-data "Resource/icon.ico;Resource" --name="ITM_Translate" ITM_Translate.py
+)
 
 if not exist "dist\ITM_Translate.exe" (
     echo ERROR: Build thất bại!

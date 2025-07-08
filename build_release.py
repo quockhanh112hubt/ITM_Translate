@@ -79,18 +79,15 @@ def main():
         import shutil
         shutil.rmtree('build')
     
-    # Build command
-    build_cmd = [
-        "pyinstaller",
-        "--onefile",
-        "--windowed" if sys.platform == "win32" else "--onedir",
-        "--icon=Resource/icon.ico" if os.path.exists("Resource/icon.ico") else "",
-        "--name=ITM_Translate",
-        "ITM_Translate.py"
-    ]
+    # Build command - có thể dùng spec file hoặc command line
+    use_spec_file = os.path.exists("ITM_Translate.spec")
     
-    build_cmd = [cmd for cmd in build_cmd if cmd]  # Remove empty strings
-    build_cmd_str = " ".join(build_cmd)
+    if use_spec_file:
+        build_cmd_str = "python -m PyInstaller ITM_Translate.spec"
+        print("Sử dụng spec file để build...")
+    else:
+        build_cmd_str = 'python -m PyInstaller --onefile --windowed --hidden-import=ttkbootstrap --icon="Resource/icon.ico" --add-data "Resource/icon.ico;Resource" --name="ITM_Translate" ITM_Translate.py'
+        print("Sử dụng command line để build...")
     
     print(f"Running: {build_cmd_str}")
     success, output, error = run_command(build_cmd_str)
