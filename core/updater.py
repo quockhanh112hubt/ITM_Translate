@@ -16,7 +16,7 @@ class Updater:
         self.current_version = current_version
         self.config = self._load_config()
         self.update_server_url = self.config.get("update_server", {}).get("api_url", 
-                                                "https://api.github.com/repos/YOUR_USERNAME/ITM_Translate/releases/latest")
+                                                "https://api.github.com/repos/quockhanh112hubt/ITM_Translate/releases/latest")
         self.download_url = None
         self.new_version = None
         self.temp_dir = None

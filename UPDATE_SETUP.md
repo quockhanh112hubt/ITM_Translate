@@ -4,14 +4,14 @@
 
 ### 1. Chuẩn bị repository trên GitHub
 
-1. Tạo repository mới trên GitHub (ví dụ: `yourusername/ITM_Translate`)
+1. Tạo repository mới trên GitHub (ví dụ: `quockhanh112hubt/ITM_Translate`)
 2. Push code lên repository
 3. Cập nhật file `config.json`:
    ```json
    {
        "update_server": {
-           "github_repo": "yourusername/ITM_Translate",
-           "api_url": "https://api.github.com/repos/yourusername/ITM_Translate/releases/latest",
+           "github_repo": "quockhanh112hubt/ITM_Translate",
+           "api_url": "https://api.github.com/repos/quockhanh112hubt/ITM_Translate/releases/latest",
            "check_interval_hours": 24
        }
    }
@@ -127,7 +127,7 @@ Nếu cần, có thể thêm GitHub token vào config.json:
 {
     "update_server": {
         "github_token": "ghp_your_token_here",
-        "github_repo": "yourusername/ITM_Translate"
+        "github_repo": "quockhanh112hubt/ITM_Translate"
     }
 }
 ```

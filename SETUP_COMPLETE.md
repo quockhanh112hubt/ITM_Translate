@@ -20,7 +20,7 @@ Hệ thống auto-update đã hoàn thành và test thành công. Executable đ�
 
 ```bash
 # Nếu chưa có repository
-git remote add origin https://github.com/YOUR_USERNAME/ITM_Translate.git
+git remote add origin https://github.com/quockhanh112hubt/ITM_Translate.git
 
 # Push code hiện tại
 git push -u origin main
@@ -33,8 +33,8 @@ Sửa file `config.json` với đúng repository URL của bạn:
 ```json
 {
     "update_server": {
-        "github_repo": "YOUR_GITHUB_USERNAME/ITM_Translate",
-        "api_url": "https://api.github.com/repos/YOUR_GITHUB_USERNAME/ITM_Translate/releases/latest",
+        "github_repo": "quockhanh112hubt/ITM_Translate",
+        "api_url": "https://api.github.com/repos/quockhanh112hubt/ITM_Translate/releases/latest",
         "check_interval_hours": 24
     }
 }
