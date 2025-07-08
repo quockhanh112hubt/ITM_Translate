@@ -1,6 +1,6 @@
 {
-    "version": "1.0.5",
-    "build": "2025070812",
+    "version": "1.0.6",
+    "build": "2025070813",
     "release_date": "2025-07-08",
-    "description": "Fixed pywin32 dependencies and improved startup functionality"
+    "description": "Fixed Python DLL loading issues and improved update restart mechanism"
 }

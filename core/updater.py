@@ -203,24 +203,31 @@ class Updater:
             # Tạo batch script để replace file sau khi app thoát
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
                 batch_content = f'''@echo off
-timeout /t 2 /nobreak >nul
+echo Starting update process...
+timeout /t 3 /nobreak >nul
+echo Replacing application file...
 if exist "{new_exe_path}" (
-    del "{current_exe_path}" >nul 2>&1
+    if exist "{current_exe_path}" del "{current_exe_path}" >nul 2>&1
     ren "{new_exe_path}" "{os.path.basename(current_exe_path)}" >nul 2>&1
     if exist "{backup_path}" del "{backup_path}" >nul 2>&1
 )
+echo Starting updated application...
+timeout /t 1 /nobreak >nul
+cd /d "{os.path.dirname(current_exe_path)}"
 start "" "{current_exe_path}"
+echo Update complete. Cleaning up...
+timeout /t 2 /nobreak >nul
 del "%~f0" >nul 2>&1
 '''
                 batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
                 with open(batch_path, 'w', encoding='utf-8') as f:
                     f.write(batch_content)
                 
-                # Chạy batch script và thoát
+                # Chạy batch script với elevated permissions nếu cần
                 subprocess.Popen([batch_path], shell=True, cwd=os.path.dirname(current_exe_path))
             else:
                 # Cho development mode
-                subprocess.Popen([current_exe_path], cwd=os.path.dirname(current_exe_path))
+                subprocess.Popen([sys.executable, os.path.abspath(__file__)], cwd=os.path.dirname(current_exe_path))
             
             sys.exit(0)
         except Exception as e:
@@ -399,24 +406,37 @@ class UpdateDialog:
     
     def _show_restart_dialog(self):
         """Hiển thị dialog khởi động lại"""
-        result = messagebox.askyesno("Cập nhật thành công", 
-                                   "Cập nhật đã hoàn tất!\n\n" +
-                                   "Chương trình sẽ tự động thay thế file và khởi động lại.\n" +
-                                   "Bạn có muốn khởi động lại ngay không?",
-                                   parent=self.dialog)
-        if result:
+        result = messagebox.askyesnocancel("Cập nhật thành công", 
+                                         "Cập nhật đã hoàn tất!\n\n" +
+                                         "Chọn cách khởi động lại:\n" +
+                                         "• YES: Tự động khởi động lại (khuyến nghị)\n" +
+                                         "• NO: Thoát và khởi động thủ công\n" +
+                                         "• CANCEL: Tiếp tục với phiên bản cũ",
+                                         parent=self.dialog)
+        if result is True:  # YES - Auto restart
             try:
                 self.updater.restart_application()
             except Exception as e:
                 messagebox.showerror("Lỗi khởi động lại", 
                                    f"Không thể khởi động lại tự động:\n{str(e)}\n\n" +
-                                   "Vui lòng thoát và chạy lại chương trình thủ công.",
+                                   "Vui lòng:\n" +
+                                   "1. Thoát chương trình hoàn toàn\n" +
+                                   "2. Chạy lại file .exe từ thư mục\n" +
+                                   "3. Nếu gặp lỗi DLL, xóa file .backup và thử lại",
                                    parent=self.dialog)
-        else:
-            messagebox.showinfo("Thông báo", 
-                              "Cập nhật đã sẵn sàng.\nVui lòng thoát và chạy lại chương trình để áp dụng cập nhật.",
+        elif result is False:  # NO - Manual restart
+            messagebox.showinfo("Hướng dẫn khởi động thủ công", 
+                              "Để hoàn tất cập nhật:\n\n" +
+                              "1. Thoát chương trình hoàn toàn (Alt+F4)\n" +
+                              "2. Tìm file ITM_Translate.exe trong thư mục\n" +
+                              "3. Chạy file .exe để khởi động phiên bản mới\n\n" +
+                              "Lưu ý: Nếu gặp lỗi 'Failed to load Python DLL':\n" +
+                              "• Xóa file .backup trong thư mục\n" +
+                              "• Khởi động lại máy tính\n" +
+                              "• Chạy lại chương trình",
                               parent=self.dialog)
             self.dialog.destroy()
+        # result is None (CANCEL) - Do nothing, keep current version
     
     def _update_error(self, error_msg):
         """Xử lý khi cập nhật lỗi"""
