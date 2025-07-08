@@ -18,7 +18,7 @@ Phần mềm dịch thuật tự động với hotkey, hỗ trợ auto-update t�
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/ITM_Translate.git
+   git clone https://github.com/quockhanh112hubt/ITM_Translate.git
    cd ITM_Translate
    ```
 
@@ -29,7 +29,7 @@ Phần mềm dịch thuật tự động với hotkey, hỗ trợ auto-update t�
 
 3. Tạo file `.env` và thêm API key:
    ```
-   ITM_TRANSLATE_KEY=your_gemini_api_key_here
+   ITM_TRANSLATE_KEY=your_api_key_here
    ```
 
 4. Chạy chương trình:
@@ -39,7 +39,7 @@ Phần mềm dịch thuật tự động với hotkey, hỗ trợ auto-update t�
 
 ### Từ Executable
 
-1. Download file `.exe` từ [GitHub Releases](https://github.com/YOUR_USERNAME/ITM_Translate/releases)
+1. Download file `.exe` từ [GitHub Releases](https://github.com/quockhanh112hubt/ITM_Translate/releases)
 2. Chạy file `.exe`
 3. Cấu hình API key trong tab "Nâng Cao"
 
@@ -153,6 +153,6 @@ All rights reserved.
 
 ## Contact
 
-- **Author**: KhanhIT ITM Team
+- **Author**: KhanhIT ITMV Team
 - **Company**: ITM Semiconductor Vietnam Company Limited
-- **GitHub**: [ITM_Translate](https://github.com/YOUR_USERNAME/ITM_Translate)
+- **GitHub**: [ITM_Translate](https://github.com/quockhanh112hubt/ITM_Translate)
