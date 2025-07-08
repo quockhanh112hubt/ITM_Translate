@@ -2,5 +2,5 @@
     "version": "1.0.5",
     "build": "2025070812",
     "release_date": "2025-07-08",
-    "description": "Auto build release"
+    "description": "Fixed pywin32 dependencies and improved startup functionality"
 }
