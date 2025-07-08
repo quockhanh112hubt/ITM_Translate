@@ -151,13 +151,16 @@ class Updater:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             current_dir = os.path.dirname(current_exe_path)
             backup_path = current_exe_path + ".backup"
+            new_exe_path = current_exe_path + ".new"
+            
+            # Copy file mới với tên tạm thời
+            shutil.copy2(downloaded_file_path, new_exe_path)
             
             # Tạo backup file hiện tại
             if os.path.exists(current_exe_path):
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
                 shutil.copy2(current_exe_path, backup_path)
-            
-            # Copy file mới
-            shutil.copy2(downloaded_file_path, current_exe_path)
             
             # Cleanup temp directory
             if self.temp_dir and os.path.exists(self.temp_dir):
@@ -165,19 +168,43 @@ class Updater:
             
             return True
         except Exception as e:
-            # Restore backup if update failed
-            if os.path.exists(backup_path):
+            # Cleanup if failed
+            if os.path.exists(new_exe_path):
                 try:
-                    shutil.copy2(backup_path, current_exe_path)
+                    os.remove(new_exe_path)
                 except Exception:
                     pass
             raise e
     
     def restart_application(self):
-        """Khởi động lại ứng dụng"""
+        """Khởi động lại ứng dụng với file mới"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
-            subprocess.Popen([current_exe_path], cwd=os.path.dirname(current_exe_path))
+            new_exe_path = current_exe_path + ".new"
+            backup_path = current_exe_path + ".backup"
+            
+            # Tạo batch script để replace file sau khi app thoát
+            if getattr(sys, 'frozen', False):  # Chỉ cho executable
+                batch_content = f'''@echo off
+timeout /t 2 /nobreak >nul
+if exist "{new_exe_path}" (
+    del "{current_exe_path}" >nul 2>&1
+    ren "{new_exe_path}" "{os.path.basename(current_exe_path)}" >nul 2>&1
+    if exist "{backup_path}" del "{backup_path}" >nul 2>&1
+)
+start "" "{current_exe_path}"
+del "%~f0" >nul 2>&1
+'''
+                batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
+                with open(batch_path, 'w', encoding='utf-8') as f:
+                    f.write(batch_content)
+                
+                # Chạy batch script và thoát
+                subprocess.Popen([batch_path], shell=True, cwd=os.path.dirname(current_exe_path))
+            else:
+                # Cho development mode
+                subprocess.Popen([current_exe_path], cwd=os.path.dirname(current_exe_path))
+            
             sys.exit(0)
         except Exception as e:
             raise e
@@ -325,14 +352,30 @@ class UpdateDialog:
     
     def _update_success(self):
         """Xử lý khi cập nhật thành công"""
-        self.status_label.config(text="Cập nhật thành công!")
+        self.status_label.config(text="Cập nhật thành công! Sẵn sàng khởi động lại...")
         
+        # Đợi 1 giây để user thấy message
+        self.dialog.after(1000, self._show_restart_dialog)
+    
+    def _show_restart_dialog(self):
+        """Hiển thị dialog khởi động lại"""
         result = messagebox.askyesno("Cập nhật thành công", 
-                                   "Cập nhật đã hoàn tất.\nBạn có muốn khởi động lại ứng dụng ngay không?",
+                                   "Cập nhật đã hoàn tất!\n\n" +
+                                   "Chương trình sẽ tự động thay thế file và khởi động lại.\n" +
+                                   "Bạn có muốn khởi động lại ngay không?",
                                    parent=self.dialog)
         if result:
-            self.updater.restart_application()
+            try:
+                self.updater.restart_application()
+            except Exception as e:
+                messagebox.showerror("Lỗi khởi động lại", 
+                                   f"Không thể khởi động lại tự động:\n{str(e)}\n\n" +
+                                   "Vui lòng thoát và chạy lại chương trình thủ công.",
+                                   parent=self.dialog)
         else:
+            messagebox.showinfo("Thông báo", 
+                              "Cập nhật đã sẵn sàng.\nVui lòng thoát và chạy lại chương trình để áp dụng cập nhật.",
+                              parent=self.dialog)
             self.dialog.destroy()
     
     def _update_error(self, error_msg):
