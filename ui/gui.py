@@ -285,8 +285,13 @@ class MainGUI:
         messagebox.showinfo("Thông tin", 
                           f"ITM Translate\n"
                           f"Phiên bản: {version_info}\n"
+                          f"🔄 Update Test Version - Enhanced Features\n"
                           f"Tác giả: KhanhIT ITM Team\n"
                           f"Github: github.com/ITM_Translate\n\n"
+                          f"✨ New in this version:\n"
+                          f"• Improved update mechanism\n"
+                          f"• Enhanced error handling\n"
+                          f"• Better user experience\n\n"
                           f"Powered by ITM Semiconductor Vietnam Company Limited\n"
                           f"Copyright © 2025 all rights reserved.")
     def update_program(self):

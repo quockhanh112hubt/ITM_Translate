@@ -1,6 +1,6 @@
 {
-    "version": "1.0.7",
-    "build": "2025070814",
+    "version": "1.0.9",
+    "build": "2025070816",
     "release_date": "2025-07-08",
-    "description": "Enhanced PyInstaller build and safer restart mechanism"
+    "description": "Test update mechanism from v1.0.8 to v1.0.9"
 }

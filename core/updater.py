@@ -20,6 +20,8 @@ class Updater:
         self.download_url = None
         self.new_version = None
         self.temp_dir = None
+        # Debug logging for v1.0.8
+        print(f"🔄 Updater v1.0.8 initialized - Enhanced update mechanism")
     
     def _load_config(self):
         """Đọc config từ file config.json"""
