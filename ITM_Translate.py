@@ -275,12 +275,12 @@ ENV_FILE = ".env"
 STARTUP_FILE = "startup.json"
 
 global_language_settings = {
-    'Ngon_ngu_dau_tien': 'Bất kỳ',
+    'Ngon_ngu_dau_tien': 'Any Language',
     'Ngon_ngu_thu_2': 'Tiếng Việt',
     'Ngon_ngu_thu_3': 'English',
-    'Nhom2_Ngon_ngu_dau_tien': 'Bất kỳ',
-    'Nhom2_Ngon_ngu_thu_2': 'Tiếng Việt',
-    'Nhom2_Ngon_ngu_thu_3': 'English',
+    'Nhom2_Ngon_ngu_dau_tien': '',
+    'Nhom2_Ngon_ngu_thu_2': '',
+    'Nhom2_Ngon_ngu_thu_3': '',
 }
 
 def load_hotkeys():
@@ -298,8 +298,8 @@ def load_hotkeys():
     return {
         "translate_popup": "<ctrl>+q",
         "replace_translate": "<ctrl>+d",
-        "translate_popup2": "<ctrl>+q",
-        "replace_translate2": "<ctrl>+w",
+        "translate_popup2": "",
+        "replace_translate2": "",
         "Ngon_ngu_dau_tien": global_language_settings['Ngon_ngu_dau_tien'],
         "Ngon_ngu_thu_2": global_language_settings['Ngon_ngu_thu_2'],
         "Ngon_ngu_thu_3": global_language_settings['Ngon_ngu_thu_3'],

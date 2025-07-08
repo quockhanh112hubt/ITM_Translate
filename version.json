@@ -2,5 +2,5 @@
     "version": "1.0.9",
     "build": "2025070816",
     "release_date": "2025-07-08",
-    "description": "Auto build release"
+    "description": "Test update mechanism from v1.0.8 to v1.0.9"
 }
