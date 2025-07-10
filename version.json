@@ -1,6 +1,6 @@
 {
-    "version": "1.0.11",
-    "build": "2025071013",
+    "version": "1.0.12",
+    "build": "2025071014",
     "release_date": "2025-07-10",
-    "description": "Fixed restart mechanism and pydantic bundling issues"
+    "description": "Auto build release"
 }

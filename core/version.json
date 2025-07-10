@@ -1,6 +1,6 @@
 {
-    "version": "1.0.11",
-    "build": "2025070818",
-    "release_date": "2025-07-08",
-    "description": "Fixed restart mechanism and pydantic bundling issues"
+    "version": "1.0.12",
+    "build": "2025071014",
+    "release_date": "2025-07-10",
+    "description": "Enhanced tray icon double-click functionality"
 }

@@ -30,6 +30,7 @@ def create_image():
 def create_tray_icon(root, app):
     def on_show():
         root.after(0, lambda: (root.deiconify(), root.lift()))
+    
     def on_quit():
         root.after(0, root.destroy)
         icon.stop()
@@ -39,33 +40,50 @@ def create_tray_icon(root, app):
         except Exception:
             pass
         os._exit(0)
+    
     def on_tray_double_click(icon, item=None):
+        # Double-click sẽ hiện cửa sổ giống như menu "Hiện cửa sổ"
         on_show()
+    
+    # Tạo tray icon với menu
     icon = pystray.Icon('ITM Translate', create_image(), menu=pystray.Menu(
         pystray.MenuItem('Hiện cửa sổ', on_show),
         pystray.MenuItem('Thoát', on_quit)
     ))
-    icon._on_double_click = on_tray_double_click
+    
+    # Gán handler cho double-click
+    icon.default_action = on_show  # Phương pháp đơn giản và reliable hơn
+    
     def setup_icon_events():
-        # Monkey patch _on_notify để bắt double-click trên Windows
-        def patch_notify(obj):
-            if hasattr(obj, "__call__"):
-                orig = obj
-                def custom(hwnd, msg, wparam, lparam):
-                    if msg == 0x203:  # WM_LBUTTONDBLCLK
-                        icon._on_double_click(icon)
-                    return orig(hwnd, msg, wparam, lparam)
-                return custom
-            return obj
-        # Patch _on_notify
-        if hasattr(icon, "_on_notify"):
-            icon._on_notify = patch_notify(icon._on_notify)
-        # Patch _listener.on_notify nếu có
-        if hasattr(icon, "_listener") and hasattr(icon._listener, "on_notify"):
-            icon._listener.on_notify = patch_notify(icon._listener.on_notify)
+        """Setup events cho tray icon, bao gồm double-click"""
+        try:
+            # Monkey patch để xử lý double-click trên Windows
+            if hasattr(icon, "_listener") and hasattr(icon._listener, "_on_notify"):
+                original_on_notify = icon._listener._on_notify
+                
+                def enhanced_on_notify(hwnd, msg, wparam, lparam):
+                    # WM_LBUTTONDBLCLK = 0x203 (double-click chuột trái)
+                    if msg == 0x203:
+                        try:
+                            on_tray_double_click(icon)
+                        except Exception:
+                            pass
+                    # Gọi handler gốc
+                    return original_on_notify(hwnd, msg, wparam, lparam)
+                
+                icon._listener._on_notify = enhanced_on_notify
+        except Exception:
+            # Nếu monkey patch thất bại, vẫn có default_action làm fallback
+            pass
+    
     def run():
         setup_icon_events()
         icon.run()
+    
+    # Chạy tray icon trong thread riêng
     threading.Thread(target=run, daemon=True).start()
+    
+    # Khi đóng cửa sổ, ẩn thay vì thoát
     root.protocol('WM_DELETE_WINDOW', lambda: root.withdraw())
+    
     return icon
