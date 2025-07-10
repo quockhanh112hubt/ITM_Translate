@@ -12,6 +12,28 @@ try:
 except ImportError:
     WIN32_AVAILABLE = False
 
+def get_app_version():
+    """Đọc version từ file version.json"""
+    try:
+        import json
+        # Thử đọc từ thư mục gốc trước
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        version_file = os.path.join(base_path, "version.json")
+        if os.path.exists(version_file):
+            with open(version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+        
+        # Thử đọc từ core/version.json
+        core_version_file = os.path.join(os.path.dirname(__file__), "version.json")
+        if os.path.exists(core_version_file):
+            with open(core_version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+    except Exception:
+        pass
+    return '1.0.0'
+
 def resource_path(relative_path):
     # Lấy đường dẫn thực tế tới resource, hỗ trợ cả khi đóng gói bằng PyInstaller
     if hasattr(sys, '_MEIPASS'):
@@ -66,8 +88,9 @@ def create_tray_icon(root, app):
         print("Tray: Double-click detected")  # Debug log
         on_show()
     
-    # Tạo tray icon với menu
-    icon = pystray.Icon('ITM Translate', create_image(), menu=pystray.Menu(
+    # Tạo tray icon với menu (có version trong title)
+    app_version = get_app_version()
+    icon = pystray.Icon(f'ITM Translate v{app_version}', create_image(), menu=pystray.Menu(
         pystray.MenuItem('Hiện cửa sổ', on_show, default=True),  # Đặt làm default action
         pystray.MenuItem('Thoát', on_quit)
     ))

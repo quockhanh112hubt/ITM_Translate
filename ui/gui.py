@@ -7,10 +7,32 @@ from ttkbootstrap.constants import *
 import keyboard
 import threading
 
+def get_app_version():
+    """Đọc version từ file version.json"""
+    try:
+        # Thử đọc từ thư mục gốc trước
+        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
+        if os.path.exists(version_file):
+            with open(version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+        
+        # Thử đọc từ core/version.json
+        core_version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "core", "version.json")
+        if os.path.exists(core_version_file):
+            with open(core_version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+    except Exception:
+        pass
+    return '1.0.0'
+
 class MainGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title('ITM Translate')
+        # Đọc version và set title với version
+        app_version = get_app_version()
+        self.root.title(f'ITM Translate v{app_version}')
         self.root.geometry('1050x420')
         self.hotkey_manager = None
         self.api_key_updater = None
@@ -269,23 +291,26 @@ class MainGUI:
     def show_help(self):
         messagebox.showinfo("Hướng dẫn sử dụng", "1. Chọn đoạn văn bản cần dịch.\n2. Nhấn phím tắt để dịch hoặc thay thế.\n3. Có thể thay đổi phím tắt và API key trong tab Cài Đặt.")
     def show_about(self):
-        # Đọc version từ file version.json
+        # Đọc version chi tiết từ file version.json
         version_info = "1.0.0"
+        build_info = "unknown"
+        release_date = "unknown"
         try:
-            import json
-            import os
             version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
             if os.path.exists(version_file):
                 with open(version_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    version_info = f"v{data.get('version', '1.0.0')} (Build {data.get('build', 'unknown')})"
+                    version_info = data.get('version', '1.0.0')
+                    build_info = data.get('build', 'unknown')
+                    release_date = data.get('release_date', 'unknown')
         except Exception:
             pass
         
-        messagebox.showinfo("Thông tin", 
-                          f"ITM Translate\n"
-                          f"Phiên bản: {version_info}\n"
-                          f"🔄 Update Test Version - Enhanced Features\n"
+        messagebox.showinfo("Thông tin về chương trình", 
+                          f"ITM Translate v{version_info}\n\n"
+                          f"📦 Build: {build_info}\n"
+                          f"� Release Date: {release_date}\n"
+                          f"🔄 Enhanced Auto-Update Version\n\n"
                           f"Tác giả: KhanhIT ITM Team\n"
                           f"Github: github.com/ITM_Translate\n\n"
                           f"✨ New in this version:\n"
