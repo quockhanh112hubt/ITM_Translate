@@ -1,6 +1,6 @@
 {
-    "version": "1.0.14",
-    "build": "2025071016",
-    "release_date": "2025-07-10",
-    "description": "Fixed update dialog - hide both buttons when updating"
+    "version": "1.0.15",
+    "build": "2025071017",
+    "release_date": "2025-07-10", 
+    "description": "Fixed hidden CMD window and DLL restart issues"
 }

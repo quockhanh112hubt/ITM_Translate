@@ -203,10 +203,10 @@ class Updater:
             backup_path = current_exe_path + ".backup"
             
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
-                # Approach: Dùng batch script đơn giản và tin cậy hơn
+                # Approach: Dùng batch script đơn giản và tin cậy hơn với delay lớn hơn
                 batch_script = f'''@echo off
-echo Starting ITM Translate update process...
-timeout /t 3 /nobreak >nul
+echo Starting ITM Translate update process... >nul
+timeout /t 5 /nobreak >nul
 
 set "current_exe={current_exe_path}"
 set "new_exe={new_exe_path}"
@@ -215,39 +215,43 @@ set "app_dir={os.path.dirname(current_exe_path)}"
 
 cd /d "%app_dir%"
 
-echo Checking for new version file...
+echo Waiting for app to close completely... >nul
+timeout /t 3 /nobreak >nul
+
+echo Checking for new version file... >nul
 if not exist "%new_exe%" (
-    echo ERROR: New version file not found!
-    pause
+    echo ERROR: New version file not found! >nul
     exit /b 1
 )
 
-echo Creating backup...
+echo Creating backup... >nul
 if exist "%current_exe%" (
     if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
     move "%current_exe%" "%backup_exe%" >nul 2>&1
 )
 
-echo Installing new version...
+echo Installing new version... >nul
 move "%new_exe%" "%current_exe%" >nul 2>&1
 
 if not exist "%current_exe%" (
-    echo ERROR: Failed to install new version!
+    echo ERROR: Failed to install new version! >nul
     if exist "%backup_exe%" (
-        echo Restoring backup...
+        echo Restoring backup... >nul
         move "%backup_exe%" "%current_exe%" >nul 2>&1
     )
-    pause
     exit /b 1
 )
 
-echo Starting new version...
+echo Waiting before restart to avoid DLL conflicts... >nul
+timeout /t 5 /nobreak >nul
+
+echo Starting new version... >nul
 start "" "%current_exe%"
 
-echo Waiting for app to start...
-timeout /t 3 /nobreak >nul
+echo Waiting for app to start... >nul
+timeout /t 5 /nobreak >nul
 
-echo Cleaning up...
+echo Cleaning up... >nul
 if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
 if exist "%~f0" del "%~f0" >nul 2>&1
 
@@ -269,39 +273,49 @@ exit
                 
                 print(f"Starting batch script: {batch_path}")  # Debug log
                 
-                # Chạy batch script với nhiều phương pháp fallback
+                # Chạy batch script với nhiều phương pháp fallback (ẩn cửa sổ CMD)
                 try:
-                    # Phương pháp 1: subprocess.Popen với shell=True
+                    # Phương pháp 1: subprocess.Popen với hidden window
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    startupinfo.wShowWindow = subprocess.SW_HIDE
+                    
                     process = subprocess.Popen(
                         [batch_path], 
-                        shell=True, 
+                        shell=False,  # Không dùng shell để tránh hiện cmd window
                         cwd=os.path.dirname(current_exe_path),
-                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
                         stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
+                        stderr=subprocess.DEVNULL,
+                        startupinfo=startupinfo
                     )
                     print(f"Batch process started with PID: {process.pid}")
                 except Exception as e1:
                     print(f"Method 1 failed: {e1}")
                     try:
-                        # Phương pháp 2: os.system
+                        # Phương pháp 2: os.system với ẩn cửa sổ
                         import threading
                         def run_batch():
-                            os.system(f'start /min "" "{batch_path}"')
+                            os.system(f'start /b /min "" "{batch_path}"')  # /b = background, /min = minimized
                         
                         thread = threading.Thread(target=run_batch, daemon=True)
                         thread.start()
-                        print("Batch script started via os.system")
+                        print("Batch script started via os.system (hidden)")
                     except Exception as e2:
                         print(f"Method 2 failed: {e2}")
-                        # Phương pháp 3: subprocess.call với cmd
+                        # Phương pháp 3: subprocess.call với cmd ẩn
                         try:
+                            startupinfo = subprocess.STARTUPINFO()
+                            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                            startupinfo.wShowWindow = subprocess.SW_HIDE
+                            
                             subprocess.Popen(
-                                ['cmd', '/c', 'start', '/min', batch_path],
+                                ['cmd', '/c', 'start', '/b', '/min', batch_path],
                                 cwd=os.path.dirname(current_exe_path),
-                                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                                creationflags=subprocess.CREATE_NO_WINDOW,
+                                startupinfo=startupinfo
                             )
-                            print("Batch script started via cmd")
+                            print("Batch script started via cmd (hidden)")
                         except Exception as e3:
                             print(f"All methods failed: {e1}, {e2}, {e3}")
                             raise e3
@@ -511,10 +525,11 @@ class UpdateDialog:
         result = messagebox.askyesnocancel("Cập nhật thành công", 
                                          "Cập nhật đã hoàn tất!\n\n" +
                                          "Chọn cách khởi động lại:\n" +
-                                         "• YES: Tự động khởi động lại (thử nghiệm)\n" +
-                                         "• NO: Khởi động thủ công (khuyến nghị)\n" +
+                                         "• YES: Tự động khởi động lại (đã cải thiện)\n" +
+                                         "• NO: Khởi động thủ công (khuyến nghị nếu gặp lỗi)\n" +
                                          "• CANCEL: Tiếp tục với phiên bản cũ\n\n" +
-                                         "Lưu ý: Nếu YES gặp lỗi DLL, hãy chọn NO và làm thủ công.",
+                                         "Lưu ý: Đã thêm delay 5 giây để tránh lỗi DLL.\n" +
+                                         "Nếu vẫn gặp lỗi DLL, hãy chọn NO.",
                                          parent=self.dialog)
         if result is True:  # YES - Auto restart (experimental)
             try:
