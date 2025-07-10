@@ -82,9 +82,9 @@ Sửa lỗi quan trọng: restart mechanism và double-click tray icon
 ---
 
 ## 🔗 **Liên kết**
-- **GitHub**: https://github.com/yourusername/ITM_Translate
-- **Releases**: https://github.com/yourusername/ITM_Translate/releases
-- **Issues**: https://github.com/yourusername/ITM_Translate/issues
+- **GitHub**: https://github.com/quockhanh112hubt/ITM_Translate
+- **Releases**: https://github.com/quockhanh112hubt/ITM_Translate/releases
+- **Issues**: https://github.com/quockhanh112hubt/ITM_Translate/issues
 
 ---
 

@@ -410,18 +410,18 @@ class UpdateDialog:
             self.status_label = tk.Label(progress_frame, text="", font=('Segoe UI', 9))
             
             # Buttons
-            button_frame = tk.Frame(main_frame)
-            button_frame.pack(fill='x')
+            self.button_frame = tk.Frame(main_frame)
+            self.button_frame.pack(fill='x')
             
-            update_btn = tk.Button(button_frame, text="Cập nhật ngay", 
+            self.update_btn = tk.Button(self.button_frame, text="Cập nhật ngay", 
                                  command=self.start_update, font=('Segoe UI', 10),
                                  bg='#2e7d32', fg='white', padx=20)
-            update_btn.pack(side='right', padx=(10, 0))
+            self.update_btn.pack(side='right', padx=(10, 0))
             
-            cancel_btn = tk.Button(button_frame, text="Để sau", 
+            self.cancel_btn = tk.Button(self.button_frame, text="Để sau", 
                                  command=self.dialog.destroy, font=('Segoe UI', 10),
                                  padx=20)
-            cancel_btn.pack(side='right')
+            self.cancel_btn.pack(side='right')
             
         else:
             # No update available
@@ -444,12 +444,9 @@ class UpdateDialog:
         self.progress_bar.pack(fill='x', pady=(0, 5))
         self.status_label.pack()
         
-        # Disable update button
-        for widget in self.dialog.winfo_children():
-            if isinstance(widget, tk.Frame):
-                for btn in widget.winfo_children():
-                    if isinstance(btn, tk.Button) and btn['text'] == "Cập nhật ngay":
-                        btn.config(state='disabled')
+        # Ẩn cả hai nút "Cập nhật ngay" và "Để sau"
+        self.update_btn.pack_forget()
+        self.cancel_btn.pack_forget()
         
         # Start download in background thread
         threading.Thread(target=self._download_and_update, daemon=True).start()
@@ -599,6 +596,11 @@ Bạn có muốn mở thư mục chương trình không?"""
     def _update_error(self, error_msg):
         """Xử lý khi cập nhật lỗi"""
         self.status_label.config(text=f"Lỗi: {error_msg}")
+        
+        # Hiển thị lại các nút để người dùng có thể thử lại hoặc hủy
+        self.update_btn.pack(side='right', padx=(10, 0))
+        self.cancel_btn.pack(side='right')
+        
         messagebox.showerror("Lỗi cập nhật", f"Không thể cập nhật:\n{error_msg}", 
                            parent=self.dialog)
 
