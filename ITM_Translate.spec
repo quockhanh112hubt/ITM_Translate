@@ -10,6 +10,8 @@ ttkbootstrap_datas = collect_data_files('ttkbootstrap')
 win32_submodules = collect_submodules('win32com')
 pythoncom_submodules = collect_submodules('pythoncom')
 pywintypes_submodules = collect_submodules('pywintypes')
+pydantic_submodules = collect_submodules('pydantic')
+pydantic_core_submodules = collect_submodules('pydantic_core')
 
 a = Analysis(
     ['ITM_Translate.py'],
@@ -61,7 +63,12 @@ a = Analysis(
         'queue',
         'ctypes',
         'ctypes.wintypes',
-    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules,
+        'pydantic',
+        'pydantic_core',
+        'pydantic_core._pydantic_core',
+        'typing_extensions',
+        'annotated_types',
+    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules + pydantic_submodules + pydantic_core_submodules,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

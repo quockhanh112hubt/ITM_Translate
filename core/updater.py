@@ -196,77 +196,93 @@ class Updater:
             raise e
     
     def restart_application(self):
-        """Khởi động lại ứng dụng với file mới - Approach mới an toàn hơn"""
+        """Khởi động lại ứng dụng với file mới - Cải thiện an toàn hơn"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             new_exe_path = current_exe_path + ".new"
             backup_path = current_exe_path + ".backup"
             
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
-                # Approach 1: Dùng Python script thay vì batch
-                updater_script = f'''
+                # Approach: Dùng batch script đơn giản và tin cậy hơn
+                batch_script = f'''@echo off
+echo Starting ITM Translate update process...
+timeout /t 3 /nobreak >nul
+
+set "current_exe={current_exe_path}"
+set "new_exe={new_exe_path}"
+set "backup_exe={backup_path}"
+set "app_dir={os.path.dirname(current_exe_path)}"
+
+cd /d "%app_dir%"
+
+echo Checking for new version file...
+if not exist "%new_exe%" (
+    echo ERROR: New version file not found!
+    pause
+    exit /b 1
+)
+
+echo Creating backup...
+if exist "%current_exe%" (
+    if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
+    move "%current_exe%" "%backup_exe%" >nul 2>&1
+)
+
+echo Installing new version...
+move "%new_exe%" "%current_exe%" >nul 2>&1
+
+if not exist "%current_exe%" (
+    echo ERROR: Failed to install new version!
+    if exist "%backup_exe%" (
+        echo Restoring backup...
+        move "%backup_exe%" "%current_exe%" >nul 2>&1
+    )
+    pause
+    exit /b 1
+)
+
+echo Starting new version...
+start "" "%current_exe%"
+
+echo Waiting for app to start...
+timeout /t 3 /nobreak >nul
+
+echo Cleaning up...
+if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
+if exist "%~f0" del "%~f0" >nul 2>&1
+
+exit
+'''
+                
+                # Tạo batch script
+                batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
+                with open(batch_path, 'w', encoding='utf-8') as f:
+                    f.write(batch_script)
+                
+                # Chạy batch script
+                subprocess.Popen([batch_path], 
+                               shell=True, 
+                               cwd=os.path.dirname(current_exe_path),
+                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS)
+                
+            else:
+                # Cho development mode - sử dụng python script đơn giản
+                python_script = f'''
 import os
 import sys
 import time
 import subprocess
 import shutil
 
-def safe_update():
-    time.sleep(3)  # Đợi app cũ thoát hoàn toàn
-    
-    current_exe = r"{current_exe_path}"
-    new_exe = r"{new_exe_path}"
-    backup_exe = r"{backup_path}"
-    
-    try:
-        # Kiểm tra file .new có tồn tại không
-        if os.path.exists(new_exe):
-            # Xóa file cũ
-            if os.path.exists(current_exe):
-                if os.path.exists(backup_exe):
-                    os.remove(backup_exe)
-                shutil.move(current_exe, backup_exe)
-            
-            # Đổi tên file mới
-            shutil.move(new_exe, current_exe)
-            
-            # Khởi động app mới
-            os.chdir(r"{os.path.dirname(current_exe_path)}")
-            subprocess.Popen([current_exe], shell=False)
-            
-            # Cleanup backup sau 5 giây
-            time.sleep(5)
-            if os.path.exists(backup_exe):
-                try:
-                    os.remove(backup_exe)
-                except:
-                    pass
-        
-    except Exception as e:
-        # Nếu có lỗi, khôi phục từ backup
-        if os.path.exists(backup_exe) and not os.path.exists(current_exe):
-            shutil.move(backup_exe, current_exe)
-        raise e
-
-if __name__ == "__main__":
-    safe_update()
+time.sleep(2)
+os.chdir(r"{os.path.dirname(current_exe_path)}")
+subprocess.Popen([sys.executable, r"{current_exe_path}"])
 '''
+                script_path = os.path.join(os.path.dirname(current_exe_path), "dev_restart.py")
+                with open(script_path, 'w', encoding='utf-8') as f:
+                    f.write(python_script)
                 
-                # Tạo updater script
-                updater_path = os.path.join(os.path.dirname(current_exe_path), "updater_temp.py")
-                with open(updater_path, 'w', encoding='utf-8') as f:
-                    f.write(updater_script)
-                
-                # Chạy updater script với Python
-                python_exe = sys.executable
-                subprocess.Popen([python_exe, updater_path], 
-                               shell=False, 
-                               cwd=os.path.dirname(current_exe_path),
-                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-                
-            else:
-                # Cho development mode
-                subprocess.Popen([sys.executable, os.path.abspath(__file__)], 
+                subprocess.Popen([sys.executable, script_path], 
                                cwd=os.path.dirname(current_exe_path))
             
             # Thoát ngay lập tức
@@ -460,15 +476,27 @@ class UpdateDialog:
             try:
                 self.updater.restart_application()
             except Exception as e:
-                messagebox.showerror("Lỗi khởi động lại", 
-                                   f"Khởi động tự động thất bại:\n{str(e)}\n\n" +
-                                   "Hãy làm theo hướng dẫn thủ công:\n" +
-                                   "1. Thoát chương trình (Alt+F4)\n" +
-                                   "2. Vào thư mục chương trình\n" +
-                                   "3. Xóa file .backup nếu có\n" +
-                                   "4. Chạy ITM_Translate.exe\n\n" +
-                                   "Nếu vẫn lỗi DLL, restart máy tính và thử lại.",
-                                   parent=self.dialog)
+                error_detail = str(e)
+                if "pydantic" in error_detail.lower() or "module" in error_detail.lower():
+                    messagebox.showerror("Lỗi khởi động lại", 
+                                       f"Khởi động tự động thất bại do lỗi dependencies:\n{error_detail}\n\n" +
+                                       "GIẢI PHÁP:\n" +
+                                       "1. Thoát chương trình hoàn toàn (Alt+F4)\n" +
+                                       "2. Restart máy tính (khuyến nghị)\n" +
+                                       "3. Chạy lại ITM_Translate.exe\n" +
+                                       "4. Nếu vẫn lỗi, download lại từ GitHub\n\n" +
+                                       "Lỗi này thường do PyInstaller bundling issue.",
+                                       parent=self.dialog)
+                else:
+                    messagebox.showerror("Lỗi khởi động lại", 
+                                       f"Khởi động tự động thất bại:\n{error_detail}\n\n" +
+                                       "Hãy làm theo hướng dẫn thủ công:\n" +
+                                       "1. Thoát chương trình (Alt+F4)\n" +
+                                       "2. Vào thư mục chương trình\n" +
+                                       "3. Xóa file .backup nếu có\n" +
+                                       "4. Chạy ITM_Translate.exe\n\n" +
+                                       "Nếu vẫn lỗi DLL, restart máy tính và thử lại.",
+                                       parent=self.dialog)
         elif result is False:  # NO - Manual restart (recommended)
             self._show_manual_restart_instructions()
         # result is None (CANCEL) - Do nothing, keep current version
@@ -491,14 +519,21 @@ class UpdateDialog:
 • Xóa file .backup (nếu có)
 
 🚀 BƯỚC 4: Khởi động lại
+• KHUYẾN NGHỊ: Restart máy tính trước
 • Chạy file ITM_Translate.exe mới
 • Kiểm tra version trong settings
 
-⚠️ NẾU GẶP LỖI "Failed to load Python DLL":
-• Restart máy tính
-• Tạm thời disable antivirus
+⚠️ NẾU GẶP LỖI "No module named 'pydantic_core'":
+• Đây là lỗi PyInstaller bundling
+• PHẢI restart máy tính
 • Chạy với quyền Administrator
-• Hoặc download lại file .exe từ GitHub
+• Tạm thời disable antivirus
+• Nếu vẫn lỗi: download lại từ GitHub releases
+
+⚠️ NẾU GẶP LỗI "Failed to load Python DLL":
+• Restart máy tính (bắt buộc)
+• Chạy với quyền Administrator
+• Kiểm tra antivirus không block file
 
 Bạn có muốn mở thư mục chương trình không?"""
         
