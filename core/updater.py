@@ -256,14 +256,55 @@ exit
                 
                 # Tạo batch script
                 batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
+                print(f"Creating batch script at: {batch_path}")  # Debug log
+                
                 with open(batch_path, 'w', encoding='utf-8') as f:
                     f.write(batch_script)
                 
-                # Chạy batch script
-                subprocess.Popen([batch_path], 
-                               shell=True, 
-                               cwd=os.path.dirname(current_exe_path),
-                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS)
+                print(f"Batch script created successfully")  # Debug log
+                
+                # Đảm bảo file batch có thể thực thi
+                import stat
+                os.chmod(batch_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH)
+                
+                print(f"Starting batch script: {batch_path}")  # Debug log
+                
+                # Chạy batch script với nhiều phương pháp fallback
+                try:
+                    # Phương pháp 1: subprocess.Popen với shell=True
+                    process = subprocess.Popen(
+                        [batch_path], 
+                        shell=True, 
+                        cwd=os.path.dirname(current_exe_path),
+                        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                    print(f"Batch process started with PID: {process.pid}")
+                except Exception as e1:
+                    print(f"Method 1 failed: {e1}")
+                    try:
+                        # Phương pháp 2: os.system
+                        import threading
+                        def run_batch():
+                            os.system(f'start /min "" "{batch_path}"')
+                        
+                        thread = threading.Thread(target=run_batch, daemon=True)
+                        thread.start()
+                        print("Batch script started via os.system")
+                    except Exception as e2:
+                        print(f"Method 2 failed: {e2}")
+                        # Phương pháp 3: subprocess.call với cmd
+                        try:
+                            subprocess.Popen(
+                                ['cmd', '/c', 'start', '/min', batch_path],
+                                cwd=os.path.dirname(current_exe_path),
+                                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+                            )
+                            print("Batch script started via cmd")
+                        except Exception as e3:
+                            print(f"All methods failed: {e1}, {e2}, {e3}")
+                            raise e3
                 
             else:
                 # Cho development mode - sử dụng python script đơn giản
@@ -285,10 +326,16 @@ subprocess.Popen([sys.executable, r"{current_exe_path}"])
                 subprocess.Popen([sys.executable, script_path], 
                                cwd=os.path.dirname(current_exe_path))
             
+            print("Exiting current application...")
+            # Đợi một chút để batch script khởi động
+            import time
+            time.sleep(1)
+            
             # Thoát ngay lập tức
             sys.exit(0)
             
         except Exception as e:
+            print(f"Error in restart_application: {e}")
             raise e
 
 class UpdateDialog:
