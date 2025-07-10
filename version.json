@@ -2,5 +2,5 @@
     "version": "1.0.12",
     "build": "2025071014",
     "release_date": "2025-07-10",
-    "description": "Auto build release"
+    "description": "Enhanced tray icon double-click functionality"
 }
