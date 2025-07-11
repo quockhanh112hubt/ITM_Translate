@@ -196,129 +196,108 @@ class Updater:
             raise e
     
     def restart_application(self):
-        """Khởi động lại ứng dụng với file mới - Cải thiện an toàn hơn"""
+        """Khởi động lại ứng dụng với file mới - Hoàn toàn ẩn CMD và fix DLL"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             new_exe_path = current_exe_path + ".new"
             backup_path = current_exe_path + ".backup"
             
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
-                # Approach: Dùng batch script đơn giản và tin cậy hơn với delay lớn hơn
+                # Approach: VBScript để chạy batch script hoàn toàn ẩn
+                vbs_script = f'''Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run chr(34) & "{os.path.dirname(current_exe_path)}\\update_restart.bat" & Chr(34), 0
+Set WshShell = Nothing'''
+                
+                # Batch script với timeout ngắn hơn và cleanup tốt hơn
                 batch_script = f'''@echo off
-echo Starting ITM Translate update process... >nul
-timeout /t 5 /nobreak >nul
-
+setlocal enabledelayedexpansion
 set "current_exe={current_exe_path}"
 set "new_exe={new_exe_path}"
 set "backup_exe={backup_path}"
 set "app_dir={os.path.dirname(current_exe_path)}"
 
-cd /d "%app_dir%"
+cd /d "%app_dir%" >nul 2>&1
 
-echo Waiting for app to close completely... >nul
-timeout /t 3 /nobreak >nul
+REM Wait for parent process to close completely
+timeout /t 3 /nobreak >nul 2>&1
 
-echo Checking for new version file... >nul
+REM Check if new version exists
 if not exist "%new_exe%" (
-    echo ERROR: New version file not found! >nul
     exit /b 1
 )
 
-echo Creating backup... >nul
+REM Create backup and replace
 if exist "%current_exe%" (
-    if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
+    if exist "%backup_exe%" del /f /q "%backup_exe%" >nul 2>&1
     move "%current_exe%" "%backup_exe%" >nul 2>&1
 )
 
-echo Installing new version... >nul
 move "%new_exe%" "%current_exe%" >nul 2>&1
 
+REM Verify installation
 if not exist "%current_exe%" (
-    echo ERROR: Failed to install new version! >nul
     if exist "%backup_exe%" (
-        echo Restoring backup... >nul
         move "%backup_exe%" "%current_exe%" >nul 2>&1
     )
     exit /b 1
 )
 
-echo Waiting before restart to avoid DLL conflicts... >nul
-timeout /t 5 /nobreak >nul
-
-echo Starting new version... >nul
+REM Wait to avoid DLL conflicts then start
+timeout /t 2 /nobreak >nul 2>&1
 start "" "%current_exe%"
 
-echo Waiting for app to start... >nul
-timeout /t 5 /nobreak >nul
-
-echo Cleaning up... >nul
-if exist "%backup_exe%" del "%backup_exe%" >nul 2>&1
-if exist "%~f0" del "%~f0" >nul 2>&1
-
-exit
+REM Cleanup
+timeout /t 1 /nobreak >nul 2>&1
+if exist "%backup_exe%" del /f /q "%backup_exe%" >nul 2>&1
+del /f /q "%~f0" >nul 2>&1
 '''
                 
-                # Tạo batch script
+                # Tạo VBS script để chạy batch ẩn hoàn toàn
+                vbs_path = os.path.join(os.path.dirname(current_exe_path), "update_launcher.vbs")
                 batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
-                print(f"Creating batch script at: {batch_path}")  # Debug log
                 
+                print(f"Creating VBS launcher: {vbs_path}")  # Debug log
+                
+                # Write batch script
                 with open(batch_path, 'w', encoding='utf-8') as f:
                     f.write(batch_script)
                 
-                print(f"Batch script created successfully")  # Debug log
+                # Write VBS script
+                with open(vbs_path, 'w', encoding='utf-8') as f:
+                    f.write(vbs_script)
                 
-                # Đảm bảo file batch có thể thực thi
-                import stat
-                os.chmod(batch_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IROTH)
+                print(f"Scripts created successfully")  # Debug log
                 
-                print(f"Starting batch script: {batch_path}")  # Debug log
-                
-                # Chạy batch script với nhiều phương pháp fallback (ẩn cửa sổ CMD)
+                # Run VBS script (hoàn toàn ẩn)
                 try:
-                    # Phương pháp 1: subprocess.Popen với hidden window
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    startupinfo.wShowWindow = subprocess.SW_HIDE
-                    
-                    process = subprocess.Popen(
-                        [batch_path], 
-                        shell=False,  # Không dùng shell để tránh hiện cmd window
+                    subprocess.Popen(
+                        ['cscript', '//NoLogo', '//B', vbs_path],
                         cwd=os.path.dirname(current_exe_path),
-                        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                        creationflags=subprocess.CREATE_NO_WINDOW,
                         stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                        startupinfo=startupinfo
+                        stderr=subprocess.DEVNULL
                     )
-                    print(f"Batch process started with PID: {process.pid}")
+                    print("VBS launcher started successfully")
                 except Exception as e1:
-                    print(f"Method 1 failed: {e1}")
+                    print(f"VBS method failed: {e1}")
+                    # Fallback: Direct batch với enhanced hidden flags
                     try:
-                        # Phương pháp 2: os.system với ẩn cửa sổ
-                        import threading
-                        def run_batch():
-                            os.system(f'start /b /min "" "{batch_path}"')  # /b = background, /min = minimized
+                        startupinfo = subprocess.STARTUPINFO()
+                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                        startupinfo.wShowWindow = subprocess.SW_HIDE
                         
-                        thread = threading.Thread(target=run_batch, daemon=True)
-                        thread.start()
-                        print("Batch script started via os.system (hidden)")
+                        subprocess.Popen(
+                            [batch_path],
+                            cwd=os.path.dirname(current_exe_path),
+                            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
+                            startupinfo=startupinfo,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL
+                        )
+                        print("Fallback batch method used")
                     except Exception as e2:
-                        print(f"Method 2 failed: {e2}")
-                        # Phương pháp 3: subprocess.call với cmd ẩn
-                        try:
-                            startupinfo = subprocess.STARTUPINFO()
-                            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                            startupinfo.wShowWindow = subprocess.SW_HIDE
-                            
-                            subprocess.Popen(
-                                ['cmd', '/c', 'start', '/b', '/min', batch_path],
-                                cwd=os.path.dirname(current_exe_path),
-                                creationflags=subprocess.CREATE_NO_WINDOW,
-                                startupinfo=startupinfo
-                            )
-                            print("Batch script started via cmd (hidden)")
-                        except Exception as e3:
-                            print(f"All methods failed: {e1}, {e2}, {e3}")
-                            raise e3
+                        print(f"All methods failed: {e1}, {e2}")
+                        raise e2
                 
             else:
                 # Cho development mode - sử dụng python script đơn giản
