@@ -4,6 +4,43 @@ import google.generativeai as genai
 
 load_dotenv()
 
+def detect_language(text):
+    """Detect language of the input text"""
+    api_key = os.environ.get("ITM_TRANSLATE_KEY") or os.getenv("ITM_TRANSLATE_KEY")
+    if not api_key:
+        return None
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-2.0-flash-exp")
+    
+    prompt = f"""Detect the primary language of this text. Return ONLY the language name in Vietnamese format.
+
+Examples:
+- Korean text → "Hàn"
+- English text → "Anh" 
+- Japanese text → "Nhật"
+- Chinese text → "Trung"
+- Vietnamese text → "Việt"
+- Thai text → "Thái"
+- French text → "Pháp"
+- German text → "Đức"
+- Spanish text → "Tây Ban Nha"
+
+For mixed language text, return the dominant language (>50% of content).
+
+Text to analyze: {text}
+
+Return only the language name:"""
+
+    try:
+        response = model.generate_content(prompt)
+        detected_lang = response.text.strip()
+        # Remove any extra quotes or formatting
+        detected_lang = detected_lang.replace('"', '').replace("'", "").strip()
+        return detected_lang
+    except Exception:
+        return None
+
 def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False):
     api_key = os.environ.get("ITM_TRANSLATE_KEY") or os.getenv("ITM_TRANSLATE_KEY")
     if not api_key:
@@ -15,79 +52,53 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
-    # Tạo prompt phù hợp với ngôn ngữ đầu vào
-    if Ngon_ngu_dau_tien.strip().lower() in ["Any language", "bất kỳ", ""]:
-        prompt = f"""You are a professional translation assistant.
-
-Instructions:
-1. Detect the primary language of the input text based on the majority of words/content
-2. For mixed-language text, identify the dominant language (>50% of meaningful content)
-3. Translation rules:
-   - If primary language is {Ngon_ngu_thu_2} → translate to {Ngon_ngu_thu_3}
-   - Otherwise → translate to {Ngon_ngu_thu_2}
-4. Preserve:
-   - Original tone and style
-   - Technical terms (if widely understood)
-   - Proper nouns and brand names
-   - Numbers and dates
-5. Format your response as: "SOURCE_LANG|TARGET_LANG|TRANSLATED_TEXT"
-   - SOURCE_LANG: The detected primary language name (e.g., "Hàn", "Anh", "Nhật", "Trung")
-   - TARGET_LANG: The target language you translated to (e.g., "Tiếng Việt", "English")
-   - TRANSLATED_TEXT: The actual translation
-
-Text to translate:
-{text}"""
-
+    # Step 1: Detect language if needed
+    detected_source_lang = None
+    if return_language_info:
+        if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+            detected_source_lang = detect_language(text)
+        else:
+            detected_source_lang = Ngon_ngu_dau_tien
+    
+    # Step 2: Determine translation direction
+    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+        # Auto-detect mode
+        if detected_source_lang and "việt" in detected_source_lang.lower():
+            target_lang = Ngon_ngu_thu_3  # Việt → English (or thu_3)
+        else:
+            target_lang = Ngon_ngu_thu_2  # Other → Việt
     else:
-        prompt = f"""You are a professional translation assistant.
+        # Fixed source mode
+        if detected_source_lang and "việt" in detected_source_lang.lower():
+            target_lang = Ngon_ngu_thu_3
+        elif detected_source_lang and any(lang in detected_source_lang.lower() for lang in [Ngon_ngu_thu_2.lower().replace("tiếng ", "")]):
+            target_lang = Ngon_ngu_thu_3
+        else:
+            target_lang = Ngon_ngu_thu_2
 
-Instructions:
-1. Source language: {Ngon_ngu_dau_tien}
-2. Translation rules:
-   - If text is in {Ngon_ngu_dau_tien} or mixed with {Ngon_ngu_dau_tien} as dominant → translate to {Ngon_ngu_thu_2}
-   - If text is in {Ngon_ngu_thu_2} → translate to {Ngon_ngu_thu_3}
-   - If text is already in target language → return as-is
-3. Preserve:
-   - Original tone and style
-   - Technical terms (if widely understood)
-   - Proper nouns and brand names
-   - Numbers and dates
-4. Format your response as: "SOURCE_LANG|TARGET_LANG|TRANSLATED_TEXT"
-   - SOURCE_LANG: The actual source language detected (e.g., "Hàn", "Anh", "Nhật", "Trung")
-   - TARGET_LANG: The target language you translated to (e.g., "Tiếng Việt", "English")
-   - TRANSLATED_TEXT: The actual translation
+    # Step 3: Create simple translation prompt
+    prompt = f"""Translate this text to {target_lang}.
 
-Text to translate:
-{text}"""
+Rules:
+- Preserve original tone and style
+- Keep technical terms if widely understood
+- Keep proper nouns and brand names
+- Keep numbers and dates unchanged
+- Return ONLY the translated text, no explanations
+
+Text to translate: {text}
+
+Translation:"""
 
     try:
         response = model.generate_content(prompt)
-        response_text = response.text.strip()
+        translated_text = response.text.strip()
         
-        # Parse response để extract language info
+        # Return results based on mode
         if return_language_info:
-            try:
-                parts = response_text.split('|', 2)
-                if len(parts) == 3:
-                    source_lang, target_lang, translated_text = parts
-                    return translated_text.strip(), source_lang.strip(), target_lang.strip()
-                else:
-                    # Fallback nếu format không đúng
-                    return response_text, None, None
-            except Exception:
-                return response_text, None, None
+            return translated_text, detected_source_lang, target_lang
         else:
-            # Compatibility mode - chỉ return text
-            if '|' in response_text:
-                try:
-                    parts = response_text.split('|', 2)
-                    if len(parts) == 3:
-                        return parts[2].strip()  # Chỉ lấy translated text
-                    elif len(parts) == 2:
-                        return parts[1].strip()  # Fallback nếu chỉ có 2 phần
-                except Exception:
-                    pass
-            return response_text
+            return translated_text
             
     except Exception as e:
         result = f"Lỗi dịch: {str(e)}"

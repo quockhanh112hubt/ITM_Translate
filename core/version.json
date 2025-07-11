@@ -1,6 +1,6 @@
 {
-    "version": "1.0.23",
-    "build": "2025071114",
+    "version": "1.0.24",
+    "build": "2025071115",
     "release_date": "2025-07-11",
-    "description": "Fixed popup title format and AI response parsing"
+    "description": "Implemented 2-step translation: separate language detection and translation"
 }
