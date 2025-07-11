@@ -16,7 +16,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
     # Tạo prompt phù hợp với ngôn ngữ đầu vào
-    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+    if Ngon_ngu_dau_tien.strip().lower() in ["Any language", "bất kỳ", ""]:
         prompt = f"""You are a professional translation assistant.
 
 Instructions:
@@ -30,9 +30,9 @@ Instructions:
    - Technical terms (if widely understood)
    - Proper nouns and brand names
    - Numbers and dates
-5. Format your response as: "DETECTED_LANG|TARGET_LANG|TRANSLATED_TEXT"
-   - DETECTED_LANG: The detected primary language name
-   - TARGET_LANG: The target language you translated to
+5. Format your response as: "SOURCE_LANG|TARGET_LANG|TRANSLATED_TEXT"
+   - SOURCE_LANG: The detected primary language name (e.g., "Hàn", "Anh", "Nhật", "Trung")
+   - TARGET_LANG: The target language you translated to (e.g., "Tiếng Việt", "English")
    - TRANSLATED_TEXT: The actual translation
 
 Text to translate:
@@ -53,8 +53,8 @@ Instructions:
    - Proper nouns and brand names
    - Numbers and dates
 4. Format your response as: "SOURCE_LANG|TARGET_LANG|TRANSLATED_TEXT"
-   - SOURCE_LANG: The actual source language detected
-   - TARGET_LANG: The target language you translated to
+   - SOURCE_LANG: The actual source language detected (e.g., "Hàn", "Anh", "Nhật", "Trung")
+   - TARGET_LANG: The target language you translated to (e.g., "Tiếng Việt", "English")
    - TRANSLATED_TEXT: The actual translation
 
 Text to translate:
@@ -83,6 +83,8 @@ Text to translate:
                     parts = response_text.split('|', 2)
                     if len(parts) == 3:
                         return parts[2].strip()  # Chỉ lấy translated text
+                    elif len(parts) == 2:
+                        return parts[1].strip()  # Fallback nếu chỉ có 2 phần
                 except Exception:
                     pass
             return response_text
