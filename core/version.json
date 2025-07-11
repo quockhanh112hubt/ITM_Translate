@@ -1,6 +1,6 @@
 {
-    "version": "1.0.19",
-    "build": "2025071111", 
+    "version": "1.0.20",
+    "build": "2025071112", 
     "release_date": "2025-07-11",
-    "description": "Fixed auto-update restart mechanism with enhanced debugging"
+    "description": "Enhanced popup titles with language info and version display"
 }

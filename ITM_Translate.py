@@ -122,7 +122,13 @@ def _on_activate_translate():
                     if loading and loading.winfo_exists():
                         loading._running = False
                         loading.destroy()
-                    show_popup(translated, master=root)
+                    # Import version từ popup module
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    show_popup(translated, master=root, 
+                              source_lang=global_language_settings['Ngon_ngu_dau_tien'],
+                              target_lang=global_language_settings['Ngon_ngu_thu_2'],
+                              version=version)
                 root.after(0, show_result)
             else:
                 def close_loading():
@@ -172,7 +178,10 @@ def _on_activate_replace():
                     pasted = get_clipboard()
                     if pasted.strip() != translated.strip():
                         def show_fail():
-                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', master=root)
+                            from ui.popup import get_app_version
+                            version = get_app_version()
+                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
+                                      master=root, version=version)
                         root.after(0, show_fail)
                 root.after(0, do_paste)
             else:
@@ -206,7 +215,13 @@ def _on_activate_translate_group2():
                     if loading and loading.winfo_exists():
                         loading._running = False
                         loading.destroy()
-                    show_popup(translated, master=root)
+                    # Import version từ popup module
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    show_popup(translated, master=root, 
+                              source_lang=global_language_settings['Nhom2_Ngon_ngu_dau_tien'],
+                              target_lang=global_language_settings['Nhom2_Ngon_ngu_thu_2'],
+                              version=version)
                 root.after(0, show_result)
             else:
                 def close_loading():
@@ -254,7 +269,10 @@ def _on_activate_replace_group2():
                     pasted = get_clipboard()
                     if pasted.strip() != translated.strip():
                         def show_fail():
-                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', master=root)
+                            from ui.popup import get_app_version
+                            version = get_app_version()
+                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
+                                      master=root, version=version)
                         root.after(0, show_fail)
                 root.after(0, do_paste)
             else:

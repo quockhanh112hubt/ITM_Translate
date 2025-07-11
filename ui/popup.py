@@ -2,6 +2,28 @@ import tkinter as tk
 import threading
 import time
 import math
+import os
+import json
+
+def get_app_version():
+    """Lấy version hiện tại từ file version.json"""
+    try:
+        # Thử đọc từ core/version.json trước
+        core_version_file = os.path.join(os.path.dirname(__file__), "..", "core", "version.json")
+        if os.path.exists(core_version_file):
+            with open(core_version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+        
+        # Fallback: đọc từ version.json gốc
+        version_file = os.path.join(os.path.dirname(__file__), "..", "version.json")
+        if os.path.exists(version_file):
+            with open(version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+    except Exception:
+        pass
+    return '1.0.0'
 
 def show_loading_popup(root):
     # Hiện popup nhỏ với hiệu ứng loading spinner dots hiện đại
@@ -58,12 +80,23 @@ def show_loading_popup(root):
     animate()
     return loading_win
 
-def show_popup(text, master=None):
+def show_popup(text, master=None, source_lang=None, target_lang=None, version=None):
     if master is None:
         master = tk._default_root
+    
+    # Tạo title với thông tin chi tiết
+    title = 'ITM Translate'
+    if version:
+        title += f' v{version}'
+    if source_lang and target_lang:
+        # Rút gọn tên ngôn ngữ nếu quá dài
+        source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
+        target_display = target_lang.replace('Tiếng ', '')
+        title += f' - {source_display} → {target_display}'
+    
     win = tk.Toplevel(master)
     win.withdraw()
-    win.title('ITM Translate')
+    win.title(title)
     win.attributes('-topmost', True)
     # Đặt icon cho popup nếu có icon.ico
     try:
