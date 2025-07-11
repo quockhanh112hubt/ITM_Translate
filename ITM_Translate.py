@@ -111,13 +111,22 @@ def _on_activate_translate():
             time.sleep(0.15)  # Đợi clipboard cập nhật
             selected_text = get_clipboard()
             if selected_text.strip():
-                translated = translate_text(selected_text, global_language_settings['Ngon_ngu_dau_tien'], global_language_settings['Ngon_ngu_thu_2'], global_language_settings['Ngon_ngu_thu_3'])
+                # Get translation with actual language info
+                translated, actual_source, actual_target = translate_text(
+                    selected_text, 
+                    global_language_settings['Ngon_ngu_dau_tien'], 
+                    global_language_settings['Ngon_ngu_thu_2'], 
+                    global_language_settings['Ngon_ngu_thu_3'],
+                    return_language_info=True
+                )
+                
                 # Kiểm tra lỗi 429
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
                     translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
                 # Kiểm tra lỗi 400
                 if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
                     translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                
                 def show_result():
                     if loading and loading.winfo_exists():
                         loading._running = False
@@ -125,9 +134,14 @@ def _on_activate_translate():
                     # Import version từ popup module
                     from ui.popup import get_app_version
                     version = get_app_version()
+                    
+                    # Use actual language info if available, fallback to settings
+                    display_source = actual_source if actual_source else global_language_settings['Ngon_ngu_dau_tien']
+                    display_target = actual_target if actual_target else global_language_settings['Ngon_ngu_thu_2']
+                    
                     show_popup(translated, master=root, 
-                              source_lang=global_language_settings['Ngon_ngu_dau_tien'],
-                              target_lang=global_language_settings['Ngon_ngu_thu_2'],
+                              source_lang=display_source,
+                              target_lang=display_target,
                               version=version)
                 root.after(0, show_result)
             else:
@@ -152,6 +166,7 @@ def _on_activate_replace():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
+                # For replace function, we don't need language info, just use old method for compatibility
                 translated = translate_text(selected_text, global_language_settings['Ngon_ngu_dau_tien'], global_language_settings['Ngon_ngu_thu_2'], global_language_settings['Ngon_ngu_thu_3'])
                 # Kiểm tra lỗi 429
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
@@ -206,11 +221,20 @@ def _on_activate_translate_group2():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
-                translated = translate_text(selected_text, global_language_settings['Nhom2_Ngon_ngu_dau_tien'], global_language_settings['Nhom2_Ngon_ngu_thu_2'], global_language_settings['Nhom2_Ngon_ngu_thu_3'])
+                # Get translation with actual language info for Group 2
+                translated, actual_source, actual_target = translate_text(
+                    selected_text, 
+                    global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
+                    global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
+                    global_language_settings['Nhom2_Ngon_ngu_thu_3'],
+                    return_language_info=True
+                )
+                
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
                     translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
                 if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
                     translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                
                 def show_result():
                     if loading and loading.winfo_exists():
                         loading._running = False
@@ -218,9 +242,14 @@ def _on_activate_translate_group2():
                     # Import version từ popup module
                     from ui.popup import get_app_version
                     version = get_app_version()
+                    
+                    # Use actual language info if available, fallback to Group 2 settings
+                    display_source = actual_source if actual_source else global_language_settings['Nhom2_Ngon_ngu_dau_tien']
+                    display_target = actual_target if actual_target else global_language_settings['Nhom2_Ngon_ngu_thu_2']
+                    
                     show_popup(translated, master=root, 
-                              source_lang=global_language_settings['Nhom2_Ngon_ngu_dau_tien'],
-                              target_lang=global_language_settings['Nhom2_Ngon_ngu_thu_2'],
+                              source_lang=display_source,
+                              target_lang=display_target,
                               version=version)
                 root.after(0, show_result)
             else:
@@ -245,6 +274,7 @@ def _on_activate_replace_group2():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
+                # For replace function Group 2, use old method for compatibility  
                 translated = translate_text(selected_text, global_language_settings['Nhom2_Ngon_ngu_dau_tien'], global_language_settings['Nhom2_Ngon_ngu_thu_2'], global_language_settings['Nhom2_Ngon_ngu_thu_3'])
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
                     translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
