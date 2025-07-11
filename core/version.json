@@ -1,6 +1,6 @@
 {
-    "version": "1.0.24",
-    "build": "2025071115",
+    "version": "1.0.27",
+    "build": "2025071118",
     "release_date": "2025-07-11",
-    "description": "Implemented 2-step translation: separate language detection and translation"
+    "description": "Enhanced mixed language translation with specialized prompts for complete translation"
 }

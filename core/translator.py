@@ -13,7 +13,10 @@ def detect_language(text):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
     
-    prompt = f"""Detect the primary language of this text. Return ONLY the language name in Vietnamese format.
+    prompt = f"""Analyze this text and determine the language composition.
+
+If the text contains MULTIPLE different languages (mixed), return "Mixed"
+If the text is primarily in ONE language (>80% of content), return the language name in Vietnamese format:
 
 Examples:
 - Korean text → "Hàn"
@@ -25,12 +28,11 @@ Examples:
 - French text → "Pháp"
 - German text → "Đức"
 - Spanish text → "Tây Ban Nha"
-
-For mixed language text, return the dominant language (>50% of content).
+- Mixed languages → "Mixed"
 
 Text to analyze: {text}
 
-Return only the language name:"""
+Return only the result:"""
 
     try:
         response = model.generate_content(prompt)
@@ -40,6 +42,39 @@ Return only the language name:"""
         return detected_lang
     except Exception:
         return None
+
+def is_same_language(detected_lang, target_lang):
+    """Check if detected language matches target language"""
+    if not detected_lang or not target_lang:
+        return False
+    
+    # Normalize language names for comparison
+    detected_clean = detected_lang.lower().replace("tiếng ", "").strip()
+    target_clean = target_lang.lower().replace("tiếng ", "").strip()
+    
+    # Direct match
+    if detected_clean == target_clean:
+        return True
+    
+    # Common mappings
+    language_mappings = {
+        "việt": ["vietnamese", "vietnam", "vi"],
+        "anh": ["english", "en", "eng"],
+        "hàn": ["korean", "korea", "ko", "kr"],
+        "nhật": ["japanese", "japan", "ja", "jp"],
+        "trung": ["chinese", "china", "zh", "cn"],
+        "thái": ["thai", "thailand", "th"],
+        "pháp": ["french", "france", "fr"],
+        "đức": ["german", "germany", "de"]
+    }
+    
+    # Check if they map to the same language
+    for base_lang, variations in language_mappings.items():
+        if (detected_clean == base_lang or detected_clean in variations) and \
+           (target_clean == base_lang or target_clean in variations):
+            return True
+    
+    return False
 
 def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False):
     api_key = os.environ.get("ITM_TRANSLATE_KEY") or os.getenv("ITM_TRANSLATE_KEY")
@@ -63,21 +98,42 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
     # Step 2: Determine translation direction
     if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
         # Auto-detect mode
-        if detected_source_lang and "việt" in detected_source_lang.lower():
-            target_lang = Ngon_ngu_thu_3  # Việt → English (or thu_3)
+        if detected_source_lang and detected_source_lang.lower() == "mixed":
+            # Mixed language → always translate to thu_2
+            target_lang = Ngon_ngu_thu_2
+            # Keep detected_source_lang as "Mixed" for display
+        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+            target_lang = Ngon_ngu_thu_3  # Source matches thu_2 → translate to thu_3
         else:
-            target_lang = Ngon_ngu_thu_2  # Other → Việt
+            target_lang = Ngon_ngu_thu_2  # Source different → translate to thu_2
     else:
         # Fixed source mode
-        if detected_source_lang and "việt" in detected_source_lang.lower():
-            target_lang = Ngon_ngu_thu_3
-        elif detected_source_lang and any(lang in detected_source_lang.lower() for lang in [Ngon_ngu_thu_2.lower().replace("tiếng ", "")]):
+        if detected_source_lang and detected_source_lang.lower() == "mixed":
+            # Mixed language → always translate to thu_2
+            target_lang = Ngon_ngu_thu_2
+        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
             target_lang = Ngon_ngu_thu_3
         else:
             target_lang = Ngon_ngu_thu_2
 
-    # Step 3: Create simple translation prompt
-    prompt = f"""Translate this text to {target_lang}.
+    # Step 3: Create translation prompt
+    if detected_source_lang and detected_source_lang.lower() == "mixed":
+        # Special prompt for mixed language content
+        prompt = f"""This text contains multiple languages mixed together. Translate ALL content to {target_lang}.
+
+Rules for mixed language translation:
+- Translate every word/phrase to {target_lang}, regardless of original language
+- Maintain the original structure and meaning
+- Keep proper nouns and brand names (unless they have common translations)
+- Keep numbers and dates unchanged
+- Return ONLY the fully translated text in {target_lang}
+
+Mixed language text to translate: {text}
+
+Complete translation to {target_lang}:"""
+    else:
+        # Standard prompt for single language
+        prompt = f"""Translate this text to {target_lang}.
 
 Rules:
 - Preserve original tone and style

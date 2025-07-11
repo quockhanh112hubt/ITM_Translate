@@ -166,8 +166,15 @@ def _on_activate_replace():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
-                # For replace function, we don't need language info, just use old method for compatibility
-                translated = translate_text(selected_text, global_language_settings['Ngon_ngu_dau_tien'], global_language_settings['Ngon_ngu_thu_2'], global_language_settings['Ngon_ngu_thu_3'])
+                # Use same logic as translate popup - detect language for proper direction
+                translated, actual_source, actual_target = translate_text(
+                    selected_text, 
+                    global_language_settings['Ngon_ngu_dau_tien'], 
+                    global_language_settings['Ngon_ngu_thu_2'], 
+                    global_language_settings['Ngon_ngu_thu_3'],
+                    return_language_info=True
+                )
+                
                 # Kiểm tra lỗi 429
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
                     translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
@@ -274,8 +281,15 @@ def _on_activate_replace_group2():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
-                # For replace function Group 2, use old method for compatibility  
-                translated = translate_text(selected_text, global_language_settings['Nhom2_Ngon_ngu_dau_tien'], global_language_settings['Nhom2_Ngon_ngu_thu_2'], global_language_settings['Nhom2_Ngon_ngu_thu_3'])
+                # Use same logic as translate popup for Group 2 - detect language for proper direction
+                translated, actual_source, actual_target = translate_text(
+                    selected_text, 
+                    global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
+                    global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
+                    global_language_settings['Nhom2_Ngon_ngu_thu_3'],
+                    return_language_info=True
+                )
+                
                 if isinstance(translated, str) and "429" in translated and "quota" in translated:
                     translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
                 if isinstance(translated, str) and "400" in translated and "key not valid" in translated:

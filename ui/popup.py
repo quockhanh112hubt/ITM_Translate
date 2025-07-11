@@ -89,8 +89,12 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     if version:
         title += f' v{version}'
     if source_lang and target_lang:
-        # Rút gọn tên ngôn ngữ nếu quá dài
-        source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
+        # Handle special cases
+        if source_lang.lower() == "mixed":
+            source_display = "Multi language"
+        else:
+            source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
+        
         target_display = target_lang.replace('Tiếng ', '')
         title += f' - {source_display} → {target_display}'
     
