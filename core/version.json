@@ -1,6 +1,6 @@
 {
-    "version": "1.0.18",
-    "build": "2025071120",
+    "version": "1.0.19",
+    "build": "2025071111", 
     "release_date": "2025-07-11",
-    "description": "Improved translation prompts - better accuracy and consistency"
+    "description": "Fixed auto-update restart mechanism with enhanced debugging"
 }

@@ -201,106 +201,202 @@ class Updater:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             new_exe_path = current_exe_path + ".new"
             backup_path = current_exe_path + ".backup"
+            app_dir = os.path.dirname(current_exe_path)
             
             if getattr(sys, 'frozen', False):  # Chỉ cho executable
-                # Approach: VBScript để chạy batch script hoàn toàn ẩn
-                vbs_script = f'''Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run chr(34) & "{os.path.dirname(current_exe_path)}\\update_restart.bat" & Chr(34), 0
-Set WshShell = Nothing'''
+                print(f"Setting up restart from: {current_exe_path}")
+                print(f"New exe available at: {new_exe_path}")
+                print(f"Working directory: {app_dir}")
                 
-                # Batch script với timeout ngắn hơn và cleanup tốt hơn
+                # Enhanced VBScript với error handling tốt hơn
+                vbs_script = f'''On Error Resume Next
+Dim WshShell, fso, appDir, result
+Set WshShell = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+appDir = "{app_dir.replace(chr(92), chr(92) + chr(92))}"
+WshShell.CurrentDirectory = appDir
+
+' Chạy batch script hoàn toàn ẩn
+result = WshShell.Run("cmd.exe /c update_restart.bat", 0, False)
+
+Set WshShell = Nothing
+Set fso = Nothing'''
+                
+                # Enhanced batch script với robust error handling
                 batch_script = f'''@echo off
 setlocal enabledelayedexpansion
+title ITM Translate Auto Updater
 set "current_exe={current_exe_path}"
 set "new_exe={new_exe_path}"
 set "backup_exe={backup_path}"
-set "app_dir={os.path.dirname(current_exe_path)}"
 
-cd /d "%app_dir%" >nul 2>&1
+echo [%time%] ITM Translate Auto Update Process Started
+echo [%time%] Current EXE: %current_exe%
+echo [%time%] New EXE: %new_exe%
+echo [%time%] App Directory: {app_dir}
 
-REM Wait for parent process to close completely
-timeout /t 3 /nobreak >nul 2>&1
-
-REM Check if new version exists
-if not exist "%new_exe%" (
+cd /d "{app_dir}" 2>nul
+if errorlevel 1 (
+    echo [%time%] ERROR: Cannot change to app directory
+    pause
     exit /b 1
 )
 
-REM Create backup and replace
-if exist "%current_exe%" (
-    if exist "%backup_exe%" del /f /q "%backup_exe%" >nul 2>&1
-    move "%current_exe%" "%backup_exe%" >nul 2>&1
+echo [%time%] Waiting for parent process to close...
+timeout /t 5 /nobreak >nul 2>&1
+
+echo [%time%] Checking for new version file...
+if not exist "%new_exe%" (
+    echo [%time%] ERROR: New version file not found: %new_exe%
+    pause
+    exit /b 1
 )
 
-move "%new_exe%" "%current_exe%" >nul 2>&1
+echo [%time%] Starting file replacement process...
 
-REM Verify installation
-if not exist "%current_exe%" (
+REM Remove old backup if exists
+if exist "%backup_exe%" (
+    echo [%time%] Removing old backup...
+    del /f /q "%backup_exe%" >nul 2>&1
+)
+
+REM Backup current version
+if exist "%current_exe%" (
+    echo [%time%] Creating backup of current version...
+    move "%current_exe%" "%backup_exe%" >nul 2>&1
+    if errorlevel 1 (
+        echo [%time%] ERROR: Cannot backup current version
+        pause
+        exit /b 1
+    )
+)
+
+REM Install new version
+echo [%time%] Installing new version...
+move "%new_exe%" "%current_exe%" >nul 2>&1
+if errorlevel 1 (
+    echo [%time%] ERROR: Cannot install new version, restoring backup...
     if exist "%backup_exe%" (
         move "%backup_exe%" "%current_exe%" >nul 2>&1
     )
+    pause
     exit /b 1
 )
 
-REM Wait to avoid DLL conflicts then start
-timeout /t 2 /nobreak >nul 2>&1
+REM Verify new installation
+if not exist "%current_exe%" (
+    echo [%time%] ERROR: New version installation failed
+    pause
+    exit /b 1
+)
+
+echo [%time%] Installation successful, waiting before restart...
+timeout /t 3 /nobreak >nul 2>&1
+
+echo [%time%] Starting application...
 start "" "%current_exe%"
 
+if errorlevel 1 (
+    echo [%time%] ERROR: Failed to start application
+    pause
+    exit /b 1
+)
+
+echo [%time%] Application started successfully
+timeout /t 2 /nobreak >nul 2>&1
+
 REM Cleanup
-timeout /t 1 /nobreak >nul 2>&1
+echo [%time%] Cleaning up...
 if exist "%backup_exe%" del /f /q "%backup_exe%" >nul 2>&1
 del /f /q "%~f0" >nul 2>&1
-'''
+
+echo [%time%] Update process completed successfully
+exit /b 0'''
                 
-                # Tạo VBS script để chạy batch ẩn hoàn toàn
-                vbs_path = os.path.join(os.path.dirname(current_exe_path), "update_launcher.vbs")
-                batch_path = os.path.join(os.path.dirname(current_exe_path), "update_restart.bat")
+                # Tạo file paths
+                vbs_path = os.path.join(app_dir, "update_launcher.vbs")
+                batch_path = os.path.join(app_dir, "update_restart.bat")
                 
-                print(f"Creating VBS launcher: {vbs_path}")  # Debug log
+                print(f"Creating update scripts...")
+                print(f"VBS: {vbs_path}")
+                print(f"BAT: {batch_path}")
                 
-                # Write batch script
-                with open(batch_path, 'w', encoding='utf-8') as f:
-                    f.write(batch_script)
+                # Write batch script first
+                try:
+                    with open(batch_path, 'w', encoding='utf-8') as f:
+                        f.write(batch_script)
+                    print(f"Batch script created successfully")
+                except Exception as e:
+                    print(f"Failed to create batch script: {e}")
+                    raise e
                 
                 # Write VBS script
-                with open(vbs_path, 'w', encoding='utf-8') as f:
-                    f.write(vbs_script)
-                
-                print(f"Scripts created successfully")  # Debug log
-                
-                # Run VBS script (hoàn toàn ẩn)
                 try:
-                    subprocess.Popen(
-                        ['cscript', '//NoLogo', '//B', vbs_path],
-                        cwd=os.path.dirname(current_exe_path),
+                    with open(vbs_path, 'w', encoding='utf-8') as f:
+                        f.write(vbs_script)
+                    print(f"VBS script created successfully")
+                except Exception as e:
+                    print(f"Failed to create VBS script: {e}")
+                    raise e
+                
+                # Verify scripts exist
+                if not os.path.exists(vbs_path):
+                    raise Exception(f"VBS script not created: {vbs_path}")
+                if not os.path.exists(batch_path):
+                    raise Exception(f"Batch script not created: {batch_path}")
+                
+                print(f"All scripts verified, starting launcher...")
+                
+                # Method 1: Try VBS with wscript (preferred)
+                try:
+                    result = subprocess.Popen(
+                        ['wscript.exe', vbs_path],
+                        cwd=app_dir,
                         creationflags=subprocess.CREATE_NO_WINDOW,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
                     )
-                    print("VBS launcher started successfully")
+                    print(f"VBS launcher started with wscript (PID: {result.pid})")
                 except Exception as e1:
-                    print(f"VBS method failed: {e1}")
-                    # Fallback: Direct batch với enhanced hidden flags
+                    print(f"wscript method failed: {e1}")
+                    
+                    # Method 2: Try VBS with cscript
                     try:
-                        startupinfo = subprocess.STARTUPINFO()
-                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                        startupinfo.wShowWindow = subprocess.SW_HIDE
-                        
-                        subprocess.Popen(
-                            [batch_path],
-                            cwd=os.path.dirname(current_exe_path),
-                            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
-                            startupinfo=startupinfo,
+                        result = subprocess.Popen(
+                            ['cscript.exe', '//NoLogo', '//B', vbs_path],
+                            cwd=app_dir,
+                            creationflags=subprocess.CREATE_NO_WINDOW,
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL
                         )
-                        print("Fallback batch method used")
+                        print(f"VBS launcher started with cscript (PID: {result.pid})")
                     except Exception as e2:
-                        print(f"All methods failed: {e1}, {e2}")
-                        raise e2
+                        print(f"cscript method failed: {e2}")
+                        
+                        # Method 3: Direct batch execution (fallback)
+                        print("Falling back to direct batch execution...")
+                        try:
+                            startupinfo = subprocess.STARTUPINFO()
+                            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                            startupinfo.wShowWindow = subprocess.SW_HIDE
+                            
+                            result = subprocess.Popen(
+                                ['cmd.exe', '/c', batch_path],
+                                cwd=app_dir,
+                                creationflags=subprocess.CREATE_NO_WINDOW,
+                                startupinfo=startupinfo,
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL
+                            )
+                            print(f"Batch launcher started directly (PID: {result.pid})")
+                        except Exception as e3:
+                            print(f"All restart methods failed: {e1}, {e2}, {e3}")
+                            raise e3
                 
             else:
-                # Cho development mode - sử dụng python script đơn giản
+                # Development mode - simple Python restart
+                print("Development mode restart")
                 python_script = f'''
 import os
 import sys
@@ -308,27 +404,33 @@ import time
 import subprocess
 import shutil
 
-time.sleep(2)
-os.chdir(r"{os.path.dirname(current_exe_path)}")
+print("Development restart script starting...")
+time.sleep(3)
+print("Changing to app directory...")
+os.chdir(r"{app_dir}")
+print("Starting application...")
 subprocess.Popen([sys.executable, r"{current_exe_path}"])
+print("Development restart completed")
 '''
-                script_path = os.path.join(os.path.dirname(current_exe_path), "dev_restart.py")
+                script_path = os.path.join(app_dir, "dev_restart.py")
                 with open(script_path, 'w', encoding='utf-8') as f:
                     f.write(python_script)
                 
-                subprocess.Popen([sys.executable, script_path], 
-                               cwd=os.path.dirname(current_exe_path))
+                subprocess.Popen([sys.executable, script_path], cwd=app_dir)
             
-            print("Exiting current application...")
-            # Đợi một chút để batch script khởi động
+            print("Restart process initiated, exiting current application...")
+            
+            # Import time locally để tránh conflicts
             import time
-            time.sleep(1)
+            time.sleep(2)  # Đợi script khởi động
             
-            # Thoát ngay lập tức
+            # Force exit
             sys.exit(0)
             
         except Exception as e:
-            print(f"Error in restart_application: {e}")
+            print(f"Critical error in restart_application: {e}")
+            import traceback
+            traceback.print_exc()
             raise e
 
 class UpdateDialog:
