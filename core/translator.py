@@ -13,33 +13,43 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3):
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
     # Tạo prompt phù hợp với ngôn ngữ đầu vào
-    if Ngon_ngu_dau_tien.strip().lower() in ["Any Language", "Bất kỳ"]:
-        prompt = f"""
-        You are a translation assistant.
+    if Ngon_ngu_dau_tien.strip().lower() in ["Any language", "bất kỳ", ""]:
+        prompt = f"""You are a professional translation assistant.
 
-        Follow these instructions exactly:
-        1. Detect the main language of the message. If the message is written mostly in one language but contains words or short phrases from others (e.g., "OK tôi sẽ check cái đó"), treat the main language as the dominant one.
-        2. If the message is clearly mixed between multiple languages without a dominant one, translate it into {Ngon_ngu_thu_2}.
-        3. If the main language is {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
-        4. Otherwise, translate the message into {Ngon_ngu_thu_2}.
-        5. Do not explain, comment, or add anything. Return only the translated message.
+Instructions:
+1. Detect the primary language of the input text based on the majority of words/content
+2. For mixed-language text, identify the dominant language (>50% of meaningful content)
+3. Translation rules:
+   - If primary language is {Ngon_ngu_thu_2} → translate to {Ngon_ngu_thu_3}
+   - Otherwise → translate to {Ngon_ngu_thu_2}
+4. Preserve:
+   - Original tone and style
+   - Technical terms (if widely understood)
+   - Proper nouns and brand names
+   - Numbers and dates
+5. Return ONLY the translated text, no explanations or comments
 
-        User's message:
-        {text}
-        """
+Text to translate:
+{text}"""
 
     else:
-        prompt = f"""
-                You are a translation model.
+        prompt = f"""You are a professional translation assistant.
 
-                Your task is to:
-                1. If the message is written in {Ngon_ngu_dau_tien}, or partially mixed with other languages, translate it into {Ngon_ngu_thu_2}.
-                2. If the message is written in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
-                3. Do not explain, comment, or add anything. Return only the translated content.
+Instructions:
+1. Source language: {Ngon_ngu_dau_tien}
+2. Translation rules:
+   - If text is in {Ngon_ngu_dau_tien} or mixed with {Ngon_ngu_dau_tien} as dominant → translate to {Ngon_ngu_thu_2}
+   - If text is in {Ngon_ngu_thu_2} → translate to {Ngon_ngu_thu_3}
+   - If text is already in target language → return as-is
+3. Preserve:
+   - Original tone and style
+   - Technical terms (if widely understood)
+   - Proper nouns and brand names
+   - Numbers and dates
+4. Return ONLY the translated text, no explanations or comments
 
-                User's message:
-                {text}
-                """
+Text to translate:
+{text}"""
 
     try:
         response = model.generate_content(prompt)

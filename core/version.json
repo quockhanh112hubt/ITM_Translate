@@ -1,6 +1,6 @@
 {
-    "version": "1.0.17",
-    "build": "2025071119",
+    "version": "1.0.18",
+    "build": "2025071120",
     "release_date": "2025-07-11",
-    "description": "Fixed CMD window and DLL loading issues - VBScript launcher"
+    "description": "Improved translation prompts - better accuracy and consistency"
 }
