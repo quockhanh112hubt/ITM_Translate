@@ -1,6 +1,6 @@
 {
-    "version": "1.0.27",
-    "build": "2025071118",
-    "release_date": "2025-07-11",
-    "description": "Enhanced mixed language translation with specialized prompts for complete translation"
+    "version": "1.0.28",
+    "build": "2025071418",
+    "release_date": "2025-07-14",
+    "description": "Completely revamped update system using Windows batch script with admin privileges for reliable executable replacement"
 }

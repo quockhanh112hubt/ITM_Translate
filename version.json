@@ -1,6 +1,6 @@
 {
-    "version": "1.0.25",
-    "build": "2025071116",
-    "release_date": "2025-07-11",
-    "description": "Fixed replace function to use same language detection as popup translation"
+    "version": "1.0.28",
+    "build": "2025071413",
+    "release_date": "2025-07-14",
+    "description": "Auto build release"
 }

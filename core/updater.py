@@ -176,6 +176,9 @@ class Updater:
                 shutil.copy2(current_exe_path, backup_path)
                 print(f"Backup created: {backup_path}")
             
+            # Tạo update.bat file
+            self.create_update_batch_file(current_exe_path, current_dir)
+            
             # Cleanup temp directory
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
@@ -195,309 +198,197 @@ class Updater:
                     pass
             raise e
     
+    def create_update_batch_file(self, current_exe_path, app_dir):
+        """Tạo file update.bat để thực hiện cập nhật"""
+        try:
+            batch_file_path = os.path.join(app_dir, "update.bat")
+            current_exe_name = os.path.basename(current_exe_path)
+            new_exe_name = current_exe_name + ".new"
+            
+            # Tạo nội dung batch file
+            batch_content = f'''@echo off
+title ITM Translate Auto Update
+echo ==========================================
+echo     ITM Translate Auto Update Process
+echo ==========================================
+echo.
+
+REM Change to application directory
+cd /d "{app_dir}"
+echo Current directory: %cd%
+echo.
+
+REM Wait for main application to close completely
+echo Waiting for application to close (5 seconds)...
+timeout /t 5 /nobreak >nul
+echo.
+
+REM Verify files exist
+echo Checking files...
+if not exist "{new_exe_name}" (
+    echo ERROR: New version file not found: {new_exe_name}
+    echo Update failed!
+    pause
+    exit /b 1
+)
+echo - New version found: {new_exe_name}
+
+if exist "{current_exe_name}" (
+    echo - Current version found: {current_exe_name}
+) else (
+    echo - Current version not found (this is normal for first install)
+)
+echo.
+
+REM Perform update steps
+echo Starting update process...
+echo.
+
+REM Step 1: Remove old executable
+echo Step 1: Removing old executable...
+if exist "{current_exe_name}" (
+    del /f /q "{current_exe_name}"
+    if exist "{current_exe_name}" (
+        echo ERROR: Could not delete old executable
+        echo This may be due to file permissions or antivirus
+        pause
+        exit /b 1
+    )
+    echo - Old executable removed successfully
+) else (
+    echo - No old executable to remove
+)
+echo.
+
+REM Step 2: Rename new file to main executable
+echo Step 2: Installing new version...
+ren "{new_exe_name}" "{current_exe_name}"
+if not exist "{current_exe_name}" (
+    echo ERROR: Could not rename new executable
+    echo Update failed!
+    pause
+    exit /b 1
+)
+echo - New version installed successfully
+echo.
+
+REM Step 3: Launch new application
+echo Step 3: Starting new application...
+echo Launching: {current_exe_name}
+start "" "{current_exe_name}"
+
+REM Small delay to let application start
+timeout /t 2 /nobreak >nul
+
+REM Check if application started
+tasklist /fi "imagename eq {current_exe_name}" | find /i "{current_exe_name}" >nul
+if %errorlevel% equ 0 (
+    echo - Application started successfully!
+) else (
+    echo - Application may not have started properly
+    echo - Please check manually if needed
+)
+echo.
+
+REM Step 4: Self-cleanup (optional)
+echo Step 4: Cleaning up...
+echo Update completed successfully!
+echo This window will close in 3 seconds...
+timeout /t 3 /nobreak >nul
+
+REM Try to delete this batch file (may fail if still in use)
+del /f /q "%~f0" 2>nul
+
+exit /b 0
+'''
+            
+            # Ghi file batch
+            with open(batch_file_path, 'w', encoding='utf-8') as f:
+                f.write(batch_content)
+            
+            print(f"✅ Update batch file created: {batch_file_path}")
+            return batch_file_path
+            
+        except Exception as e:
+            print(f"❌ Failed to create update batch file: {e}")
+            raise e
+    
     def restart_application(self):
-        """Khởi động lại ứng dụng với file mới - Simplified với subprocess.Popen trực tiếp"""
+        """Chạy update.bat với quyền admin và thoát ứng dụng"""
         try:
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
-            new_exe_path = current_exe_path + ".new"
-            backup_path = current_exe_path + ".backup"
             app_dir = os.path.dirname(current_exe_path)
+            batch_file_path = os.path.join(app_dir, "update.bat")
             
-            print(f"🔄 Setting up restart from: {current_exe_path}")
-            print(f"📦 New exe available at: {new_exe_path}")
-            print(f"📂 Working directory: {app_dir}")
+            print(f"🔄 Starting batch update process...")
+            print(f"📁 App directory: {app_dir}")
+            print(f"📄 Batch file: {batch_file_path}")
+            
+            # Verify batch file exists
+            if not os.path.exists(batch_file_path):
+                raise Exception(f"Update batch file not found: {batch_file_path}")
+            
+            print(f"✅ Batch file verified")
             
             if getattr(sys, 'frozen', False):  # Executable mode
-                print("🚀 Creating simplified restart script...")
-                
-                # Simplified Python script với multiple launch methods
-                restart_script = f'''import os
-import sys
-import time
-import subprocess
-import shutil
-
-print("[RESTART] ITM Translate Auto-Update Restart Process")
-print("[RESTART] ==========================================")
-
-# Paths
-app_dir = r"{app_dir}"
-current_exe = r"{current_exe_path}"
-new_exe = r"{new_exe_path}"
-backup_exe = r"{backup_path}"
-
-print(f"[RESTART] App Dir: {{app_dir}}")
-print(f"[RESTART] Current EXE: {{current_exe}}")
-print(f"[RESTART] New EXE: {{new_exe}}")
-
-# Change to app directory
-os.chdir(app_dir)
-print(f"[RESTART] Working in: {{os.getcwd()}}")
-
-# Wait for parent process to fully exit
-print("[RESTART] ⏳ Waiting for parent process to close (5 seconds)...")
-time.sleep(5)
-
-try:
-    # Step 1: Verify new exe exists
-    if not os.path.exists(new_exe):
-        print(f"[RESTART] ❌ ERROR: New exe not found: {{new_exe}}")
-        input("Press Enter to exit...")
-        sys.exit(1)
-    
-    print(f"[RESTART] ✅ New exe verified: {{os.path.getsize(new_exe)}} bytes")
-    
-    # Step 2: File operations
-    print("[RESTART] 🔄 Starting file replacement...")
-    
-    # Remove old backup
-    if os.path.exists(backup_exe):
-        print(f"[RESTART] 🗑️ Removing old backup: {{backup_exe}}")
-        os.remove(backup_exe)
-    
-    # Backup current version
-    if os.path.exists(current_exe):
-        print(f"[RESTART] 💾 Creating backup: {{current_exe}} -> {{backup_exe}}")
-        shutil.move(current_exe, backup_exe)
-    
-    # Install new version
-    print(f"[RESTART] 📥 Installing new version: {{new_exe}} -> {{current_exe}}")
-    shutil.move(new_exe, current_exe)
-    
-    # Verify installation
-    if not os.path.exists(current_exe):
-        print("[RESTART] ❌ ERROR: Installation failed!")
-        if os.path.exists(backup_exe):
-            print("[RESTART] 🔄 Restoring backup...")
-            shutil.move(backup_exe, current_exe)
-        input("Press Enter to exit...")
-        sys.exit(1)
-    
-    print(f"[RESTART] ✅ Installation successful! Size: {{os.path.getsize(current_exe)}} bytes")
-    
-    # Step 3: Wait before restart để tránh DLL conflicts
-    print("[RESTART] ⏳ Waiting before restart (3 seconds to avoid DLL conflicts)...")
-    time.sleep(3)
-    
-    # Step 4: Launch new application với multiple methods
-    print(f"[RESTART] 🚀 Launching new application...")
-    launch_success = False
-    
-    # Method 1: Simple subprocess.Popen (preferred)
-    try:
-        print("[RESTART] 🔸 Method 1: Simple Popen...")
-        process = subprocess.Popen(
-            [current_exe],
-            cwd=app_dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL
-        )
-        
-        # Verify process started and is still running
-        time.sleep(1.5)
-        if process.poll() is None:  # Still running
-            print(f"[RESTART] ✅ Success! Process running (PID: {{process.pid}})")
-            launch_success = True
-        else:
-            print(f"[RESTART] ⚠️ Process exited immediately (code: {{process.returncode}})")
-            
-    except Exception as e1:
-        print(f"[RESTART] ❌ Method 1 failed: {{e1}}")
-    
-    # Method 2: With shell=True
-    if not launch_success:
-        try:
-            print("[RESTART] 🔸 Method 2: Popen with shell=True...")
-            process = subprocess.Popen(
-                current_exe,
-                cwd=app_dir,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL
-            )
-            
-            time.sleep(1.5)
-            if process.poll() is None:
-                print(f"[RESTART] ✅ Success with shell=True! (PID: {{process.pid}})")
-                launch_success = True
-            else:
-                print(f"[RESTART] ⚠️ Shell method process exited (code: {{process.returncode}})")
-                
-        except Exception as e2:
-            print(f"[RESTART] ❌ Method 2 failed: {{e2}}")
-    
-    # Method 3: Windows START command
-    if not launch_success:
-        try:
-            print("[RESTART] 🔸 Method 3: Windows START command...")
-            subprocess.run(
-                'start "" "' + current_exe + '"',
-                cwd=app_dir,
-                shell=True,
-                check=False,
-                timeout=5
-            )
-            print("[RESTART] ✅ START command executed")
-            launch_success = True
-            
-        except Exception as e3:
-            print(f"[RESTART] ❌ Method 3 failed: {{e3}}")
-    
-    # Method 4: os.startfile (Windows specific)
-    if not launch_success:
-        try:
-            print("[RESTART] 🔸 Method 4: os.startfile...")
-            import os
-            os.startfile(current_exe)
-            print("[RESTART] ✅ os.startfile executed")
-            launch_success = True
-            
-        except Exception as e4:
-            print(f"[RESTART] ❌ Method 4 failed: {{e4}}")
-    
-    if not launch_success:
-        print("[RESTART] ❌ All launch methods failed!")
-        print("[RESTART] 🔧 Please manually run the application:")
-        print(f"[RESTART]    {{current_exe}}")
-        input("Press Enter to continue...")
-    else:
-        print("[RESTART] 🎉 Application launch successful!")
-    
-    # Step 5: Cleanup
-    print("[RESTART] 🧹 Cleaning up...")
-    time.sleep(2)  # Wait a bit before cleanup
-    
-    if os.path.exists(backup_exe):
-        try:
-            os.remove(backup_exe)
-            print(f"[RESTART] 🗑️ Backup removed: {{backup_exe}}")
-        except Exception:
-            print(f"[RESTART] ⚠️ Could not remove backup (may be in use)")
-    
-    print("[RESTART] ✅ Update process completed successfully!")
-    print("[RESTART] 👋 Restart script will now exit.")
-    
-except Exception as e:
-    print(f"[RESTART] 💥 CRITICAL ERROR: {{e}}")
-    import traceback
-    traceback.print_exc()
-    
-    # Try to restore backup
-    if os.path.exists(backup_exe) and not os.path.exists(current_exe):
-        try:
-            shutil.move(backup_exe, current_exe)
-            print("[RESTART] 🔄 Backup restored due to error")
-        except Exception:
-            pass
-    
-    print("[RESTART] ❌ Update failed. Please check manually.")
-    input("Press Enter to exit...")
-    sys.exit(1)
-
-# Clean exit
-time.sleep(1)
-sys.exit(0)
-'''
-                
-                # Write restart script
-                script_path = os.path.join(app_dir, "restart_updater.py")
-                print(f"📝 Creating restart script: {script_path}")
+                print("🚀 Running update.bat with administrator privileges...")
                 
                 try:
-                    with open(script_path, 'w', encoding='utf-8') as f:
-                        f.write(restart_script)
-                    print(f"✅ Restart script created successfully")
-                except Exception as e:
-                    print(f"❌ Failed to create restart script: {e}")
-                    raise e
-                
-                # Verify script exists
-                if not os.path.exists(script_path):
-                    raise Exception(f"Restart script not created: {script_path}")
-                
-                print(f"🚀 Launching restart script...")
-                
-                # Launch restart script với Python
-                try:
-                    # Find python executable
-                    python_exe = sys.executable
+                    # Method 1: Run batch file with admin privileges using ShellExecute
+                    import ctypes
                     
-                    # For frozen apps, try to find system python
-                    if getattr(sys, 'frozen', False):
-                        possible_pythons = [
-                            "python",
-                            "python.exe",
-                            "python3",
-                            "python3.exe"
-                        ]
-                        
-                        for py_cmd in possible_pythons:
-                            try:
-                                result = subprocess.run([py_cmd, "--version"], 
-                                                      capture_output=True, timeout=3, text=True)
-                                if result.returncode == 0:
-                                    python_exe = py_cmd
-                                    print(f"✅ Found Python: {python_exe} ({result.stdout.strip()})")
-                                    break
-                            except Exception:
-                                continue
-                    
-                    # Launch restart script with visible console for debugging
-                    print(f"🎯 Using Python: {python_exe}")
-                    process = subprocess.Popen(
-                        [python_exe, script_path],
-                        cwd=app_dir,
-                        creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                    # ShellExecute với "runas" để yêu cầu quyền admin
+                    result = ctypes.windll.shell32.ShellExecuteW(
+                        None,           # hwnd
+                        "runas",        # lpVerb (run as administrator)
+                        batch_file_path, # lpFile
+                        None,           # lpParameters
+                        app_dir,        # lpDirectory
+                        1               # nShowCmd (SW_NORMAL)
                     )
-                    print(f"✅ Restart script launched successfully (PID: {process.pid})")
                     
+                    if result > 32:  # Success
+                        print(f"✅ Batch file launched with admin privileges (result: {result})")
+                        print("👋 Exiting current application...")
+                        
+                        # Small delay to ensure batch file starts
+                        import time
+                        time.sleep(1)
+                        
+                        # Force exit current process
+                        sys.exit(0)
+                    else:
+                        raise Exception(f"ShellExecute failed with result: {result}")
+                        
                 except Exception as e:
-                    print(f"❌ Failed to launch restart script: {e}")
-                    # Fallback: try to use system() call
+                    print(f"❌ Admin launch failed: {e}")
+                    
+                    # Fallback: Try without admin privileges
+                    print("🔄 Trying fallback method without admin...")
                     try:
-                        print("🔄 Trying fallback method with os.system...")
-                        import os
-                        os.system(f'python "{script_path}"')
-                        print("✅ Fallback launch attempt completed")
+                        subprocess.Popen(
+                            [batch_file_path],
+                            cwd=app_dir,
+                            shell=True,
+                            creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                        )
+                        print("✅ Batch file launched without admin privileges")
+                        print("👋 Exiting current application...")
+                        
+                        import time
+                        time.sleep(1)
+                        sys.exit(0)
+                        
                     except Exception as e2:
                         print(f"❌ Fallback also failed: {e2}")
-                        raise e
-                
+                        raise e2
+                        
             else:
                 # Development mode
-                print("🛠️ Development mode restart")
-                restart_script = f'''
-import os
-import sys
-import time
-import subprocess
-
-print("🛠️ Development restart script starting...")
-time.sleep(3)
-print("📂 Changing to app directory...")
-os.chdir(r"{app_dir}")
-print("🚀 Starting application...")
-subprocess.Popen([sys.executable, r"{current_exe_path}"])
-print("✅ Development restart completed")
-'''
-                script_path = os.path.join(app_dir, "dev_restart.py")
-                with open(script_path, 'w', encoding='utf-8') as f:
-                    f.write(restart_script)
-                
-                subprocess.Popen([sys.executable, script_path], cwd=app_dir)
-            
-            print("🔄 Restart process initiated!")
-            print("⏳ Waiting 2 seconds before exit...")
-            
-            # Delay để script có thời gian khởi động
-            import time
-            time.sleep(2)
-            
-            # Force exit current process
-            print("👋 Exiting current process...")
-            sys.exit(0)
+                print("🛠️ Development mode - running batch file normally...")
+                subprocess.Popen([batch_file_path], cwd=app_dir, shell=True)
+                print("👋 Exiting current application...")
+                sys.exit(0)
             
         except Exception as e:
             print(f"💥 Critical error in restart_application: {e}")
@@ -677,39 +568,31 @@ class UpdateDialog:
         """Hiển thị dialog khởi động lại"""
         result = messagebox.askyesnocancel("Cập nhật thành công", 
                                          "Cập nhật đã hoàn tất!\n\n" +
-                                         "Chọn cách khởi động lại:\n" +
-                                         "• YES: Tự động khởi động lại (đã cải thiện)\n" +
-                                         "• NO: Khởi động thủ công (khuyến nghị nếu gặp lỗi)\n" +
+                                         "Chọn cách thực hiện cập nhật:\n" +
+                                         "• YES: Tự động cập nhật (chạy update.bat với quyền Admin)\n" +
+                                         "• NO: Hướng dẫn cập nhật thủ công\n" +
                                          "• CANCEL: Tiếp tục với phiên bản cũ\n\n" +
-                                         "Lưu ý: Đã thêm delay 5 giây để tránh lỗi DLL.\n" +
-                                         "Nếu vẫn gặp lỗi DLL, hãy chọn NO.",
+                                         "Lưu ý: \n" +
+                                         "- Cần quyền Admin để thay thế file .exe\n" +
+                                         "- Ứng dụng sẽ tự động khởi động lại sau khi cập nhật\n" +
+                                         "- File update.bat sẽ tự xóa sau khi hoàn thành",
                                          parent=self.dialog)
-        if result is True:  # YES - Auto restart (experimental)
+        if result is True:  # YES - Auto update with batch file
             try:
                 self.updater.restart_application()
             except Exception as e:
                 error_detail = str(e)
-                if "pydantic" in error_detail.lower() or "module" in error_detail.lower():
-                    messagebox.showerror("Lỗi khởi động lại", 
-                                       f"Khởi động tự động thất bại do lỗi dependencies:\n{error_detail}\n\n" +
-                                       "GIẢI PHÁP:\n" +
-                                       "1. Thoát chương trình hoàn toàn (Alt+F4)\n" +
-                                       "2. Restart máy tính (khuyến nghị)\n" +
-                                       "3. Chạy lại ITM_Translate.exe\n" +
-                                       "4. Nếu vẫn lỗi, download lại từ GitHub\n\n" +
-                                       "Lỗi này thường do PyInstaller bundling issue.",
-                                       parent=self.dialog)
-                else:
-                    messagebox.showerror("Lỗi khởi động lại", 
-                                       f"Khởi động tự động thất bại:\n{error_detail}\n\n" +
-                                       "Hãy làm theo hướng dẫn thủ công:\n" +
-                                       "1. Thoát chương trình (Alt+F4)\n" +
-                                       "2. Vào thư mục chương trình\n" +
-                                       "3. Xóa file .backup nếu có\n" +
-                                       "4. Chạy ITM_Translate.exe\n\n" +
-                                       "Nếu vẫn lỗi DLL, restart máy tính và thử lại.",
-                                       parent=self.dialog)
-        elif result is False:  # NO - Manual restart (recommended)
+                messagebox.showerror("Lỗi cập nhật tự động", 
+                                   f"Không thể chạy update.bat:\n{error_detail}\n\n" +
+                                   "GIẢI PHÁP:\n" +
+                                   "1. Đảm bảo chạy với quyền Administrator\n" +
+                                   "2. Kiểm tra antivirus không block file update.bat\n" +
+                                   "3. Thử cập nhật thủ công (chọn NO)\n\n" +
+                                   "Files đã sẵn sàng:\n" +
+                                   "- ITM_Translate.exe.new (phiên bản mới)\n" +
+                                   "- update.bat (script cập nhật)",
+                                   parent=self.dialog)
+        elif result is False:  # NO - Manual update instructions
             self._show_manual_restart_instructions()
         # result is None (CANCEL) - Do nothing, keep current version
     
@@ -717,15 +600,13 @@ class UpdateDialog:
         """Hiển thị hướng dẫn khởi động thủ công chi tiết"""
         instructions = """✅ CẬP NHẬT HOÀN TẤT - Hướng dẫn khởi động thủ công
 
-🔧 BƯỚC 1: Thoát chương trình
-• Nhấn Alt+F4 hoặc đóng tất cả cửa sổ ITM Translate
-• Đảm bảo không còn process nào đang chạy
+🔧 CÁCH 1: Sử dụng update.bat (Đơn giản nhất)
+• Thoát ITM Translate hoàn toàn (Alt+F4)
+• Vào thư mục chứa ITM_Translate.exe
+• Click phải vào file "update.bat" → "Run as administrator"
+• Đợi script hoàn thành và khởi động lại ứng dụng
 
-📁 BƯỚC 2: Vào thư mục chương trình
-• Mở thư mục chứa file ITM_Translate.exe
-• Bạn sẽ thấy các file: .exe, .new, .backup
-
-🔄 BƯỚC 3: Thực hiện cập nhật
+� CÁCH 2: Thủ công (Nếu update.bat không hoạt động)
 • Xóa file ITM_Translate.exe (file cũ)
 • Đổi tên ITM_Translate.exe.new thành ITM_Translate.exe
 • Xóa file .backup (nếu có)
