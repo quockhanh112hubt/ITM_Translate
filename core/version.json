@@ -1,6 +1,6 @@
 {
-    "version": "1.0.30",
-    "build": "2025071415",
+    "version": "1.0.31",
+    "build": "2025071416",
     "release_date": "2025-07-14",
-    "description": "Simplified update dialog - removed manual update option, auto-restart only"
+    "description": "Fixed update.bat to remove old backup files preventing future updates"
 }

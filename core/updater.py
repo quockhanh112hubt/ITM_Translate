@@ -221,12 +221,17 @@ if not exist "{new_exe_name}" (
 )
 
 REM Perform update steps
-REM Step 1: Remove old executable
+REM Step 1: Remove old executable and backup files
 if exist "{current_exe_name}" (
     del /f /q "{current_exe_name}" >nul 2>&1
     if exist "{current_exe_name}" (
         exit /b 1
     )
+)
+
+REM Also remove old backup file if exists
+if exist "{current_exe_name}.backup" (
+    del /f /q "{current_exe_name}.backup" >nul 2>&1
 )
 
 REM Step 2: Rename new file to main executable
