@@ -1,6 +1,6 @@
 {
-    "version": "1.0.32",
-    "build": "2025071420",
+    "version": "1.1.0",
+    "build": "2025071417",
     "release_date": "2025-07-14",
-    "description": "Fixed update.bat to remove old backup files preventing future updates"
+    "description": "First Public Release - Professional Translation Tool with Comprehensive User Guide and Enhanced UI"
 }

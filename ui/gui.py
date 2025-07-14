@@ -289,7 +289,226 @@ class MainGUI:
     def get_show_on_startup(self):
         return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
     def show_help(self):
-        messagebox.showinfo("Hướng dẫn sử dụng", "1. Chọn đoạn văn bản cần dịch.\n2. Nhấn phím tắt để dịch hoặc thay thế.\n3. Có thể thay đổi phím tắt và API key trong tab Cài Đặt.")
+        # Tạo dialog custom với scroll để hiển thị hướng dẫn chi tiết
+        help_window = tk.Toplevel(self.root)
+        help_window.title("ITM Translate - User Guide")
+        help_window.geometry("900x700")
+        help_window.resizable(True, True)
+        help_window.transient(self.root)
+        help_window.grab_set()
+        
+        # Center the dialog
+        help_window.update_idletasks()
+        x = (help_window.winfo_screenwidth() // 2) - (900 // 2)
+        y = (help_window.winfo_screenheight() // 2) - (700 // 2)
+        help_window.geometry(f"900x700+{x}+{y}")
+        
+        # Main frame with scrollbar
+        main_frame = tk.Frame(help_window)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Text widget with scrollbar
+        text_frame = tk.Frame(main_frame)
+        text_frame.pack(fill='both', expand=True)
+        
+        text_widget = tk.Text(text_frame, wrap='word', font=('Segoe UI', 10), 
+                             bg='#f8f9fa', fg='#2c3e50', padx=20, pady=20,
+                             selectbackground='#3498db', selectforeground='white')
+        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+        
+        help_content = """🌟 ITM TRANSLATE - COMPREHENSIVE USER GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 QUICK START GUIDE
+
+🔧 1. SETUP & CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ GET GEMINI API KEY (Required for Translation)
+   
+   Step 1: Visit Google AI Studio
+   • Open your web browser and go to: https://aistudio.google.com/
+   • Make sure you're signed in with your Google account
+   
+   Step 2: Access API Keys Section
+   • Look for "Get API key" in the navigation menu or dashboard
+   • Click on "Create API key" or "Get API key"
+   
+   Step 3: Create New API Key
+   • Click "Create API key in new project" (recommended)
+   • Or select an existing Google Cloud project if you have one
+   • Give your project a descriptive name (e.g., "ITM Translate")
+   
+   Step 4: Copy Your API Key
+   • Once created, copy the API key (starts with "AIza...")
+   • ⚠️ IMPORTANT: Store this key securely - don't share it publicly
+   • The key will look like: AIzaSyD...abcd123 (example)
+   
+   Step 5: Configure in ITM Translate
+   • Open ITM Translate → Go to "Nâng Cao" tab
+   • Paste your API key in the "ITM_TRANSLATE_KEY" field
+   • Click "Lưu cấu hình" to save
+   
+   💡 BILLING NOTE: Gemini API has generous free usage limits
+   • 15 requests per minute for free tier
+   • 1 million tokens per month free
+   • Perfect for personal/professional translation needs
+
+2️⃣ CONFIGURE HOTKEYS & LANGUAGES
+   
+   Default Group (Tuỳ chọn mặc định):
+   • Popup Translation: Ctrl+Q (default)
+   • Replace Translation: Ctrl+D (default)
+   
+   Custom Group (Tuỳ chọn tuỳ chỉnh):
+   • Popup Translation 2: Ctrl+1 (default)
+   • Replace Translation 2: Ctrl+2 (default)
+   
+   Language Configuration:
+   • Language 1 → Language 2 → Language 3 (circular translation)
+   • "Any Language" = Auto-detect source language
+   • Example: Any Language → Tiếng Việt → English
+
+🚀 2. HOW TO USE ITM TRANSLATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 BASIC TRANSLATION WORKFLOW:
+
+   Step 1: Select Text
+   • Highlight any text in ANY application (Word, Chrome, Notepad, etc.)
+   • Works with emails, documents, websites, chat applications
+   
+   Step 2: Use Hotkey
+   • For POPUP translation: Press your configured hotkey (default: Ctrl+Q)
+   • For REPLACE translation: Press your configured hotkey (default: Ctrl+D)
+   
+   Step 3: View Results
+   • Popup mode: Translation appears in a popup window
+   • Replace mode: Selected text is replaced with translation
+   
+   🎯 SMART FEATURES:
+   • Auto-detects source language (works with mixed languages!)
+   • Preserves text formatting and context
+   • Popup shows language detection info in title
+   • Copy translation results with Ctrl+C
+
+⭐ 3. ADVANCED FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧠 AI-POWERED LANGUAGE DETECTION:
+   • Automatically detects source language
+   • Handles mixed-language content intelligently
+   • Shows "Multi language → Target" for complex content
+   
+🎨 DUAL LANGUAGE GROUPS:
+   • Two independent hotkey groups
+   • Different language combinations per group
+   • Example Use Cases:
+     - Group 1: Work languages (EN ↔ VI)
+     - Group 2: Study languages (KR ↔ VI)
+   
+🎛️ FLEXIBLE HOTKEY SYSTEM:
+   • Supports Ctrl, Alt, Shift modifiers
+   • Combine up to 2 modifiers + main key
+   • Works globally in any application
+   • Examples: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
+
+🔄 CIRCULAR TRANSLATION:
+   Language 1 → Language 2 → Language 3 → Language 1
+   • Press same hotkey multiple times to cycle through languages
+   • Perfect for multilingual workflows
+
+🛠️ 4. SYSTEM INTEGRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🖥️ WINDOWS STARTUP:
+   • Enable "Khởi động cùng Windows" in Advanced tab
+   • ITM Translate runs in system tray
+   • Always ready for instant translation
+
+🔧 SYSTEM TRAY OPERATION:
+   • Runs silently in background
+   • Right-click tray icon for options
+   • Left-click to show/hide settings window
+
+🔄 AUTO-UPDATE SYSTEM:
+   • Automatic update notifications
+   • One-click update with admin privileges
+   • Silent background installation
+
+⚡ 5. PERFORMANCE TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 OPTIMIZATION TIPS:
+   • Keep API key secure and don't share
+   • Use "Any Language" for auto-detection efficiency
+   • Close popup by clicking outside or losing focus
+   • Replace mode works best with short text selections
+   
+🔧 TROUBLESHOOTING:
+   • If translation fails: Check internet connection and API key
+   • If hotkeys don't work: Restart application or check conflicts
+   • If popup doesn't appear: Ensure text is properly selected
+   • For mixed languages: Use auto-detect source language
+
+🌍 6. SUPPORTED LANGUAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 FULL LANGUAGE SUPPORT:
+   • English (English)
+   • Tiếng Việt (Vietnamese)
+   • 한국어 (Korean)
+   • 中文 (Chinese)
+   • 日本語 (Japanese)
+   • Français (French)
+   • Deutsch (German)
+   • Русский (Russian)
+   • Español (Spanish)
+   • ไทย (Thai)
+   • + Auto-detect for 100+ languages via Gemini AI
+
+📞 7. SUPPORT & CONTACT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏢 ITM Semiconductor Vietnam Company Limited
+📧 Contact: ITM IT Team
+🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
+🔄 Updates: Check "Cập nhật chương trình" in Advanced tab
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 ENHANCE YOUR PRODUCTIVITY WITH INTELLIGENT TRANSLATION
+Ready to translate the world at your fingertips!"""
+        
+        # Insert content
+        text_widget.insert('1.0', help_content)
+        text_widget.config(state='disabled')
+        
+        # Button frame
+        btn_frame = tk.Frame(main_frame)
+        btn_frame.pack(fill='x', pady=(15, 0))
+        
+        # Buttons
+        def open_gemini_studio():
+            import webbrowser
+            webbrowser.open('https://aistudio.google.com/')
+        
+        def copy_guide():
+            help_window.clipboard_clear()
+            help_window.clipboard_append(help_content)
+            tk.messagebox.showinfo("Copied", "User guide copied to clipboard!")
+        
+        tk.Button(btn_frame, text="🌐 Open Google AI Studio", command=open_gemini_studio,
+                 font=('Segoe UI', 10), bg='#4285f4', fg='white', padx=20, pady=8).pack(side='left')
+        
+        tk.Button(btn_frame, text="📋 Copy Guide", command=copy_guide,
+                 font=('Segoe UI', 10), bg='#95a5a6', fg='white', padx=20, pady=8).pack(side='left', padx=(10, 0))
+        
+        tk.Button(btn_frame, text="✕ Close", command=help_window.destroy, 
+                 font=('Segoe UI', 10), bg='#e74c3c', fg='white', padx=30, pady=8).pack(side='right')
     def show_about(self):
         # Đọc version chi tiết từ file version.json
         version_info = "1.0.0"
@@ -306,19 +525,116 @@ class MainGUI:
         except Exception:
             pass
         
-        messagebox.showinfo("Thông tin về chương trình", 
-                          f"ITM Translate v{version_info}\n\n"
-                          f"📦 Build: {build_info}\n"
-                          f"� Release Date: {release_date}\n"
-                          f"🔄 Enhanced Auto-Update Version\n\n"
-                          f"Tác giả: KhanhIT ITM Team\n"
-                          f"Github: github.com/ITM_Translate\n\n"
-                          f"✨ New in this version:\n"
-                          f"• Improved update mechanism\n"
-                          f"• Enhanced error handling\n"
-                          f"• Better user experience\n\n"
-                          f"Powered by ITM Semiconductor Vietnam Company Limited\n"
-                          f"Copyright © 2025 all rights reserved.")
+        about_text = f"""🌐 ITM Translate v{version_info}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 INTELLIGENT TRANSLATION MANAGER
+Professional AI-Powered Translation Tool for Windows
+
+📋 CORE FEATURES:
+• 🎯 Smart Text Selection & Translation
+• ⚡ Instant Popup Translation with Hotkeys  
+• 🔄 Real-time Text Replacement
+• 🧠 AI-Powered Language Detection (Mixed Language Support)
+• 🎨 Dual Language Groups with Custom Hotkeys
+• 🌍 Support 10+ Languages (EN, VI, KR, CN, JP, FR, DE, RU, ES, TH)
+
+⭐ ADVANCED CAPABILITIES:
+• 🤖 Gemini AI Integration for Accurate Translation
+• 🔍 Automatic Language Detection (Auto-detect source language)
+• 📝 Context-Aware Translation (Preserves meaning & tone)
+• 🎛️ Flexible Hotkey Configuration (Ctrl/Alt/Shift combinations)
+• 💾 Persistent Settings & Auto-backup
+• 🔒 Secure API Key Management
+
+🛠️ SYSTEM INTEGRATION:
+• 🖥️ Windows Startup Integration
+• 🔧 System Tray Background Operation
+• 📊 Memory-efficient Performance
+• 🎯 Global Hotkey Support (Works in any application)
+• 🔒 Single Instance Protection
+
+🔄 UPDATE SYSTEM:
+• ✨ Intelligent Auto-Update with GitHub Integration
+• 🛡️ Silent Background Updates with Admin Privileges
+• 📦 Windows Batch-based Update Mechanism
+• 🔄 Seamless Version Migration
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 VERSION INFORMATION:
+├─ Version: {version_info}
+├─ Build: {build_info} 
+├─ Release Date: {release_date}
+└─ Architecture: Windows x64
+
+👥 DEVELOPMENT TEAM:
+├─ Lead Developer: KhanhIT ITM Team
+├─ AI Integration: Gemini API Implementation
+├─ UI/UX Design: Modern Bootstrap Theme
+└─ Quality Assurance: Enterprise-grade Testing
+
+🏢 COMPANY:
+ITM Semiconductor Vietnam Company Limited
+🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
+📧 Support: Contact ITM IT Team
+� Vietnam, 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 DESIGNED FOR PROFESSIONALS
+Enhance your productivity with intelligent translation at your fingertips
+
+© 2025 ITM Semiconductor Vietnam Co., Ltd. All rights reserved."""
+        
+        # Tạo dialog custom với scroll để hiển thị đẹp
+        about_window = tk.Toplevel(self.root)
+        about_window.title("About ITM Translate")
+        about_window.geometry("800x600")
+        about_window.resizable(True, True)
+        about_window.transient(self.root)
+        about_window.grab_set()
+        
+        # Center the dialog
+        about_window.update_idletasks()
+        x = (about_window.winfo_screenwidth() // 2) - (800 // 2)
+        y = (about_window.winfo_screenheight() // 2) - (600 // 2)
+        about_window.geometry(f"800x600+{x}+{y}")
+        
+        # Main frame with scrollbar
+        main_frame = tk.Frame(about_window)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Text widget with scrollbar
+        text_frame = tk.Frame(main_frame)
+        text_frame.pack(fill='both', expand=True)
+        
+        text_widget = tk.Text(text_frame, wrap='word', font=('Consolas', 10), 
+                             bg='#f8f9fa', fg='#2c3e50', padx=15, pady=15,
+                             selectbackground='#3498db', selectforeground='white')
+        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+        
+        # Insert content
+        text_widget.insert('1.0', about_text)
+        text_widget.config(state='disabled')
+        
+        # Button frame
+        btn_frame = tk.Frame(main_frame)
+        btn_frame.pack(fill='x', pady=(15, 0))
+        
+        tk.Button(btn_frame, text="Close", command=about_window.destroy, 
+                 font=('Segoe UI', 10), bg='#3498db', fg='white', padx=30, pady=8).pack(side='right')
+        
+        # Copy info button
+        def copy_version_info():
+            about_window.clipboard_clear()
+            about_window.clipboard_append(f"ITM Translate v{version_info} (Build: {build_info})")
+            tk.messagebox.showinfo("Copied", "Version information copied to clipboard!")
+        
+        tk.Button(btn_frame, text="Copy Version", command=copy_version_info,
+                 font=('Segoe UI', 10), bg='#95a5a6', fg='white', padx=20, pady=8).pack(side='right', padx=(0, 10))
     def update_program(self):
         # Hiển thị loading popup
         loading_popup = None
