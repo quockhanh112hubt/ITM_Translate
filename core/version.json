@@ -1,6 +1,6 @@
 {
-    "version": "1.0.29",
-    "build": "2025071429",
+    "version": "1.0.30",
+    "build": "2025071415",
     "release_date": "2025-07-14",
-    "description": "Completely revamped update system using Windows batch script with admin privileges for reliable executable replacement"
+    "description": "Simplified update dialog - removed manual update option, auto-restart only"
 }

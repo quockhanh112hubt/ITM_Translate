@@ -208,96 +208,41 @@ class Updater:
             # Tạo nội dung batch file
             batch_content = f'''@echo off
 title ITM Translate Auto Update
-echo ==========================================
-echo     ITM Translate Auto Update Process
-echo ==========================================
-echo.
 
 REM Change to application directory
 cd /d "{app_dir}"
-echo Current directory: %cd%
-echo.
 
 REM Wait for main application to close completely
-echo Waiting for application to close (5 seconds)...
-timeout /t 5 /nobreak >nul
-echo.
+timeout /t 3 /nobreak >nul 2>&1
 
 REM Verify files exist
-echo Checking files...
 if not exist "{new_exe_name}" (
-    echo ERROR: New version file not found: {new_exe_name}
-    echo Update failed!
-    pause
     exit /b 1
 )
-echo - New version found: {new_exe_name}
-
-if exist "{current_exe_name}" (
-    echo - Current version found: {current_exe_name}
-) else (
-    echo - Current version not found (this is normal for first install)
-)
-echo.
 
 REM Perform update steps
-echo Starting update process...
-echo.
-
 REM Step 1: Remove old executable
-echo Step 1: Removing old executable...
 if exist "{current_exe_name}" (
-    del /f /q "{current_exe_name}"
+    del /f /q "{current_exe_name}" >nul 2>&1
     if exist "{current_exe_name}" (
-        echo ERROR: Could not delete old executable
-        echo This may be due to file permissions or antivirus
-        pause
         exit /b 1
     )
-    echo - Old executable removed successfully
-) else (
-    echo - No old executable to remove
 )
-echo.
 
 REM Step 2: Rename new file to main executable
-echo Step 2: Installing new version...
-ren "{new_exe_name}" "{current_exe_name}"
+ren "{new_exe_name}" "{current_exe_name}" >nul 2>&1
 if not exist "{current_exe_name}" (
-    echo ERROR: Could not rename new executable
-    echo Update failed!
-    pause
     exit /b 1
 )
-echo - New version installed successfully
-echo.
 
 REM Step 3: Launch new application
-echo Step 3: Starting new application...
-echo Launching: {current_exe_name}
 start "" "{current_exe_name}"
 
 REM Small delay to let application start
-timeout /t 2 /nobreak >nul
+timeout /t 2 /nobreak >nul 2>&1
 
-REM Check if application started
-tasklist /fi "imagename eq {current_exe_name}" | find /i "{current_exe_name}" >nul
-if %errorlevel% equ 0 (
-    echo - Application started successfully!
-) else (
-    echo - Application may not have started properly
-    echo - Please check manually if needed
-)
-echo.
-
-REM Step 4: Self-cleanup (optional)
-echo Step 4: Cleaning up...
-echo Update completed successfully!
-echo This window will close in 3 seconds...
-timeout /t 3 /nobreak >nul
-
-REM Try to delete this batch file (may fail if still in use)
-del /f /q "%~f0" 2>nul
+REM Step 4: Self-cleanup
+del /f /q "%~f0" >nul 2>&1
 
 exit /b 0
 '''
@@ -344,7 +289,7 @@ exit /b 0
                         batch_file_path, # lpFile
                         None,           # lpParameters
                         app_dir,        # lpDirectory
-                        1               # nShowCmd (SW_NORMAL)
+                        0               # nShowCmd (SW_HIDE - chạy ẩn)
                     )
                     
                     if result > 32:  # Success
@@ -370,7 +315,7 @@ exit /b 0
                             [batch_file_path],
                             cwd=app_dir,
                             shell=True,
-                            creationflags=subprocess.CREATE_NEW_CONSOLE if hasattr(subprocess, 'CREATE_NEW_CONSOLE') else 0
+                            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
                         )
                         print("✅ Batch file launched without admin privileges")
                         print("👋 Exiting current application...")
@@ -386,7 +331,8 @@ exit /b 0
             else:
                 # Development mode
                 print("🛠️ Development mode - running batch file normally...")
-                subprocess.Popen([batch_file_path], cwd=app_dir, shell=True)
+                subprocess.Popen([batch_file_path], cwd=app_dir, shell=True,
+                               creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
                 print("👋 Exiting current application...")
                 sys.exit(0)
             
@@ -566,35 +512,24 @@ class UpdateDialog:
     
     def _show_restart_dialog(self):
         """Hiển thị dialog khởi động lại"""
-        result = messagebox.askyesnocancel("Cập nhật thành công", 
-                                         "Cập nhật đã hoàn tất!\n\n" +
-                                         "Chọn cách thực hiện cập nhật:\n" +
-                                         "• YES: Tự động cập nhật (chạy update.bat với quyền Admin)\n" +
-                                         "• NO: Hướng dẫn cập nhật thủ công\n" +
-                                         "• CANCEL: Tiếp tục với phiên bản cũ\n\n" +
-                                         "Lưu ý: \n" +
-                                         "- Cần quyền Admin để thay thế file .exe\n" +
-                                         "- Ứng dụng sẽ tự động khởi động lại sau khi cập nhật\n" +
-                                         "- File update.bat sẽ tự xóa sau khi hoàn thành",
-                                         parent=self.dialog)
-        if result is True:  # YES - Auto update with batch file
+        result = messagebox.askyesno("Cập nhật thành công", 
+                                   "Cập nhật đã hoàn tất!\n\n" +
+                                   "Khởi động lại ngay để áp dụng phiên bản mới?\n\n" +
+                                   "• YES: Khởi động lại ứng dụng ngay\n" +
+                                   "• NO: Tiếp tục sử dụng, khởi động lại sau\n\n" +
+                                   "Lưu ý: Cần quyền Administrator để thay thế file .exe",
+                                   parent=self.dialog)
+        if result:  # YES - Restart now
             try:
                 self.updater.restart_application()
             except Exception as e:
                 error_detail = str(e)
-                messagebox.showerror("Lỗi cập nhật tự động", 
-                                   f"Không thể chạy update.bat:\n{error_detail}\n\n" +
-                                   "GIẢI PHÁP:\n" +
-                                   "1. Đảm bảo chạy với quyền Administrator\n" +
-                                   "2. Kiểm tra antivirus không block file update.bat\n" +
-                                   "3. Thử cập nhật thủ công (chọn NO)\n\n" +
-                                   "Files đã sẵn sàng:\n" +
-                                   "- ITM_Translate.exe.new (phiên bản mới)\n" +
-                                   "- update.bat (script cập nhật)",
+                messagebox.showerror("Lỗi khởi động lại", 
+                                   f"Không thể khởi động lại tự động:\n{error_detail}\n\n" +
+                                   "Vui lòng thoát ứng dụng và chạy lại thủ công.\n" +
+                                   "File cập nhật đã sẵn sàng.",
                                    parent=self.dialog)
-        elif result is False:  # NO - Manual update instructions
-            self._show_manual_restart_instructions()
-        # result is None (CANCEL) - Do nothing, keep current version
+        # result is False (NO) - Continue with current version, restart later
     
     def _show_manual_restart_instructions(self):
         """Hiển thị hướng dẫn khởi động thủ công chi tiết"""
