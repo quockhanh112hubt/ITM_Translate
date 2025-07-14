@@ -522,7 +522,7 @@ class UpdateDialog:
                                    "Khởi động lại ngay để áp dụng phiên bản mới?\n\n" +
                                    "• YES: Khởi động lại ứng dụng ngay\n" +
                                    "• NO: Tiếp tục sử dụng, khởi động lại sau\n\n" +
-                                   "Lưu ý: Cần quyền Administrator để thay thế file .exe",
+                                   "Lưu ý: Luôn sử dụng phiên bản mới nhất để đảm bảo có trải nghiệm tốt.\n",
                                    parent=self.dialog)
         if result:  # YES - Restart now
             try:
@@ -534,7 +534,8 @@ class UpdateDialog:
                                    "Vui lòng thoát ứng dụng và chạy lại thủ công.\n" +
                                    "File cập nhật đã sẵn sàng.",
                                    parent=self.dialog)
-        # result is False (NO) - Continue with current version, restart later
+        else:  # NO - Close dialog and continue with current version
+            self.dialog.destroy()
     
     def _show_manual_restart_instructions(self):
         """Hiển thị hướng dẫn khởi động thủ công chi tiết"""
