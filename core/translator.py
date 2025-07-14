@@ -13,26 +13,16 @@ def detect_language(text):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-2.0-flash-exp")
     
-    prompt = f"""Analyze this text and determine the language composition.
+    prompt = f"""What language is the following text used?.
+    Follow these instructions exactly:
+    - Analyze the text and determine the primary language used. If the message is written mostly in one language but contains words or short phrases from others (e.g., "OK tôi sẽ check cái đó"), treat the main language as the dominant one.
+    - If the dominant language cannot be determined, return "Mixed".
+    - Do not return any explanations or additional text, just the language name
 
-If the text contains MULTIPLE different languages (mixed), return "Mixed"
-If the text is primarily in ONE language (>80% of content), return the language name in Vietnamese format:
+    Text:
+    {text}
 
-Examples:
-- Korean text → "Hàn"
-- English text → "Anh" 
-- Japanese text → "Nhật"
-- Chinese text → "Trung"
-- Vietnamese text → "Việt"
-- Thai text → "Thái"
-- French text → "Pháp"
-- German text → "Đức"
-- Spanish text → "Tây Ban Nha"
-- Mixed languages → "Mixed"
-
-Text to analyze: {text}
-
-Return only the result:"""
+    """
 
     try:
         response = model.generate_content(prompt)
@@ -92,6 +82,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
     if return_language_info:
         if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
             detected_source_lang = detect_language(text)
+            print(f"Detected source language: {detected_source_lang}")
         else:
             detected_source_lang = Ngon_ngu_dau_tien
     
@@ -116,6 +107,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
         else:
             target_lang = Ngon_ngu_thu_2
 
+    print(f"Translation direction: {detected_source_lang} → {target_lang}")
     # Step 3: Create translation prompt
     if detected_source_lang and detected_source_lang.lower() == "mixed":
         # Special prompt for mixed language content
@@ -136,7 +128,9 @@ Complete translation to {target_lang}:"""
         prompt = f"""Translate this text to {target_lang}.
 
 Rules:
+- Translate every word/phrase to {target_lang}
 - Preserve original tone and style
+- Ensure natural grammar and correct sentence structure in {target_lang}
 - Keep technical terms if widely understood
 - Keep proper nouns and brand names
 - Keep numbers and dates unchanged

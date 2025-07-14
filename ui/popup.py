@@ -96,7 +96,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
         
         target_display = target_lang.replace('Tiếng ', '')
-        title += f' - {source_display} → {target_display}'
+        title += f' *** {source_display} → {target_display}'
     
     win = tk.Toplevel(master)
     win.withdraw()
