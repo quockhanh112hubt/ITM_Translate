@@ -323,168 +323,169 @@ class MainGUI:
         text_widget.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
         
-        help_content = """🌟 ITM TRANSLATE - COMPREHENSIVE USER GUIDE
+        help_content = """🌟 ITM TRANSLATE – HƯỚNG DẪN SỬ DỤNG TOÀN DIỆN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📋 QUICK START GUIDE
+📋 HƯỚNG DẪN CHO NGƯỜI BẮT ĐẦU
 
-🔧 1. SETUP & CONFIGURATION
+🔧 1. CÀI ĐẶT VÀ CẤU HÌNH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1️⃣ LẤY MÃ API GEMINI (Bắt buộc để sử dụng dịch thuật)
+🚨 LƯU Ý QUAN TRỌNG: Bạn cần có mã API Gemini để sử dụng ITM Translate. Dưới đây là hướng dẫn chi tiết:
 
-1️⃣ GET GEMINI API KEY (Required for Translation)
-   
-   Step 1: Visit Google AI Studio
-   • Open your web browser and go to: https://aistudio.google.com/
-   • Make sure you're signed in with your Google account
-   
-   Step 2: Access API Keys Section
-   • Look for "Get API key" in the navigation menu or dashboard
-   • Click on "Create API key" or "Get API key"
-   
-   Step 3: Create New API Key
-   • Click "Create API key in new project" (recommended)
-   • Or select an existing Google Cloud project if you have one
-   • Give your project a descriptive name (e.g., "ITM Translate")
-   
-   Step 4: Copy Your API Key
-   • Once created, copy the API key (starts with "AIza...")
-   • ⚠️ IMPORTANT: Store this key securely - don't share it publicly
-   • The key will look like: AIzaSyD...abcd123 (example)
-   
-   Step 5: Configure in ITM Translate
-   • Open ITM Translate → Go to "Nâng Cao" tab
-   • Paste your API key in the "ITM_TRANSLATE_KEY" field
-   • Click "Lưu cấu hình" to save
-   
-   💡 BILLING NOTE: Gemini API has generous free usage limits
-   • 15 requests per minute for free tier
-   • 1 million tokens per month free
-   • Perfect for personal/professional translation needs
+Bước 1: Truy cập Google AI Studio
+• Mở trình duyệt và truy cập: https://aistudio.google.com/
+• Đảm bảo bạn đã đăng nhập bằng tài khoản Google
 
-2️⃣ CONFIGURE HOTKEYS & LANGUAGES
-   
-   Default Group (Tuỳ chọn mặc định):
-   • Popup Translation: Ctrl+Q (default)
-   • Replace Translation: Ctrl+D (default)
-   
-   Custom Group (Tuỳ chọn tuỳ chỉnh):
-   • Popup Translation 2: Ctrl+1 (default)
-   • Replace Translation 2: Ctrl+2 (default)
-   
-   Language Configuration:
-   • Language 1 → Language 2 → Language 3 (circular translation)
-   • "Any Language" = Auto-detect source language
-   • Example: Any Language → Tiếng Việt → English
+Bước 2: Truy cập mục API Keys
+• Tìm mục “Get API key” trong menu hoặc bảng điều khiển
+• Nhấn “Create API key” hoặc “Get API key”
 
-🚀 2. HOW TO USE ITM TRANSLATE
+Bước 3: Tạo khoá API mới
+• Nhấn “Create API key in new project” (khuyến nghị)
+• Hoặc chọn một project Google Cloud sẵn có
+• Đặt tên cho project, ví dụ: “ITM Translate”
+
+Bước 4: Sao chép khoá API của bạn
+• Sau khi tạo, sao chép khoá API (bắt đầu bằng “AIza...”)
+• ⚠️ LƯU Ý QUAN TRỌNG: Lưu trữ khóa cẩn thận – không chia sẻ công khai
+• Ví dụ khóa: AIzaSyD...abcd123
+
+Bước 5: Cấu hình trong ITM Translate
+• Mở ITM Translate → Vào tab “Nâng Cao”
+• Dán khoá vào trường "ITM_TRANSLATE_KEY"
+• Nhấn “Lưu cấu hình” để lưu lại
+
+💡 LƯU Ý VỀ CHI PHÍ: API Gemini có giới hạn miễn phí
+• 15 yêu cầu mỗi phút với gói miễn phí
+• 1 triệu token mỗi tháng miễn phí
+• Phù hợp cho nhu cầu cá nhân và công việc
+
+2️⃣ CẤU HÌNH PHÍM TẮT & NGÔN NGỮ
+
+Nhóm mặc định:
+• Dịch popup: Ctrl+Q (mặc định)
+• Dịch thay thế: Ctrl+D (mặc định)
+
+Nhóm tùy chỉnh:
+• Dịch popup 2: Ctrl+1 (mặc định)
+• Dịch thay thế 2: Ctrl+2 (mặc định)
+
+💡 LƯU Ý VỀ PHÍM TẮT: 
+• Phím tắt có thể bị trùng với ứng dụng khác
+• Nên chọn phím tắt ít xung đột nhất
+• Hỗ trợ phím Ctrl, Alt, Shift kết hợp với phím chính
+• Ví dụ: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
+• Tối đa 2 phím bổ trợ + 1 phím chính
+• Không hỗ trợ phím tắt đơn giản như F1, F2...
+• Không hỗ trợ phím tắt có ký tự đặc biệt (ví dụ: @, #, $, v.v.)
+• Nên tránh phím tắt trùng với các ứng dụng khác
+• Nếu gặp lỗi, hãy thử đổi phím tắt khác
+
+🔄 DỊCH TUẦN HOÀN:
+Ngôn ngữ 1 → Ngôn ngữ 2 → Ngôn ngữ 3 → Ngôn ngữ 1
+• Chọn văn bản trên popup vừa được dịch. Nhấn lại cùng một phím tắt để chuyển qua ngôn ngữ tiếp theo
+• Rất phù hợp với công việc đa ngôn ngữ
+
+
+🚀 2. CÁCH SỬ DỤNG ITM TRANSLATE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 QUY TRÌNH DỊCH CƠ BẢN:
+Bước 1: Chọn văn bản
+• Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào (Word, Chrome, Notepad, v.v.)
+• Hoạt động với email, tài liệu, trang web, ứng dụng chat...
 
-📝 BASIC TRANSLATION WORKFLOW:
+Bước 2: Dùng phím tắt
+• Dịch POPUP: Nhấn phím tắt đã cấu hình (mặc định: Ctrl+Q)
+• Dịch THAY THẾ: Nhấn phím tắt đã cấu hình (mặc định: Ctrl+D)
 
-   Step 1: Select Text
-   • Highlight any text in ANY application (Word, Chrome, Notepad, etc.)
-   • Works with emails, documents, websites, chat applications
-   
-   Step 2: Use Hotkey
-   • For POPUP translation: Press your configured hotkey (default: Ctrl+Q)
-   • For REPLACE translation: Press your configured hotkey (default: Ctrl+D)
-   
-   Step 3: View Results
-   • Popup mode: Translation appears in a popup window
-   • Replace mode: Selected text is replaced with translation
-   
-   🎯 SMART FEATURES:
-   • Auto-detects source language (works with mixed languages!)
-   • Preserves text formatting and context
-   • Popup shows language detection info in title
-   • Copy translation results with Ctrl+C
+Bước 3: Xem kết quả
+• Chế độ Popup: Hiển thị kết quả dịch trong cửa sổ nổi
+• Chế độ Thay thế: Văn bản được thay bằng bản dịch
 
-⭐ 3. ADVANCED FEATURES
+🎯 TÍNH NĂNG THÔNG MINH:
+• Tự động nhận diện ngôn ngữ (kể cả khi có nhiều ngôn ngữ pha trộn)
+• Giữ nguyên định dạng văn bản và ngữ cảnh
+• Popup hiển thị thông tin ngôn ngữ ở tiêu đề
+• Dùng Ctrl+C để sao chép kết quả
+
+
+⭐ 3. TÍNH NĂNG NÂNG CAO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 NHẬN DIỆN NGÔN NGỮ BẰNG AI:
+• Tự động phát hiện ngôn ngữ gốc
+• Xử lý thông minh văn bản pha trộn
+• Hiển thị “Nhiều ngôn ngữ → Ngôn ngữ đích”
 
-🧠 AI-POWERED LANGUAGE DETECTION:
-   • Automatically detects source language
-   • Handles mixed-language content intelligently
-   • Shows "Multi language → Target" for complex content
-   
-🎨 DUAL LANGUAGE GROUPS:
-   • Two independent hotkey groups
-   • Different language combinations per group
-   • Example Use Cases:
-     - Group 1: Work languages (EN ↔ VI)
-     - Group 2: Study languages (KR ↔ VI)
-   
-🎛️ FLEXIBLE HOTKEY SYSTEM:
-   • Supports Ctrl, Alt, Shift modifiers
-   • Combine up to 2 modifiers + main key
-   • Works globally in any application
-   • Examples: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
+🎨 NHÓM NGÔN NGỮ KÉP:
+• Hai nhóm phím tắt độc lập
+• Mỗi nhóm dùng cặp ngôn ngữ khác nhau
+• Ví dụ ứng dụng:
 
-🔄 CIRCULAR TRANSLATION:
-   Language 1 → Language 2 → Language 3 → Language 1
-   • Press same hotkey multiple times to cycle through languages
-   • Perfect for multilingual workflows
+Nhóm 1: Dùng trong công việc (Anh ↔ Việt)
 
-🛠️ 4. SYSTEM INTEGRATION
+Nhóm 2: Dùng học tập (Hàn ↔ Việt)
+
+
+🛠️ 4. TÍCH HỢP HỆ THỐNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖥️ KHỞI ĐỘNG CÙNG WINDOWS:
+• Bật tùy chọn “Khởi động cùng Windows” trong tab Nâng Cao
+• Ứng dụng chạy nền trong khay hệ thống
+• Luôn sẵn sàng dịch tức thì
 
-🖥️ WINDOWS STARTUP:
-   • Enable "Khởi động cùng Windows" in Advanced tab
-   • ITM Translate runs in system tray
-   • Always ready for instant translation
+🔧 HOẠT ĐỘNG TRONG KHAY HỆ THỐNG:
+• Chạy nền một cách yên lặng
+• Nhấp chuột phải biểu tượng để xem tùy chọn
+• Nhấp chuột trái để mở/ẩn cửa sổ cài đặt
 
-🔧 SYSTEM TRAY OPERATION:
-   • Runs silently in background
-   • Right-click tray icon for options
-   • Left-click to show/hide settings window
+🔄 HỆ THỐNG CẬP NHẬT TỰ ĐỘNG:
+• Thông báo cập nhật tự động
+• Cập nhật một lần nhấn với quyền quản trị viên
+• Cài đặt nền không làm gián đoạn
 
-🔄 AUTO-UPDATE SYSTEM:
-   • Automatic update notifications
-   • One-click update with admin privileges
-   • Silent background installation
 
-⚡ 5. PERFORMANCE TIPS
+⚡ 5. MẸO TỐI ƯU HIỆU NĂNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 MẸO SỬ DỤNG TỐT HƠN:
+• Giữ khoá API an toàn, không chia sẻ
+• Dùng “Any Language” để tăng hiệu quả phát hiện ngôn ngữ
+• Đóng popup bằng cách click ra ngoài hoặc làm mất focus
+• Chế độ thay thế hoạt động tốt nhất với đoạn văn bản ngắn
 
-💡 OPTIMIZATION TIPS:
-   • Keep API key secure and don't share
-   • Use "Any Language" for auto-detection efficiency
-   • Close popup by clicking outside or losing focus
-   • Replace mode works best with short text selections
-   
-🔧 TROUBLESHOOTING:
-   • If translation fails: Check internet connection and API key
-   • If hotkeys don't work: Restart application or check conflicts
-   • If popup doesn't appear: Ensure text is properly selected
-   • For mixed languages: Use auto-detect source language
+🔧 XỬ LÝ SỰ CỐ:
+• Nếu dịch thất bại: Kiểm tra kết nối mạng và khóa API
+• Nếu phím tắt không hoạt động: Khởi động lại ứng dụng hoặc kiểm tra xung đột
+• Nếu không hiện popup: Kiểm tra lại đoạn văn đã chọn
+• Với văn bản pha ngôn ngữ: Dùng chế độ tự động phát hiện
 
-🌍 6. SUPPORTED LANGUAGES
+
+🌍 6. CÁC NGÔN NGỮ HỖ TRỢ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 DANH SÁCH NGÔN NGỮ:
+• English (Tiếng Anh)
+• Tiếng Việt (Vietnamese)
+• 한국어 (Tiếng Hàn)
+• 中文 (Tiếng Trung)
+• 日本語 (Tiếng Nhật)
+• Français (Tiếng Pháp)
+• Deutsch (Tiếng Đức)
+• Русский (Tiếng Nga)
+• Español (Tiếng Tây Ban Nha)
+• ไทย (Tiếng Thái)
+• + Hỗ trợ tự động nhận diện hơn 100 ngôn ngữ qua AI Gemini
 
-🌐 FULL LANGUAGE SUPPORT:
-   • English (English)
-   • Tiếng Việt (Vietnamese)
-   • 한국어 (Korean)
-   • 中文 (Chinese)
-   • 日本語 (Japanese)
-   • Français (French)
-   • Deutsch (German)
-   • Русский (Russian)
-   • Español (Spanish)
-   • ไทย (Thai)
-   • + Auto-detect for 100+ languages via Gemini AI
 
-📞 7. SUPPORT & CONTACT
+📞 7. HỖ TRỢ & LIÊN HỆ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🏢 ITM Semiconductor Vietnam Company Limited
-📧 Contact: ITM IT Team
+🏢 Công ty TNHH ITM Semiconductor Việt Nam
+📧 Liên hệ: Đội IT ITM
 🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
-🔄 Updates: Check "Cập nhật chương trình" in Advanced tab
+🔄 Cập nhật: Vào tab “Nâng Cao” → chọn “Cập nhật chương trình”
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 ENHANCE YOUR PRODUCTIVITY WITH INTELLIGENT TRANSLATION
-Ready to translate the world at your fingertips!"""
+🎯 TĂNG NĂNG SUẤT LÀM VIỆC VỚI DỊCH THUẬT THÔNG MINH
+Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
         
         # Insert content
         text_widget.insert('1.0', help_content)
@@ -531,62 +532,61 @@ Ready to translate the world at your fingertips!"""
         about_text = f"""🌐 ITM Translate v{version_info}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🚀 INTELLIGENT TRANSLATION MANAGER
-Professional AI-Powered Translation Tool for Windows
+🚀 TRÌNH QUẢN LÝ DỊCH THUẬT THÔNG MINH
+Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
 
-📋 CORE FEATURES:
-• 🎯 Smart Text Selection & Translation
-• ⚡ Instant Popup Translation with Hotkeys  
-• 🔄 Real-time Text Replacement
-• 🧠 AI-Powered Language Detection (Mixed Language Support)
-• 🎨 Dual Language Groups with Custom Hotkeys
-• 🌍 Support 10+ Languages (EN, VI, KR, CN, JP, FR, DE, RU, ES, TH)
+📋 CÁC TÍNH NĂNG CHÍNH:
+• 🎯 Chọn và dịch văn bản thông minh
+• ⚡ Dịch nhanh tức thì bằng phím tắt
+• 🔄 Thay thế văn bản theo thời gian thực
+• 🧠 Tự động nhận diện ngôn ngữ bằng AI (Hỗ trợ ngôn ngữ pha trộn)
+• 🎨 Nhóm ngôn ngữ kép với phím tắt tuỳ chỉnh
+• 🌍 Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
 
-⭐ ADVANCED CAPABILITIES:
-• 🤖 Gemini AI Integration for Accurate Translation
-• 🔍 Automatic Language Detection (Auto-detect source language)
-• 📝 Context-Aware Translation (Preserves meaning & tone)
-• 🎛️ Flexible Hotkey Configuration (Ctrl/Alt/Shift combinations)
-• 💾 Persistent Settings & Auto-backup
-• 🔒 Secure API Key Management
+⭐ TÍNH NĂNG NÂNG CAO:
+• 🤖 Tích hợp AI Gemini cho kết quả dịch chính xác
+• 🔍 Tự động phát hiện ngôn ngữ gốc
+• 📝 Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
+• 🎛️ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
+• 💾 Ghi nhớ thiết lập và sao lưu tự động
+• 🔒 Quản lý khóa API an toàn
 
-🛠️ SYSTEM INTEGRATION:
-• 🖥️ Windows Startup Integration
-• 🔧 System Tray Background Operation
-• 📊 Memory-efficient Performance
-• 🎯 Global Hotkey Support (Works in any application)
-• 🔒 Single Instance Protection
+🛠️ TÍCH HỢP HỆ THỐNG:
+• 🖥️ Tự khởi động cùng Windows
+• 🔧 Chạy nền trong khay hệ thống
+• 📊 Tối ưu hiệu suất sử dụng bộ nhớ
+• 🎯 Hỗ trợ phím tắt toàn cục (Dùng được trong mọi ứng dụng)
+• 🔒 Bảo vệ khỏi khởi động nhiều phiên bản
 
-🔄 UPDATE SYSTEM:
-• ✨ Intelligent Auto-Update with GitHub Integration
-• 🛡️ Silent Background Updates with Admin Privileges
-• 📦 Windows Batch-based Update Mechanism
-• 🔄 Seamless Version Migration
+🔄 HỆ THỐNG CẬP NHẬT:
+• ✨ Cập nhật tự động thông minh qua GitHub
+• 🛡️ Cập nhật nền yên lặng với quyền quản trị viên
+• 📦 Cơ chế cập nhật dựa trên tập tin Batch
+• 🔄 Di chuyển phiên bản mượt mà
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 VERSION INFORMATION:
-├─ Version: {version_info}
-├─ Build: {build_info} 
-├─ Release Date: {release_date}
-└─ Architecture: Windows x64
+📊 THÔNG TIN PHIÊN BẢN:
+├─ Phiên bản: {version_info}
+├─ Bản dựng: {build_info}
+├─ Ngày phát hành: {release_date}
+└─ Kiến trúc: Windows x64
 
-👥 DEVELOPMENT TEAM:
-├─ Lead Developer: KhanhIT ITM Team
-├─ AI Integration: Gemini API Implementation
-├─ UI/UX Design: Modern Bootstrap Theme
-└─ Quality Assurance: Enterprise-grade Testing
+👥 ĐỘI NGŨ PHÁT TRIỂN:
+├─ Lập trình chính: KhanhIT – Nhóm ITM
+├─ Tích hợp AI: Sử dụng API Gemini
+├─ Thiết kế UI/UX: Giao diện hiện đại với Bootstrap
+└─ Đảm bảo chất lượng: Kiểm thử chuẩn doanh nghiệp
 
-🏢 COMPANY:
-ITM Semiconductor Vietnam Company Limited
+🏢 CÔNG TY:
+Công ty TNHH ITM Semiconductor Việt Nam
 🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
-📧 Support: Contact ITM IT Team
-� Vietnam, 2025
+📧 Hỗ trợ: Liên hệ đội IT ITM Việt Nam, 2025
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 DESIGNED FOR PROFESSIONALS
-Enhance your productivity with intelligent translation at your fingertips
+🎯 MỤC TIÊU ỨNG DỤNG
+Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thông minh ngay trong tầm tay
 
-© 2025 ITM Semiconductor Vietnam Co., Ltd. All rights reserved."""
+© 2025 Công ty TNHH ITM Semiconductor Việt Nam. Bảo lưu mọi quyền."""
         
         # Tạo dialog custom với scroll để hiển thị đẹp
         about_window = tk.Toplevel(self.root)
