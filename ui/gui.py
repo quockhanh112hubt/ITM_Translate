@@ -7,6 +7,8 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 import keyboard
 import threading
+import subprocess
+
 
 def get_app_version():
     """Đọc version từ file version.json"""
@@ -799,7 +801,7 @@ Enhance your productivity with intelligent translation at your fingertips
             self.api_key_updater(api_key)
         if changed:
             if messagebox.askokcancel("Thông báo", "Phím tắt đã được thay đổi, hãy khởi động lại chương trình để áp dụng"):
-                self._restart_application()
+                self._restart_with_batch()
             else:
                 return
         else:
@@ -849,240 +851,197 @@ Enhance your productivity with intelligent translation at your fingertips
         print("Translate popup 2 triggered")
     def on_replace_translate2(self):
         print("Replace translate 2 triggered")
-    def _restart_application(self):
-        """Restart ứng dụng một cách an toàn (giống như update system)"""
+    def _restart_with_batch(self):
+        """Tạo restart.bat, chạy với quyền Admin và thoát ứng dụng"""
         try:
-            # Tạo restart batch file
-            self._create_restart_batch_file()
+            # Bước 1: Tạo restart.bat
+            self._create_restart_batch()
             
-            # Execute restart với admin privileges
+            # Bước 2: Chạy restart.bat với quyền Admin
+            self._run_restart_batch_with_admin()
+            
+            # Bước 3: Thoát hoàn toàn ứng dụng hiện tại
+            self._exit_application()
+            
+        except Exception as e:
+            print(f"❌ Error in restart process: {e}")
+            # Fallback: thoát đơn giản
+            self._exit_application()
+    
+    def _create_restart_batch(self):
+        """Tạo restart.bat file"""
+        try:
+            # Xác định đường dẫn executable hiện tại
             if getattr(sys, 'frozen', False):
-                current_exe_path = sys.executable
-                app_dir = os.path.dirname(current_exe_path)
+                # Executable mode
+                current_exe = sys.executable
+                app_dir = os.path.dirname(current_exe)
+                exe_name = os.path.basename(current_exe)
             else:
-                # Development mode
+                # Development mode - tìm ITM_Translate.py
                 current_dir = os.path.dirname(os.path.dirname(__file__))
                 main_script = os.path.join(current_dir, "ITM_Translate.py")
                 if os.path.exists(main_script):
+                    current_exe = f'"{sys.executable}" "{main_script}"'
                     app_dir = current_dir
+                    exe_name = "python.exe"
                 else:
-                    raise Exception("ITM_Translate.py not found in parent directory")
+                    raise Exception("ITM_Translate.py not found")
             
-            batch_file_path = os.path.join(app_dir, "restart.bat")
+            # Tạo restart.bat
+            batch_path = os.path.join(app_dir, "restart.bat")
             
-            print(f"🔄 Starting restart process...")
-            print(f"📁 App directory: {app_dir}")
-            print(f"📄 Batch file: {batch_file_path}")
-            
-            # Verify batch file exists
-            if not os.path.exists(batch_file_path):
-                raise Exception(f"Restart batch file not found: {batch_file_path}")
-            
-            print(f"✅ Restart batch file verified")
-            
-            if getattr(sys, 'frozen', False):  # Executable mode
-                print("🚀 Running restart.bat with administrator privileges...")
-                
-                try:
-                    # Run batch file with admin privileges using ShellExecute
-                    import ctypes
-                    
-                    # ShellExecute với "runas" để yêu cầu quyền admin
-                    result = ctypes.windll.shell32.ShellExecuteW(
-                        None,           # hwnd
-                        "runas",        # lpVerb (run as administrator)
-                        batch_file_path, # lpFile
-                        None,           # lpParameters
-                        app_dir,        # lpDirectory
-                        0               # nShowCmd (SW_HIDE - chạy ẩn)
-                    )
-                    
-                    if result > 32:  # Success
-                        print(f"✅ Restart batch file launched with admin privileges (result: {result})")
-                        self._safe_exit()
-                    else:
-                        raise Exception(f"ShellExecute failed with result: {result}")
-                        
-                except Exception as e:
-                    print(f"❌ Admin launch failed: {e}")
-                    
-                    # Fallback: Try without admin privileges
-                    print("🔄 Trying fallback method without admin...")
-                    try:
-                        import subprocess
-                        subprocess.Popen(
-                            [batch_file_path],
-                            cwd=app_dir,
-                            shell=True,
-                            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
-                        )
-                        print("✅ Restart batch file launched without admin privileges")
-                        self._safe_exit()
-                        
-                    except Exception as e2:
-                        print(f"❌ Fallback also failed: {e2}")
-                        # Final fallback: simple restart
-                        self._simple_restart()
-            
-            else:
-                # Development mode
-                print("🛠️ Development mode - running restart batch file normally...")
-                import subprocess
-                subprocess.Popen([batch_file_path], cwd=app_dir, shell=True,
-                               creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
-                self._safe_exit()
-            
-        except Exception as e:
-            print(f"💥 Critical error in restart_application: {e}")
-            import traceback
-            traceback.print_exc()
-            # Final fallback
-            self._simple_restart()
-    
-    def _create_restart_batch_file(self):
-        """Tạo restart batch file để khởi động lại ứng dụng"""
-        try:
-            import sys
-            import os
-            
-            # Trong development mode, sử dụng script chính (ITM_Translate.py)
             if getattr(sys, 'frozen', False):
-                current_exe_path = sys.executable
-                app_dir = os.path.dirname(current_exe_path)
-            else:
-                # Development mode: Tìm ITM_Translate.py trong thư mục gốc
-                current_dir = os.path.dirname(os.path.dirname(__file__))  # Lên 1 level từ ui/
-                main_script = os.path.join(current_dir, "ITM_Translate.py")
-                if os.path.exists(main_script):
-                    current_exe_path = f'"{sys.executable}" "{main_script}"'
-                    app_dir = current_dir
-                else:
-                    raise Exception("ITM_Translate.py not found in parent directory")
-            
-            batch_file_path = os.path.join(app_dir, "restart.bat")
-            
-            # Batch script để restart ứng dụng
-            if getattr(sys, 'frozen', False):
-                # Executable mode
+                # Executable mode batch content
                 batch_content = f'''@echo off
 title ITM Translate - Restart Process
-echo.
-echo ================================
-echo   ITM Translate Restart Process  
-echo ================================
-echo.
+echo [INFO] ITM Translate restart process started...
 
+REM Wait for current application to close
 echo [INFO] Waiting for application to close...
 timeout /t 3 /nobreak >nul
 
-echo [INFO] Checking if application is still running...
-:check_process
-tasklist /FI "IMAGENAME eq ITM_Translate.exe" 2>NUL | find /I /N "ITM_Translate.exe">NUL
+REM Check if application is still running and wait
+:wait_close
+tasklist /FI "IMAGENAME eq {exe_name}" 2>NUL | find /I /N "{exe_name}" >NUL
 if "%ERRORLEVEL%"=="0" (
     echo [WAIT] Application still running, waiting...
     timeout /t 2 /nobreak >nul
-    goto check_process
+    goto wait_close
 )
 
 echo [INFO] Application closed successfully
 echo [INFO] Starting ITM Translate...
 
+REM Start new application
 cd /d "{app_dir}"
-start "" "{current_exe_path}"
+start "" "{current_exe}"
 
-echo [SUCCESS] ITM Translate restarted successfully
+if "%ERRORLEVEL%"=="0" (
+    echo [SUCCESS] ITM Translate restarted successfully
+) else (
+    echo [ERROR] Failed to restart ITM Translate
+)
+
+REM Self-delete this batch file
 echo [INFO] Cleaning up restart batch file...
-
 (goto) 2>nul & del "%~f0"
 '''
             else:
-                # Development mode
+                # Development mode batch content
                 batch_content = f'''@echo off
 title ITM Translate - Restart Process (Development)
-echo.
-echo ====================================
-echo   ITM Translate Restart Process     
-echo   Development Mode                   
-echo ====================================
-echo.
+echo [INFO] ITM Translate restart process started (Development Mode)...
 
+REM Wait for current application to close
 echo [INFO] Waiting for application to close...
 timeout /t 3 /nobreak >nul
 
-echo [INFO] Checking if Python processes are still running...
-:check_process
-tasklist /FI "IMAGENAME eq python.exe" 2>NUL | find /I /N "ITM_Translate">NUL
+REM Check if Python process is still running and wait
+:wait_close
+tasklist /FI "IMAGENAME eq python.exe" 2>NUL | find /I /N "ITM_Translate" >NUL
 if "%ERRORLEVEL%"=="0" (
     echo [WAIT] Python process still running, waiting...
     timeout /t 2 /nobreak >nul
-    goto check_process
+    goto wait_close
 )
 
 echo [INFO] Application closed successfully
 echo [INFO] Starting ITM Translate (Development mode)...
 
+REM Start new application
 cd /d "{app_dir}"
-{current_exe_path}
+{current_exe}
 
-echo [SUCCESS] ITM Translate restarted successfully
+if "%ERRORLEVEL%"=="0" (
+    echo [SUCCESS] ITM Translate restarted successfully
+) else (
+    echo [ERROR] Failed to restart ITM Translate
+)
+
+REM Self-delete this batch file
 echo [INFO] Cleaning up restart batch file...
-
 timeout /t 2 /nobreak >nul
 del "%~f0"
 '''
             
-            # Ghi batch file
-            with open(batch_file_path, 'w', encoding='utf-8') as f:
+            # Ghi file batch
+            with open(batch_path, 'w', encoding='utf-8') as f:
                 f.write(batch_content)
             
-            print(f"✅ Restart batch file created: {batch_file_path}")
+            print(f"✅ Restart batch file created: {batch_path}")
+            return batch_path
             
         except Exception as e:
             print(f"❌ Failed to create restart batch file: {e}")
             raise e
     
-    def _safe_exit(self):
-        """Exit ứng dụng một cách an toàn"""
+    def _run_restart_batch_with_admin(self):
+        """Chạy restart.bat với quyền Admin"""
         try:
-            print("👋 Exiting current application...")
+            # Xác định đường dẫn
+            if getattr(sys, 'frozen', False):
+                app_dir = os.path.dirname(sys.executable)
+            else:
+                app_dir = os.path.dirname(os.path.dirname(__file__))
             
-            # Nếu có icon tray, dừng nó
-            if hasattr(self, 'tray_icon') and self.tray_icon:
-                self.tray_icon.stop()
-        except Exception:
-            pass
-        
-        try:
-            from core.lockfile import release_lock
-            release_lock()
-        except Exception:
-            pass
-        
-        # Small delay to ensure batch file starts
-        import time
-        time.sleep(1)
-        
-        self.root.destroy()
-        import os
-        os._exit(0)
+            batch_path = os.path.join(app_dir, "restart.bat")
+            
+            if not os.path.exists(batch_path):
+                raise Exception(f"Restart batch file not found: {batch_path}")
+            
+            print(f"🚀 Running restart.bat with admin privileges...")
+            
+            # Chạy với quyền Admin bằng ShellExecute
+            import ctypes
+            result = ctypes.windll.shell32.ShellExecuteW(
+                None,        # hwnd
+                "runas",     # lpVerb (run as administrator) 
+                batch_path,  # lpFile
+                None,        # lpParameters
+                app_dir,     # lpDirectory
+                0            # nShowCmd (SW_HIDE)
+            )
+            
+            if result > 32:
+                print(f"✅ Restart batch launched with admin privileges (result: {result})")
+            else:
+                print(f"⚠️ Admin launch may have failed (result: {result}), trying fallback...")
+                # Fallback: chạy không cần admin
+                subprocess.Popen(
+                    [batch_path],
+                    cwd=app_dir,
+                    shell=True,
+                    creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+                )
+                print("✅ Restart batch launched without admin privileges")
+                
+        except Exception as e:
+            print(f"❌ Failed to run restart batch: {e}")
+            raise e
     
-    def _simple_restart(self):
-        """Simple restart fallback method"""
+    def _exit_application(self):
+        """Thoát hoàn toàn ứng dụng hiện tại"""
         try:
-            print("🔄 Using simple restart method...")
+            print("� Exiting current application...")
             
-            # Nếu có icon tray, dừng nó
+            # Dọn dẹp tray icon nếu có
             if hasattr(self, 'tray_icon') and self.tray_icon:
                 self.tray_icon.stop()
         except Exception:
             pass
         
         try:
+            # Release lock file
             from core.lockfile import release_lock
             release_lock()
         except Exception:
             pass
         
+        # Delay nhỏ để batch file kịp khởi động
+        import time
+        time.sleep(0.5)
+        
+        # Thoát hoàn toàn
         self.root.destroy()
-        import os
         os._exit(0)
