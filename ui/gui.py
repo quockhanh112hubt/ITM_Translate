@@ -292,45 +292,70 @@ class MainGUI:
     def get_show_on_startup(self):
         return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
     def show_help(self):
-        # Tạo dialog custom với scroll để hiển thị hướng dẫn chi tiết
+        # Beautiful modern help window with light theme
         help_window = tk.Toplevel(self.root)
-        help_window.title("ITM Translate - User Guide")
-        help_window.geometry("900x700")
+        help_window.title("🌟 ITM Translate - User Guide")
+        help_window.geometry("950x900")
         help_window.resizable(True, True)
         help_window.transient(self.root)
         help_window.grab_set()
+        help_window.configure(bg='#ffffff')  # Clean white background
         
         # Center the dialog
         help_window.update_idletasks()
         x = (help_window.winfo_screenwidth() // 2) - (900 // 2)
         y = (help_window.winfo_screenheight() // 2) - (700 // 2)
-        help_window.geometry(f"900x700+{x}+{y}")
+        help_window.geometry(f"950x900+{x}+{y}")
         
-        # Main frame with scrollbar
-        main_frame = tk.Frame(help_window)
+        # Header frame with beautiful blue gradient
+        header_frame = tk.Frame(help_window, bg='#4285f4', height=90)
+        header_frame.pack(fill='x', padx=0, pady=0)
+        header_frame.pack_propagate(False)
+        
+        # Header title with modern styling
+        header_label = tk.Label(header_frame, 
+                               text="📚 ITM TRANSLATE USER GUIDE", 
+                               font=('Segoe UI', 20, 'bold'), 
+                               fg='white', bg='#4285f4')
+        header_label.pack(pady=(20, 5))
+        
+        # Subtitle
+        subtitle_label = tk.Label(header_frame, 
+                                 text="Complete Guide for Professional AI Translation", 
+                                 font=('Segoe UI', 11), 
+                                 fg='#e8f0fe', bg='#4285f4')
+        subtitle_label.pack()
+        
+        # Main content frame with clean styling
+        main_frame = tk.Frame(help_window, bg='white')
         main_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
-        # Text widget with scrollbar
-        text_frame = tk.Frame(main_frame)
+        # Text widget with beautiful light theme
+        text_frame = tk.Frame(main_frame, bg='white')
         text_frame.pack(fill='both', expand=True)
         
-        text_widget = tk.Text(text_frame, wrap='word', font=('Segoe UI', 10), 
-                             bg='#f8f9fa', fg='#2c3e50', padx=20, pady=20,
-                             selectbackground='#3498db', selectforeground='white')
-        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+        text_widget = tk.Text(text_frame, wrap='word', 
+                             font=('Segoe UI', 11), 
+                             bg='#fafafa', fg='#333333', 
+                             padx=30, pady=25,
+                             selectbackground='#4285f4', selectforeground='white',
+                             insertbackground='#4285f4',
+                             relief='solid',
+                             borderwidth=1)
+        
+        # Beautiful scrollbar styling
+        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview,
+                                bg='#f0f0f0', troughcolor='#fafafa', 
+                                activebackground='#4285f4',
+                                relief='flat', borderwidth=0, width=14)
         text_widget.configure(yscrollcommand=scrollbar.set)
         
         text_widget.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
         
-        help_content = """🌟 ITM TRANSLATE – HƯỚNG DẪN SỬ DỤNG TOÀN DIỆN
+        help_content = """
+🔧 A. CÀI ĐẶT VÀ CẤU HÌNH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 HƯỚNG DẪN CHO NGƯỜI BẮT ĐẦU
-
-🔧 1. CÀI ĐẶT VÀ CẤU HÌNH
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1️⃣ LẤY MÃ API GEMINI (Bắt buộc để sử dụng dịch thuật)
 🚨 LƯU Ý QUAN TRỌNG: Bạn cần có mã API Gemini để sử dụng ITM Translate. Dưới đây là hướng dẫn chi tiết:
 
 Bước 1: Truy cập Google AI Studio
@@ -361,8 +386,7 @@ Bước 5: Cấu hình trong ITM Translate
 • 1 triệu token mỗi tháng miễn phí
 • Phù hợp cho nhu cầu cá nhân và công việc
 
-2️⃣ CẤU HÌNH PHÍM TẮT & NGÔN NGỮ
-
+💡 CẤU HÌNH PHÍM TẮT & NGÔN NGỮ
 Nhóm mặc định:
 • Dịch popup: Ctrl+Q (mặc định)
 • Dịch thay thế: Ctrl+D (mặc định)
@@ -372,23 +396,14 @@ Nhóm tùy chỉnh:
 • Dịch thay thế 2: Ctrl+2 (mặc định)
 
 💡 LƯU Ý VỀ PHÍM TẮT: 
-• Phím tắt có thể bị trùng với ứng dụng khác
-• Nên chọn phím tắt ít xung đột nhất
-• Hỗ trợ phím Ctrl, Alt, Shift kết hợp với phím chính
-• Ví dụ: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
-• Tối đa 2 phím bổ trợ + 1 phím chính
+• Phím tắt có thể bị trùng với ứng dụng khác. Nên chọn phím tắt ít xung đột nhất
+• Hỗ trợ phím Ctrl, Alt, Shift kết hợp với phím chính. Ví dụ: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
 • Không hỗ trợ phím tắt đơn giản như F1, F2...
 • Không hỗ trợ phím tắt có ký tự đặc biệt (ví dụ: @, #, $, v.v.)
-• Nên tránh phím tắt trùng với các ứng dụng khác
-• Nếu gặp lỗi, hãy thử đổi phím tắt khác
-
-🔄 DỊCH TUẦN HOÀN:
-Ngôn ngữ 1 → Ngôn ngữ 2 → Ngôn ngữ 3 → Ngôn ngữ 1
-• Chọn văn bản trên popup vừa được dịch. Nhấn lại cùng một phím tắt để chuyển qua ngôn ngữ tiếp theo
-• Rất phù hợp với công việc đa ngôn ngữ
+• Nên tránh phím tắt trùng với các ứng dụng khác. Nếu gặp lỗi, hãy thử đổi phím tắt khác
 
 
-🚀 2. CÁCH SỬ DỤNG ITM TRANSLATE
+🚀 B. CÁCH SỬ DỤNG ITM TRANSLATE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📝 QUY TRÌNH DỊCH CƠ BẢN:
 Bước 1: Chọn văn bản
@@ -410,7 +425,7 @@ Bước 3: Xem kết quả
 • Dùng Ctrl+C để sao chép kết quả
 
 
-⭐ 3. TÍNH NĂNG NÂNG CAO
+⭐ C. TÍNH NĂNG NÂNG CAO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🧠 NHẬN DIỆN NGÔN NGỮ BẰNG AI:
 • Tự động phát hiện ngôn ngữ gốc
@@ -427,25 +442,7 @@ Nhóm 1: Dùng trong công việc (Anh ↔ Việt)
 Nhóm 2: Dùng học tập (Hàn ↔ Việt)
 
 
-🛠️ 4. TÍCH HỢP HỆ THỐNG
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🖥️ KHỞI ĐỘNG CÙNG WINDOWS:
-• Bật tùy chọn “Khởi động cùng Windows” trong tab Nâng Cao
-• Ứng dụng chạy nền trong khay hệ thống
-• Luôn sẵn sàng dịch tức thì
-
-🔧 HOẠT ĐỘNG TRONG KHAY HỆ THỐNG:
-• Chạy nền một cách yên lặng
-• Nhấp chuột phải biểu tượng để xem tùy chọn
-• Nhấp chuột trái để mở/ẩn cửa sổ cài đặt
-
-🔄 HỆ THỐNG CẬP NHẬT TỰ ĐỘNG:
-• Thông báo cập nhật tự động
-• Cập nhật một lần nhấn với quyền quản trị viên
-• Cài đặt nền không làm gián đoạn
-
-
-⚡ 5. MẸO TỐI ƯU HIỆU NĂNG
+⚡ D. MẸO TỐI ƯU HIỆU NĂNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💡 MẸO SỬ DỤNG TỐT HƠN:
 • Giữ khoá API an toàn, không chia sẻ
@@ -460,7 +457,7 @@ Nhóm 2: Dùng học tập (Hàn ↔ Việt)
 • Với văn bản pha ngôn ngữ: Dùng chế độ tự động phát hiện
 
 
-🌍 6. CÁC NGÔN NGỮ HỖ TRỢ
+🌍 E. CÁC NGÔN NGỮ HỖ TRỢ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 DANH SÁCH NGÔN NGỮ:
 • English (Tiếng Anh)
@@ -476,7 +473,7 @@ Nhóm 2: Dùng học tập (Hàn ↔ Việt)
 • + Hỗ trợ tự động nhận diện hơn 100 ngôn ngữ qua AI Gemini
 
 
-📞 7. HỖ TRỢ & LIÊN HỆ
+📞 F. HỖ TRỢ & LIÊN HỆ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏢 Công ty TNHH ITM Semiconductor Việt Nam
 📧 Liên hệ: Đội IT ITM
@@ -487,15 +484,56 @@ Nhóm 2: Dùng học tập (Hàn ↔ Việt)
 🎯 TĂNG NĂNG SUẤT LÀM VIỆC VỚI DỊCH THUẬT THÔNG MINH
 Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
         
-        # Insert content
-        text_widget.insert('1.0', help_content)
+        # Insert content với màu sắc đẹp mắt cho cả icon và text
+        lines = help_content.split('\n')
+        for line in lines:
+            if line.startswith('🌟'):
+                text_widget.insert('end', line + '\n', 'title')
+            elif line.startswith('━━━'):
+                text_widget.insert('end', line + '\n', 'separator')
+            elif line.startswith('📋') or line.startswith('🔧') or line.startswith('🚀') or line.startswith('⭐') or line.startswith('🛠️') or line.startswith('⚡') or line.startswith('🌍') or line.startswith('📞'):
+                text_widget.insert('end', line + '\n', 'header')
+            elif line.startswith('🚨') or line.startswith('⚠️'):
+                text_widget.insert('end', line + '\n', 'warning')
+            elif line.startswith('💡'):
+                text_widget.insert('end', line + '\n', 'highlight')
+            elif line.startswith('1️⃣') or line.startswith('2️⃣') or line.startswith('Bước'):
+                text_widget.insert('end', line + '\n', 'step')
+            elif '•' in line and any(emoji in line for emoji in ['🎯', '🔑', '⚡', '📋', '⚙️', '🌐', '🖥️']):
+                text_widget.insert('end', line + '\n', 'emoji_blue')
+            elif '•' in line and any(emoji in line for emoji in ['🧠', '📝', '🔍', '✨', '🎨']):
+                text_widget.insert('end', line + '\n', 'emoji_green')
+            elif '•' in line and any(emoji in line for emoji in ['🔧', '📊', '🔒', '🎛️']):
+                text_widget.insert('end', line + '\n', 'emoji_orange')
+            elif '•' in line and any(emoji in line for emoji in ['🔄', '🇺🇸', '🇻🇳', '🇰🇷', '🇨🇳', '🇯🇵', '🇫🇷', '🇩🇪', '🇷🇺', '🇪🇸', '🇹🇭']):
+                text_widget.insert('end', line + '\n', 'emoji_purple')
+            elif '•' in line:
+                text_widget.insert('end', line + '\n', 'subheader')
+            else:
+                text_widget.insert('end', line + '\n', 'normal')
+        
+        # Configure colorful text tags với màu sắc rõ ràng (không có background)
+        text_widget.tag_configure("title", font=('Segoe UI', 16, 'bold'), foreground='#1a73e8')
+        text_widget.tag_configure("header", font=('Segoe UI', 14, 'bold'), foreground='#4285f4')
+        text_widget.tag_configure("separator", font=('Segoe UI', 10), foreground='#9aa0a6')
+        text_widget.tag_configure("subheader", font=('Segoe UI', 12, 'bold'), foreground='#34a853')
+        text_widget.tag_configure("warning", font=('Segoe UI', 11, 'bold'), foreground='#ea4335')
+        text_widget.tag_configure("highlight", font=('Segoe UI', 11, 'bold'), foreground='#9c27b0')
+        text_widget.tag_configure("step", font=('Segoe UI', 11, 'bold'), foreground='#ff9800')
+        text_widget.tag_configure("emoji_blue", font=('Segoe UI', 11), foreground='#1976d2')
+        text_widget.tag_configure("emoji_green", font=('Segoe UI', 11), foreground='#388e3c')
+        text_widget.tag_configure("emoji_orange", font=('Segoe UI', 11), foreground='#f57c00')
+        text_widget.tag_configure("emoji_purple", font=('Segoe UI', 11), foreground='#7b1fa2')
+        text_widget.tag_configure("normal", font=('Segoe UI', 11), foreground='#555555')
+        
         text_widget.config(state='disabled')
         
-        # Button frame
-        btn_frame = tk.Frame(main_frame)
-        btn_frame.pack(fill='x', pady=(15, 0))
+        # Beautiful button frame with clean design
+        btn_frame = tk.Frame(main_frame, bg='white', height=70)
+        btn_frame.pack(fill='x', pady=(20, 0))
+        btn_frame.pack_propagate(False)
         
-        # Buttons
+        # Buttons with beautiful modern styling
         def open_gemini_studio():
             import webbrowser
             webbrowser.open('https://aistudio.google.com/')
@@ -503,16 +541,26 @@ Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
         def copy_guide():
             help_window.clipboard_clear()
             help_window.clipboard_append(help_content)
-            tk.messagebox.showinfo("Copied", "User guide copied to clipboard!")
+            tk.messagebox.showinfo("✅ Đã sao chép", "Hướng dẫn đã được sao chép vào clipboard!")
         
-        tk.Button(btn_frame, text="🌐 Open Google AI Studio", command=open_gemini_studio,
-                 font=('Segoe UI', 10), bg='#4285f4', fg='white', padx=20, pady=8).pack(side='left')
+        # Beautiful modern buttons inspired by Google Material Design
+        open_btn = tk.Button(btn_frame, text="🌐 Open Google AI Studio", command=open_gemini_studio,
+                 font=('Segoe UI', 11, 'bold'), bg='#4285f4', fg='white', 
+                 padx=35, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#3367d6', activeforeground='white')
+        open_btn.pack(side='left', padx=(0, 15))
         
-        tk.Button(btn_frame, text="📋 Copy Guide", command=copy_guide,
-                 font=('Segoe UI', 10), bg='#95a5a6', fg='white', padx=20, pady=8).pack(side='left', padx=(10, 0))
+        copy_btn = tk.Button(btn_frame, text="📋 Copy User Guide", command=copy_guide,
+                 font=('Segoe UI', 11, 'bold'), bg='#34a853', fg='white', 
+                 padx=35, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#2d7d32', activeforeground='white')
+        copy_btn.pack(side='left', padx=(0, 15))
         
-        tk.Button(btn_frame, text="✕ Close", command=help_window.destroy, 
-                 font=('Segoe UI', 10), bg='#e74c3c', fg='white', padx=30, pady=8).pack(side='right')
+        close_btn = tk.Button(btn_frame, text="✕ Close", command=help_window.destroy, 
+                 font=('Segoe UI', 11, 'bold'), bg='#f1f3f4', fg='#5f6368', 
+                 padx=40, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#e8eaed', activeforeground='#202124')
+        close_btn.pack(side='right')
     def show_about(self):
         # Đọc version chi tiết từ file version.json
         version_info = "1.0.0"
@@ -529,40 +577,38 @@ Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
         except Exception:
             pass
         
-        about_text = f"""🌐 ITM Translate v{version_info}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+        about_text = f"""
 🚀 TRÌNH QUẢN LÝ DỊCH THUẬT THÔNG MINH
 Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
 
 📋 CÁC TÍNH NĂNG CHÍNH:
-• 🎯 Chọn và dịch văn bản thông minh
-• ⚡ Dịch nhanh tức thì bằng phím tắt
-• 🔄 Thay thế văn bản theo thời gian thực
-• 🧠 Tự động nhận diện ngôn ngữ bằng AI (Hỗ trợ ngôn ngữ pha trộn)
-• 🎨 Nhóm ngôn ngữ kép với phím tắt tuỳ chỉnh
-• 🌍 Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
+├─ Chọn và dịch văn bản thông minh
+├─ Dịch nhanh tức thì bằng phím tắt
+├─ Thay thế văn bản theo thời gian thực
+├─ Tự động nhận diện ngôn ngữ bằng AI (Hỗ trợ ngôn ngữ pha trộn)
+├─ Nhóm ngôn ngữ kép với phím tắt tuỳ chỉnh
+└─ Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
 
 ⭐ TÍNH NĂNG NÂNG CAO:
-• 🤖 Tích hợp AI Gemini cho kết quả dịch chính xác
-• 🔍 Tự động phát hiện ngôn ngữ gốc
-• 📝 Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
-• 🎛️ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
-• 💾 Ghi nhớ thiết lập và sao lưu tự động
-• 🔒 Quản lý khóa API an toàn
+├─ Tích hợp AI Gemini cho kết quả dịch chính xác
+├─ Tự động phát hiện ngôn ngữ gốc
+├─ Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
+├─ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
+├─ Ghi nhớ thiết lập và sao lưu tự động
+└─ Quản lý khóa API an toàn
 
-🛠️ TÍCH HỢP HỆ THỐNG:
-• 🖥️ Tự khởi động cùng Windows
-• 🔧 Chạy nền trong khay hệ thống
-• 📊 Tối ưu hiệu suất sử dụng bộ nhớ
-• 🎯 Hỗ trợ phím tắt toàn cục (Dùng được trong mọi ứng dụng)
-• 🔒 Bảo vệ khỏi khởi động nhiều phiên bản
+🔧 TÍCH HỢP HỆ THỐNG:
+├─ Tự khởi động cùng Windows
+├─ Chạy nền trong khay hệ thống
+├─ Tối ưu hiệu suất sử dụng bộ nhớ
+├─ Hỗ trợ phím tắt toàn cục (Dùng được trong mọi ứng dụng)
+└─ Bảo vệ khỏi khởi động nhiều phiên bản
 
 🔄 HỆ THỐNG CẬP NHẬT:
-• ✨ Cập nhật tự động thông minh qua GitHub
-• 🛡️ Cập nhật nền yên lặng với quyền quản trị viên
-• 📦 Cơ chế cập nhật dựa trên tập tin Batch
-• 🔄 Di chuyển phiên bản mượt mà
+├─ Cập nhật tự động/thủ công dựa trên phiên bản mới nhất
+├─ Cập nhật nền yên lặng với quyền quản trị viên
+├─ Cơ chế cập nhật dựa trên kết nối GitHub
+└─ Di chuyển phiên bản mượt mà
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 THÔNG TIN PHIÊN BẢN:
@@ -572,7 +618,7 @@ Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
 └─ Kiến trúc: Windows x64
 
 👥 ĐỘI NGŨ PHÁT TRIỂN:
-├─ Lập trình chính: KhanhIT – Nhóm ITM
+├─ Lập trình viên: KhanhIT – Nhóm ITM
 ├─ Tích hợp AI: Sử dụng API Gemini
 ├─ Thiết kế UI/UX: Giao diện hiện đại với Bootstrap
 └─ Đảm bảo chất lượng: Kiểm thử chuẩn doanh nghiệp
@@ -588,56 +634,140 @@ Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thô
 
 © 2025 Công ty TNHH ITM Semiconductor Việt Nam. Bảo lưu mọi quyền."""
         
-        # Tạo dialog custom với scroll để hiển thị đẹp
+        # Beautiful modern about window with light theme
         about_window = tk.Toplevel(self.root)
-        about_window.title("About ITM Translate")
-        about_window.geometry("800x600")
+        about_window.title("About ITM Translate v" + version_info)
+        about_window.geometry("800x650")
         about_window.resizable(True, True)
         about_window.transient(self.root)
         about_window.grab_set()
         
+        # Modern light theme configuration
+        about_window.configure(bg='#ffffff')
+        
         # Center the dialog
         about_window.update_idletasks()
         x = (about_window.winfo_screenwidth() // 2) - (800 // 2)
-        y = (about_window.winfo_screenheight() // 2) - (600 // 2)
-        about_window.geometry(f"800x600+{x}+{y}")
+        y = (about_window.winfo_screenheight() // 2) - (650 // 2)
+        about_window.geometry(f"800x650+{x}+{y}")
         
-        # Main frame with scrollbar
-        main_frame = tk.Frame(about_window)
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        # Create beautiful gradient header with blue theme
+        header_frame = tk.Frame(about_window, bg='#4285f4', height=100)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
         
-        # Text widget with scrollbar
-        text_frame = tk.Frame(main_frame)
+        # Header content with professional styling
+        header_label = tk.Label(header_frame, text="🌟 ITM TRANSLATE", 
+                               font=('Segoe UI', 22, 'bold'), 
+                               bg='#4285f4', fg='white')
+        header_label.pack(pady=(15, 5))
+        
+        version_label = tk.Label(header_frame, text=f"Professional AI Translation Suite v{version_info}", 
+                                font=('Segoe UI', 12), 
+                                bg='#4285f4', fg='#e8f0fe')
+        version_label.pack()
+        
+        # Main frame with clean light theme
+        main_frame = tk.Frame(about_window, bg='white')
+        main_frame.pack(fill='both', expand=True, padx=25, pady=25)
+        
+        # Text widget with beautiful light theme and modern scrollbar
+        text_frame = tk.Frame(main_frame, bg='white')
         text_frame.pack(fill='both', expand=True)
         
-        text_widget = tk.Text(text_frame, wrap='word', font=('Consolas', 10), 
-                             bg='#f8f9fa', fg='#2c3e50', padx=15, pady=15,
-                             selectbackground='#3498db', selectforeground='white')
-        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+        text_widget = tk.Text(text_frame, wrap='word', font=('Segoe UI', 11), 
+                             bg='#fafafa', fg='#333333', padx=25, pady=20,
+                             selectbackground='#4285f4', selectforeground='white',
+                             insertbackground='#4285f4', relief='solid', borderwidth=1)
+        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview,
+                                bg='#f0f0f0', troughcolor='#fafafa', 
+                                activebackground='#4285f4',
+                                relief='flat', borderwidth=0, width=14)
         text_widget.configure(yscrollcommand=scrollbar.set)
         
         text_widget.pack(side='left', fill='both', expand=True)
         scrollbar.pack(side='right', fill='y')
         
-        # Insert content
-        text_widget.insert('1.0', about_text)
+        # Configure text tags for beautiful formatting
+        text_widget.tag_configure("header", font=('Segoe UI', 14, 'bold'), foreground='#4285f4')
+        text_widget.tag_configure("subheader", font=('Segoe UI', 12, 'bold'), foreground='#34a853')
+        text_widget.tag_configure("emoji", font=('Segoe UI', 12))
+        text_widget.tag_configure("version", font=('Consolas', 11), foreground='#ea4335')
+        text_widget.tag_configure("highlight", background='#e8f0fe', foreground='#1a73e8')
+        
+        # Insert content với màu sắc sinh động cho cả icon và text
+        lines = about_text.split('\n')
+        for line in lines:
+            if line.startswith('🌐') and 'ITM Translate' in line:
+                text_widget.insert('end', line + '\n', 'title')
+            elif line.startswith('━━━'):
+                text_widget.insert('end', line + '\n', 'separator')
+            elif line.startswith('🚀') or line.startswith('📋') or line.startswith('⭐') or line.startswith('🔧') or line.startswith('🔄') or line.startswith('📊') or line.startswith('👥') or line.startswith('🏢') or line.startswith('🎯'):
+                text_widget.insert('end', line + '\n', 'header')
+            elif '•' in line and any(emoji in line for emoji in ['🎯', '⚡', '🔄', '🧠', '🎨', '🌍']):
+                text_widget.insert('end', line + '\n', 'feature_blue')
+            elif '•' in line and any(emoji in line for emoji in ['🤖', '🔍', '📝', '🎛️', '💾', '🔒']):
+                text_widget.insert('end', line + '\n', 'feature_green')
+            elif '•' in line and any(emoji in line for emoji in ['🖥️', '🔧', '📊', '🛡️', '📦']):
+                text_widget.insert('end', line + '\n', 'feature_orange')
+            elif '•' in line and any(emoji in line for emoji in ['✨']):
+                text_widget.insert('end', line + '\n', 'feature_purple')
+            elif '•' in line:
+                text_widget.insert('end', line + '\n', 'normal')
+            elif line.startswith('├─') or line.startswith('└─'):
+                text_widget.insert('end', line + '\n', 'tree_info')
+            elif line.startswith('© 2025'):
+                text_widget.insert('end', line + '\n', 'copyright')
+            else:
+                text_widget.insert('end', line + '\n', 'normal')
+        
+        # Configure colorful text tags chỉ với màu sắc (không có background)
+        text_widget.tag_configure("title", font=('Segoe UI', 16, 'bold'), foreground='#1a73e8')
+        text_widget.tag_configure("header", font=('Segoe UI', 13, 'bold'), foreground='#4285f4')
+        text_widget.tag_configure("separator", font=('Segoe UI', 10), foreground='#9aa0a6')
+        text_widget.tag_configure("feature_blue", font=('Segoe UI', 11), foreground='#1976d2')
+        text_widget.tag_configure("feature_green", font=('Segoe UI', 11), foreground='#388e3c')
+        text_widget.tag_configure("feature_orange", font=('Segoe UI', 11), foreground='#f57c00')
+        text_widget.tag_configure("feature_purple", font=('Segoe UI', 11), foreground='#7b1fa2')
+        text_widget.tag_configure("tree_info", font=('Consolas', 10), foreground='#5f6368')
+        text_widget.tag_configure("copyright", font=('Segoe UI', 9, 'italic'), foreground='#9aa0a6')
+        text_widget.tag_configure("normal", font=('Segoe UI', 11), foreground='#555555')
+        
         text_widget.config(state='disabled')
         
-        # Button frame
-        btn_frame = tk.Frame(main_frame)
-        btn_frame.pack(fill='x', pady=(15, 0))
+        # Beautiful button frame with clean design
+        btn_frame = tk.Frame(main_frame, bg='white', height=70)
+        btn_frame.pack(fill='x', pady=(20, 0))
+        btn_frame.pack_propagate(False)
         
-        tk.Button(btn_frame, text="Close", command=about_window.destroy, 
-                 font=('Segoe UI', 10), bg='#3498db', fg='white', padx=30, pady=8).pack(side='right')
-        
-        # Copy info button
+        # Copy info button with beautiful styling
         def copy_version_info():
             about_window.clipboard_clear()
             about_window.clipboard_append(f"ITM Translate v{version_info} (Build: {build_info})")
-            tk.messagebox.showinfo("Copied", "Version information copied to clipboard!")
+            tk.messagebox.showinfo("✅ Đã sao chép", "Thông tin phiên bản đã được sao chép vào clipboard!")
         
-        tk.Button(btn_frame, text="Copy Version", command=copy_version_info,
-                 font=('Segoe UI', 10), bg='#95a5a6', fg='white', padx=20, pady=8).pack(side='right', padx=(0, 10))
+        def open_github():
+            import webbrowser
+            webbrowser.open('https://github.com/quockhanh112hubt/ITM_Translate')
+        
+        # Beautiful modern buttons with Google Material Design style
+        github_btn = tk.Button(btn_frame, text="🌐 GitHub Repository", command=open_github,
+                 font=('Segoe UI', 11, 'bold'), bg='#4285f4', fg='white', 
+                 padx=30, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#3367d6', activeforeground='white')
+        github_btn.pack(side='left', padx=(0, 15))
+        
+        copy_btn = tk.Button(btn_frame, text="📋 Copy Version Info", command=copy_version_info,
+                 font=('Segoe UI', 11, 'bold'), bg='#34a853', fg='white', 
+                 padx=30, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#2d7d32', activeforeground='white')
+        copy_btn.pack(side='left', padx=(0, 15))
+        
+        close_btn = tk.Button(btn_frame, text="✕ Close", command=about_window.destroy, 
+                 font=('Segoe UI', 11, 'bold'), bg='#f1f3f4', fg='#5f6368', 
+                 padx=35, pady=15, relief='flat', cursor='hand2',
+                 activebackground='#e8eaed', activeforeground='#202124')
+        close_btn.pack(side='right')
     def update_program(self):
         # Hiển thị loading popup
         loading_popup = None
