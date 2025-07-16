@@ -111,6 +111,14 @@ def _on_activate_translate():
             time.sleep(0.15)  # Đợi clipboard cập nhật
             selected_text = get_clipboard()
             if selected_text.strip():
+                # Print current API key info before translation
+                from core.api_key_manager import api_key_manager
+                current_key = api_key_manager.get_active_key()
+                if current_key:
+                    print(f"🔑 [GROUP 1] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                else:
+                    print("⚠️ [GROUP 1] No API key available!")
+                
                 # Get translation with actual language info
                 translated, actual_source, actual_target = translate_text(
                     selected_text, 
@@ -120,12 +128,8 @@ def _on_activate_translate():
                     return_language_info=True
                 )
                 
-                # Kiểm tra lỗi 429
-                if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-                # Kiểm tra lỗi 400
-                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                # Print result info
+                print(f"✨ [GROUP 1] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1] Translation result: {translated}")
                 
                 def show_result():
                     if loading and loading.winfo_exists():
@@ -166,6 +170,14 @@ def _on_activate_replace():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
+                # Print current API key info before translation
+                from core.api_key_manager import api_key_manager
+                current_key = api_key_manager.get_active_key()
+                if current_key:
+                    print(f"🔑 [GROUP 1 REPLACE] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                else:
+                    print("⚠️ [GROUP 1 REPLACE] No API key available!")
+                
                 # Use same logic as translate popup - detect language for proper direction
                 translated, actual_source, actual_target = translate_text(
                     selected_text, 
@@ -175,12 +187,8 @@ def _on_activate_replace():
                     return_language_info=True
                 )
                 
-                # Kiểm tra lỗi 429
-                if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-                # Kiểm tra lỗi 400
-                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                # Print result info
+                print(f"✨ [GROUP 1 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1 REPLACE] Translation result: {translated}")
                 def do_paste():
                     if loading and loading.winfo_exists():
                         loading._running = False
@@ -228,6 +236,14 @@ def _on_activate_translate_group2():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
+                # Print current API key info before translation
+                from core.api_key_manager import api_key_manager
+                current_key = api_key_manager.get_active_key()
+                if current_key:
+                    print(f"🔑 [GROUP 2] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                else:
+                    print("⚠️ [GROUP 2] No API key available!")
+                
                 # Get translation with actual language info for Group 2
                 translated, actual_source, actual_target = translate_text(
                     selected_text, 
@@ -237,10 +253,8 @@ def _on_activate_translate_group2():
                     return_language_info=True
                 )
                 
-                if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                # Print result info
+                print(f"✨ [GROUP 2] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2] Translation result: {translated}")
                 
                 def show_result():
                     if loading and loading.winfo_exists():
@@ -281,6 +295,14 @@ def _on_activate_replace_group2():
             time.sleep(0.15)
             selected_text = get_clipboard()
             if selected_text.strip():
+                # Print current API key info before translation
+                from core.api_key_manager import api_key_manager
+                current_key = api_key_manager.get_active_key()
+                if current_key:
+                    print(f"🔑 [GROUP 2 REPLACE] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                else:
+                    print("⚠️ [GROUP 2 REPLACE] No API key available!")
+                
                 # Use same logic as translate popup for Group 2 - detect language for proper direction
                 translated, actual_source, actual_target = translate_text(
                     selected_text, 
@@ -290,10 +312,8 @@ def _on_activate_replace_group2():
                     return_language_info=True
                 )
                 
-                if isinstance(translated, str) and "429" in translated and "quota" in translated:
-                    translated = "Lỗi dịch 429: Key của bạn đã hết hạn sử dụng, vui lòng liên hệ Admin để nhận key mới!."
-                if isinstance(translated, str) and "400" in translated and "key not valid" in translated:
-                    translated = "Lỗi 400: Key của bạn không chính xác, vui lòng liên hệ Admin để nhận key sử dụng!."
+                # Print result info
+                print(f"✨ [GROUP 2 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2 REPLACE] Translation result: {translated}")
                 def do_paste():
                     if loading and loading.winfo_exists():
                         loading._running = False
@@ -571,10 +591,23 @@ if startup_enabled and not show_on_startup:
     root.withdraw()
 app = MainGUI(root)
 app.set_hotkey_manager(multi_hotkey)
-app.set_api_key_updater(update_ITM_TRANSLATE_KEY)
 app.set_hotkey_updater(update_hotkeys_from_gui)
-app.set_initial_settings(user_hotkeys, load_ITM_TRANSLATE_KEY(), startup_enabled, show_on_startup)
+app.set_initial_settings(user_hotkeys, "", startup_enabled, show_on_startup)
 app.set_startup_callback(set_startup_windows)
+
+# Print API key status on startup
+try:
+    from core.api_key_manager import api_key_manager
+    key_count = api_key_manager.get_key_count()
+    active_key = api_key_manager.get_active_key()
+    print(f"🚀 ITM Translate started with {key_count} API key(s)")
+    if active_key:
+        print(f"🎯 Active key: {active_key[:10]}... (index: {api_key_manager.active_index})")
+    else:
+        print("⚠️ No active API key found")
+except Exception as e:
+    print(f"❌ Error checking API keys: {e}")
+
 tray = create_tray_icon(root, app)
 check_queue()
 root.mainloop()
