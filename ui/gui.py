@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import PhotoImage
 import json
 import os
 import sys
@@ -38,7 +39,6 @@ class MainGUI:
         self.root.title(f'ITM Translate v{app_version}')
         self.root.geometry('1050x420')
         self.hotkey_manager = None
-        self.api_key_updater = None
         self.hotkey_updater = None
         self.startup_callback = None
         self.initial_hotkeys = None
@@ -47,8 +47,6 @@ class MainGUI:
         self.initial_show_on_startup = True
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
-    def set_api_key_updater(self, updater):
-        self.api_key_updater = updater
     def set_hotkey_updater(self, updater):
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
@@ -69,14 +67,6 @@ class MainGUI:
         }
         self.create_tabs()
     def create_tabs(self):
-        tab_control = ttk.Notebook(self.root, bootstyle=PRIMARY)
-        self.settings_tab = ttk.Frame(tab_control)
-        self.advanced_tab = ttk.Frame(tab_control)
-        tab_control.add(self.settings_tab, text='Cài Đặt')
-        tab_control.add(self.advanced_tab, text='Nâng Cao')
-        tab_control.pack(expand=1, fill='both')
-        self.create_settings_tab()
-        self.create_advanced_tab()
         # Footer đẹp: trái là label, phải là 2 nút sát mép phải
         footer_frame = ttk.Frame(self.root)
         footer_frame.pack(side='bottom', fill='x', pady=(0, 8), padx=8)
@@ -90,6 +80,51 @@ class MainGUI:
             self.root.withdraw()
         ttk.Button(right_btn_frame, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
         ttk.Button(right_btn_frame, text='Huỷ bỏ', style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
+        
+        # Tạo notebook sau footer để footer luôn ở dưới cùng
+        self.tab_control = ttk.Notebook(self.root, bootstyle=PRIMARY)
+        self.settings_tab = ttk.Frame(self.tab_control)
+        self.api_key_tab = ttk.Frame(self.tab_control)
+        self.advanced_tab = ttk.Frame(self.tab_control)
+        self.tab_control.add(self.settings_tab, text='Cài Đặt')
+        self.tab_control.add(self.api_key_tab, text='Quản lý API KEY')
+        self.tab_control.add(self.advanced_tab, text='Nâng Cao')
+        
+        # Bind sự kiện chuyển tab để tự động điều chỉnh kích thước
+        self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+        
+        self.tab_control.pack(expand=1, fill='both')
+        self.create_settings_tab()
+        self.create_api_key_tab()
+        self.create_advanced_tab()
+
+    def on_tab_changed(self, event):
+        """Xử lý sự kiện chuyển tab và tự động điều chỉnh kích thước cửa sổ"""
+        selected_tab = event.widget.select()
+        tab_text = event.widget.tab(selected_tab, "text")
+        
+        # Điều chỉnh kích thước cửa sổ theo tab được chọn
+        if tab_text == "Cài Đặt":
+            # Tab Cài Đặt: kích thước mặc định hoặc mở rộng nếu có Group 2
+            if hasattr(self, 'group2_visible') and self.group2_visible:
+                self.root.geometry('1050x650')
+            else:
+                self.root.geometry('1050x420')
+        elif tab_text == "Quản lý API KEY":
+            # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
+            self.root.geometry('1050x660')
+            # Tự động làm mới danh sách API keys khi chuyển sang tab này
+            try:
+                if hasattr(self, 'refresh_api_keys'):
+                    self.refresh_api_keys()
+            except Exception as e:
+                print(f"Warning: Could not auto-refresh API keys: {e}")
+        elif tab_text == "Nâng Cao":
+            # Tab Nâng Cao: kích thước nhỏ gọn
+            self.root.geometry('1050x350')
+        
+        # Đảm bảo cửa sổ được cập nhật
+        self.root.update_idletasks()
 
     def create_settings_tab(self):
         style = ttk.Style()
@@ -237,6 +272,196 @@ class MainGUI:
         self.entries['replace_translate2_key'].grid(row=3, column=3, padx=2, pady=8)
 
 
+    def create_api_key_tab(self):
+        """Tạo tab quản lý API KEY"""
+        from core.api_key_manager import api_key_manager
+        
+        # Title
+        title_frame = ttk.Frame(self.api_key_tab)
+        title_frame.pack(pady=(20, 10), fill='x')
+        
+        title = ttk.Label(title_frame, text='Quản lý API KEY', 
+                         font=('Segoe UI', 18, 'bold'), bootstyle=PRIMARY)
+        title.pack()
+        
+        subtitle = ttk.Label(title_frame, 
+                           text='Thêm, xóa và quản lý API keys. Hệ thống sẽ tự động chuyển đổi key khi gặp lỗi.',
+                           font=('Segoe UI', 10), bootstyle=SECONDARY)
+        subtitle.pack(pady=(5, 0))
+        
+        # Main content frame
+        main_frame = ttk.Frame(self.api_key_tab)
+        main_frame.pack(fill='both', expand=True, padx=40, pady=20)
+        
+        # Left side - Key list
+        left_frame = ttk.LabelFrame(main_frame, text='Danh sách API Keys', bootstyle=INFO)
+        left_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        
+        # Key listbox with scrollbar
+        list_frame = ttk.Frame(left_frame)
+        list_frame.pack(fill='both', expand=True, padx=10, pady=10)
+        
+        # Listbox with scrollbar
+        listbox_frame = ttk.Frame(list_frame)
+        listbox_frame.pack(fill='both', expand=True)
+        
+        self.api_key_listbox = tk.Listbox(listbox_frame, font=('Consolas', 10))
+        scrollbar_keys = ttk.Scrollbar(listbox_frame, orient='vertical', command=self.api_key_listbox.yview)
+        self.api_key_listbox.configure(yscrollcommand=scrollbar_keys.set)
+        
+        self.api_key_listbox.pack(side='left', fill='both', expand=True)
+        scrollbar_keys.pack(side='right', fill='y')
+        
+        # Key status frame
+        status_frame = ttk.Frame(left_frame)
+        status_frame.pack(fill='x', padx=10, pady=(0, 10))
+        
+        self.key_status_label = ttk.Label(status_frame, text='', font=('Segoe UI', 9))
+        self.key_status_label.pack()
+        
+        # Right side - Controls
+        right_frame = ttk.LabelFrame(main_frame, text='Thao tác', bootstyle=INFO)
+        right_frame.pack(side='right', fill='y', padx=(10, 0))
+        
+        # Add key section
+        add_frame = ttk.Frame(right_frame)
+        add_frame.pack(fill='x', padx=10, pady=10)
+        
+        ttk.Label(add_frame, text='Thêm API Key mới:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        
+        self.new_key_entry = ttk.Entry(add_frame, width=40, show='*')
+        self.new_key_entry.pack(fill='x', pady=(5, 10))
+        
+        add_btn = ttk.Button(add_frame, text='➕ Thêm Key', command=self.add_api_key, 
+                           bootstyle=SUCCESS)
+        add_btn.pack(fill='x')
+        
+        # Control buttons
+        control_frame = ttk.Frame(right_frame)
+        control_frame.pack(fill='x', padx=10, pady=(20, 10))
+        
+        ttk.Label(control_frame, text='Quản lý Keys:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        
+        set_active_btn = ttk.Button(control_frame, text='🎯 Đặt làm Active', 
+                                  command=self.set_active_key, bootstyle=PRIMARY)
+        set_active_btn.pack(fill='x', pady=(5, 5))
+        
+        remove_btn = ttk.Button(control_frame, text='🗑️ Xóa Key', 
+                              command=self.remove_api_key, bootstyle=DANGER)
+        remove_btn.pack(fill='x', pady=(0, 5))
+        
+        refresh_btn = ttk.Button(control_frame, text='🔄 Làm mới', 
+                               command=self.refresh_api_keys, bootstyle=SECONDARY)
+        refresh_btn.pack(fill='x')
+        
+        # Info section
+        info_frame = ttk.Frame(right_frame)
+        info_frame.pack(fill='x', padx=10, pady=(20, 10))
+        
+        ttk.Label(info_frame, text='💡 Thông tin:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        
+        info_text = """• Key Active sẽ được ưu tiên sử dụng
+• Khi gặp lỗi, hệ thống sẽ tự động chuyển key
+• Chuyển đổi theo vòng tròn: Key1 → Key2 → Key1
+• Có thể thêm nhiều key để tăng độ ổn định"""
+        
+        info_label = ttk.Label(info_frame, text=info_text, 
+                             font=('Segoe UI', 9), bootstyle=SECONDARY,
+                             wraplength=250, justify='left')
+        info_label.pack(anchor='w', pady=(5, 0))
+        
+        # Load and display keys
+        self.refresh_api_keys()
+    
+    def add_api_key(self):
+        """Thêm API key mới"""
+        from core.api_key_manager import api_key_manager
+        
+        new_key = self.new_key_entry.get().strip()
+        if not new_key:
+            messagebox.showwarning("Cảnh báo", "Vui lòng nhập API key!")
+            return
+        
+        if api_key_manager.add_key(new_key):
+            messagebox.showinfo("Thành công", "Đã thêm API key mới!")
+            self.new_key_entry.delete(0, 'end')
+            self.refresh_api_keys()
+        else:
+            messagebox.showerror("Lỗi", "API key đã tồn tại hoặc không hợp lệ!")
+    
+    def remove_api_key(self):
+        """Xóa API key đã chọn"""
+        from core.api_key_manager import api_key_manager
+        
+        selection = self.api_key_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn key cần xóa!")
+            return
+        
+        index = selection[0]
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa API key này?"):
+            if api_key_manager.remove_key(index):
+                messagebox.showinfo("Thành công", "Đã xóa API key!")
+                self.refresh_api_keys()
+            else:
+                messagebox.showerror("Lỗi", "Không thể xóa API key!")
+    
+    def set_active_key(self):
+        """Đặt key đã chọn làm active"""
+        from core.api_key_manager import api_key_manager
+        
+        selection = self.api_key_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn key để đặt làm active!")
+            return
+        
+        index = selection[0]
+        if api_key_manager.set_active_index(index):
+            messagebox.showinfo("Thành công", "Đã đặt key làm active!")
+            self.refresh_api_keys()
+        else:
+            messagebox.showerror("Lỗi", "Không thể đặt key làm active!")
+    
+    def refresh_api_keys(self):
+        """Làm mới danh sách API keys"""
+        from core.api_key_manager import api_key_manager
+        
+        # Clear listbox
+        self.api_key_listbox.delete(0, 'end')
+        
+        keys = api_key_manager.get_all_keys()
+        active_index = api_key_manager.active_index
+        
+        for i, key in enumerate(keys):
+            # Mask key for security (show only first 6 and last 4 characters)
+            if len(key) > 10:
+                masked_key = key[:6] + "..." + key[-4:]
+            else:
+                masked_key = key[:3] + "..." + key[-2:] if len(key) > 5 else key
+            
+            status = " (ACTIVE)" if i == active_index else ""
+            display_text = f"{i+1}. {masked_key}{status}"
+            
+            self.api_key_listbox.insert('end', display_text)
+            
+            # Highlight active key
+            if i == active_index:
+                self.api_key_listbox.itemconfig(i, {'bg': '#e8f5e8', 'fg': '#2e7d32'})
+        
+        # Update status
+        key_count = len(keys)
+        if key_count == 0:
+            status_text = "⚠️ Chưa có API key nào. Vui lòng thêm ít nhất 1 key."
+        else:
+            active_key = api_key_manager.get_active_key()
+            if active_key:
+                masked_active = active_key[:6] + "..." + active_key[-4:] if len(active_key) > 10 else active_key
+                status_text = f"✅ {key_count} key(s) | Active: {masked_active}"
+            else:
+                status_text = f"⚠️ {key_count} key(s) | Không có key active"
+        
+        self.key_status_label.config(text=status_text)
+
     def create_advanced_tab(self):
         # Khởi động cùng Windows
         self.startup_var = tk.BooleanVar(value=self.initial_startup)
@@ -260,12 +485,6 @@ class MainGUI:
         tk.Button(self.advanced_tab, text="Thông tin về chương trình", command=self.show_about).pack(fill='x', padx=20, pady=5)
         # Nút cập nhật chương trình (chưa xử lý logic)
         tk.Button(self.advanced_tab, text="Cập nhật chương trình", command=self.update_program).pack(fill='x', padx=20, pady=5)
-        # Thêm phần nhập ITM_TRANSLATE_KEY vào đầu tab Nâng Cao
-        ttk.Label(self.advanced_tab, text='ITM_TRANSLATE_KEY:', font=('Segoe UI', 12, 'bold'), bootstyle=PRIMARY).pack(pady=(18, 5))
-        self.api_key_entry = ttk.Entry(self.advanced_tab, width=50, show='*')
-        if self.initial_api_key:
-            self.api_key_entry.insert(0, self.initial_api_key)
-        self.api_key_entry.pack()
 
     def on_startup_toggle(self):
         enabled = self.startup_var.get()
@@ -926,9 +1145,6 @@ Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thô
             changed = True
         with open('hotkeys.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-        api_key = self.api_key_entry.get()
-        if self.api_key_updater:
-            self.api_key_updater(api_key)
         if changed:
             if messagebox.askokcancel("Thông báo", "Phím tắt đã được thay đổi, hãy khởi động lại chương trình để áp dụng"):
                 self._restart_with_batch()
@@ -937,7 +1153,6 @@ Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thô
         else:
             messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
         self.initial_hotkeys = new_hotkeys
-        self.initial_api_key = api_key
     def load_settings(self):
         # Đọc hotkeys từ file
         if os.path.exists("hotkeys.json"):
