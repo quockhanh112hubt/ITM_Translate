@@ -1,6 +1,6 @@
 {
     "version": "1.2.0",
-    "build": "2025071717",
+    "build": "2025071716",
     "release_date": "2025-07-17",
-    "description": "Multi-Provider AI Support with Auto Failover - Gemini, ChatGPT, DeepSeek, Claude"
+    "description": "Auto build release"
 }
