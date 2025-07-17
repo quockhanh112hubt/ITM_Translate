@@ -4,6 +4,7 @@ import time
 import math
 import os
 import json
+from core.api_key_manager import api_key_manager
 
 def get_app_version():
     """Lấy version hiện tại từ file version.json"""
@@ -86,6 +87,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     
     # Tạo title với thông tin chi tiết
     title = 'ITM Translate'
+    curent_key = api_key_manager.get_active_key()
     if version:
         title += f' v{version}'
     if source_lang and target_lang:
@@ -96,7 +98,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
         
         target_display = target_lang.replace('Tiếng ', '')
-        title += f' *** {source_display} → {target_display}'
+        title += f' *** {source_display} → {target_display} *** API: {curent_key[-10:] if curent_key else "None"}'
     
     win = tk.Toplevel(master)
     win.withdraw()
