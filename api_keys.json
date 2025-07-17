@@ -1,6 +1,30 @@
 {
   "keys": [
-    "AIzaSyCHf6Yj_v6EBC7frcrrTBMNbGS1afE5ELU"
+    {
+      "key": "AIzaSyCGjEojssmoT5Vy-I6UWBKqyZ92SoqfX1g",
+      "provider": "gemini",
+      "model": "gemini-2.0-flash-exp",
+      "name": "Gemini_1",
+      "is_active": true,
+      "failed_count": 0,
+      "last_error": ""
+    },
+    {
+      "key": "AIzaSyCHf6Yj_v6EBC7frcrrTBMNbGS1afE5ELU",
+      "provider": "gemini",
+      "model": "gemini-2.0-flash-exp",
+      "name": "Gemini_2",
+      "is_active": true,
+      "failed_count": 0,
+      "last_error": ""
+    }
   ],
-  "active_index": 0
+  "active_index": 0,
+  "provider_priority": [
+    "gemini",
+    "chatgpt",
+    "copilot",
+    "deepseek",
+    "claude"
+  ]
 }

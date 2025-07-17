@@ -87,9 +87,11 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     
     # Tạo title với thông tin chi tiết
     title = 'ITM Translate'
-    curent_key = api_key_manager.get_active_key()
+    provider_info = api_key_manager.get_provider_info()
+    
     if version:
         title += f' v{version}'
+    
     if source_lang and target_lang:
         # Handle special cases
         if source_lang.lower() == "mixed":
@@ -98,7 +100,16 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
         
         target_display = target_lang.replace('Tiếng ', '')
-        title += f' *** {source_display} → {target_display} *** API: {curent_key[-10:] if curent_key else "None"}'
+        
+        # Add provider and model info
+        provider_name = provider_info['provider'].title()
+        model_name = provider_info['model']
+        key_preview = provider_info['key_preview']
+        
+        title += f' *** {source_display} → {target_display} *** {provider_name}'
+        if model_name != "auto":
+            title += f' ({model_name})'
+        title += f' - API: {key_preview}'
     
     win = tk.Toplevel(master)
     win.withdraw()
