@@ -112,7 +112,7 @@ class MainGUI:
                 self.root.geometry('1050x420')
         elif tab_text == "Quản lý API KEY":
             # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
-            self.root.geometry('1050x660')
+            self.root.geometry('1050x1010')
             # Tự động làm mới danh sách API keys khi chuyển sang tab này
             try:
                 if hasattr(self, 'refresh_api_keys'):
@@ -273,19 +273,19 @@ class MainGUI:
 
 
     def create_api_key_tab(self):
-        """Tạo tab quản lý API KEY"""
-        from core.api_key_manager import api_key_manager
+        """Tạo tab quản lý API KEY với hỗ trợ multiple providers"""
+        from core.api_key_manager import api_key_manager, AIProvider
         
         # Title
         title_frame = ttk.Frame(self.api_key_tab)
         title_frame.pack(pady=(20, 10), fill='x')
         
-        title = ttk.Label(title_frame, text='Quản lý API KEY', 
+        title = ttk.Label(title_frame, text='Quản lý API KEY & AI Providers', 
                          font=('Segoe UI', 18, 'bold'), bootstyle=PRIMARY)
         title.pack()
         
         subtitle = ttk.Label(title_frame, 
-                           text='Thêm, xóa và quản lý API keys. Hệ thống sẽ tự động chuyển đổi key khi gặp lỗi.',
+                           text='Quản lý API keys từ nhiều providers khác nhau. Hệ thống sẽ tự động failover khi gặp lỗi.',
                            font=('Segoe UI', 10), bootstyle=SECONDARY)
         subtitle.pack(pady=(5, 0))
         
@@ -294,22 +294,37 @@ class MainGUI:
         main_frame.pack(fill='both', expand=True, padx=40, pady=20)
         
         # Left side - Key list
-        left_frame = ttk.LabelFrame(main_frame, text='Danh sách API Keys', bootstyle=INFO)
+        left_frame = ttk.LabelFrame(main_frame, text='Danh sách API Keys & Providers', bootstyle=INFO)
         left_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
         
         # Key listbox with scrollbar
         list_frame = ttk.Frame(left_frame)
         list_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # Listbox with scrollbar
-        listbox_frame = ttk.Frame(list_frame)
-        listbox_frame.pack(fill='both', expand=True)
+        # Treeview for better display of provider info
+        columns = ('Provider', 'Model', 'Name', 'Status', 'Key')
+        self.api_key_tree = ttk.Treeview(list_frame, columns=columns, show='tree headings', height=10)
         
-        self.api_key_listbox = tk.Listbox(listbox_frame, font=('Consolas', 10))
-        scrollbar_keys = ttk.Scrollbar(listbox_frame, orient='vertical', command=self.api_key_listbox.yview)
-        self.api_key_listbox.configure(yscrollcommand=scrollbar_keys.set)
+        # Configure columns
+        self.api_key_tree.heading('#0', text='Active')
+        self.api_key_tree.heading('Provider', text='Provider')
+        self.api_key_tree.heading('Model', text='Model')
+        self.api_key_tree.heading('Name', text='Name')
+        self.api_key_tree.heading('Status', text='Status')
+        self.api_key_tree.heading('Key', text='API Key')
         
-        self.api_key_listbox.pack(side='left', fill='both', expand=True)
+        self.api_key_tree.column('#0', width=60)
+        self.api_key_tree.column('Provider', width=80)
+        self.api_key_tree.column('Model', width=100)
+        self.api_key_tree.column('Name', width=120)
+        self.api_key_tree.column('Status', width=80)
+        self.api_key_tree.column('Key', width=200)
+        
+        # Scrollbar for treeview
+        scrollbar_keys = ttk.Scrollbar(list_frame, orient='vertical', command=self.api_key_tree.yview)
+        self.api_key_tree.configure(yscrollcommand=scrollbar_keys.set)
+        
+        self.api_key_tree.pack(side='left', fill='both', expand=True)
         scrollbar_keys.pack(side='right', fill='y')
         
         # Key status frame
@@ -329,12 +344,56 @@ class MainGUI:
         
         ttk.Label(add_frame, text='Thêm API Key mới:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        self.new_key_entry = ttk.Entry(add_frame, width=40, show='*')
-        self.new_key_entry.pack(fill='x', pady=(5, 10))
+        # Provider selection
+        provider_frame = ttk.Frame(add_frame)
+        provider_frame.pack(fill='x', pady=(5, 5))
+        
+        ttk.Label(provider_frame, text='Provider:').pack(anchor='w')
+        self.provider_var = tk.StringVar(value='gemini')
+        provider_combo = ttk.Combobox(provider_frame, textvariable=self.provider_var, 
+                                    values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
+                                    state='readonly', width=37)
+        provider_combo.pack(fill='x')
+        
+        # Bind provider change to update model list
+        provider_combo.bind('<<ComboboxSelected>>', self.on_provider_changed)
+        
+        # Model selection - now as dropdown
+        model_frame = ttk.Frame(add_frame)
+        model_frame.pack(fill='x', pady=(5, 5))
+        
+        ttk.Label(model_frame, text='Model:').pack(anchor='w')
+        self.model_var = tk.StringVar(value='auto')
+        self.model_combo = ttk.Combobox(model_frame, textvariable=self.model_var, 
+                                       state='readonly', width=37)
+        self.model_combo.pack(fill='x')
+        
+        # Add tooltip for model info
+        self.create_model_tooltip()
+        
+        # Initialize model list for default provider
+        self.update_model_list()
+        
+        # Name
+        name_frame = ttk.Frame(add_frame)
+        name_frame.pack(fill='x', pady=(5, 5))
+        
+        ttk.Label(name_frame, text='Tên (tùy chọn):').pack(anchor='w')
+        self.name_var = tk.StringVar()
+        name_entry = ttk.Entry(name_frame, textvariable=self.name_var, width=40)
+        name_entry.pack(fill='x')
+        
+        # API Key input
+        key_frame = ttk.Frame(add_frame)
+        key_frame.pack(fill='x', pady=(5, 10))
+        
+        ttk.Label(key_frame, text='API Key:').pack(anchor='w')
+        self.new_key_entry = ttk.Entry(key_frame, width=40, show='*')
+        self.new_key_entry.pack(fill='x')
         
         add_btn = ttk.Button(add_frame, text='➕ Thêm Key', command=self.add_api_key, 
                            bootstyle=SUCCESS)
-        add_btn.pack(fill='x')
+        add_btn.pack(fill='x', pady=(5, 0))
         
         # Control buttons
         control_frame = ttk.Frame(right_frame)
@@ -346,6 +405,10 @@ class MainGUI:
                                   command=self.set_active_key, bootstyle=PRIMARY)
         set_active_btn.pack(fill='x', pady=(5, 5))
         
+        edit_btn = ttk.Button(control_frame, text='✏️ Chỉnh sửa', 
+                            command=self.edit_api_key, bootstyle=INFO)
+        edit_btn.pack(fill='x', pady=(0, 5))
+        
         remove_btn = ttk.Button(control_frame, text='🗑️ Xóa Key', 
                               command=self.remove_api_key, bootstyle=DANGER)
         remove_btn.pack(fill='x', pady=(0, 5))
@@ -354,16 +417,34 @@ class MainGUI:
                                command=self.refresh_api_keys, bootstyle=SECONDARY)
         refresh_btn.pack(fill='x')
         
+        # Provider priority section
+        priority_frame = ttk.Frame(right_frame)
+        priority_frame.pack(fill='x', padx=10, pady=(20, 10))
+        
+        ttk.Label(priority_frame, text='Ưu tiên Providers:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        
+        self.priority_listbox = tk.Listbox(priority_frame, height=5, font=('Segoe UI', 9))
+        self.priority_listbox.pack(fill='x', pady=(5, 5))
+        
+        priority_btn_frame = ttk.Frame(priority_frame)
+        priority_btn_frame.pack(fill='x')
+        
+        up_btn = ttk.Button(priority_btn_frame, text='↑', command=self.move_priority_up, width=3)
+        up_btn.pack(side='left', padx=(0, 5))
+        
+        down_btn = ttk.Button(priority_btn_frame, text='↓', command=self.move_priority_down, width=3)
+        down_btn.pack(side='left')
+        
         # Info section
         info_frame = ttk.Frame(right_frame)
         info_frame.pack(fill='x', padx=10, pady=(20, 10))
         
         ttk.Label(info_frame, text='💡 Thông tin:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        info_text = """• Key Active sẽ được ưu tiên sử dụng
-• Khi gặp lỗi, hệ thống sẽ tự động chuyển key
-• Chuyển đổi theo vòng tròn: Key1 → Key2 → Key1
-• Có thể thêm nhiều key để tăng độ ổn định"""
+        info_text = """• Hỗ trợ Gemini, ChatGPT, GitHub Copilot, DeepSeek, Claude
+• Auto failover khi provider gặp lỗi
+• Model 'auto' = model mặc định của provider
+• Thứ tự ưu tiên quyết định failover order"""
         
         info_label = ttk.Label(info_frame, text=info_text, 
                              font=('Segoe UI', 9), bootstyle=SECONDARY,
@@ -373,32 +454,198 @@ class MainGUI:
         # Load and display keys
         self.refresh_api_keys()
     
+    def on_provider_changed(self, event=None):
+        """Xử lý khi provider thay đổi - cập nhật danh sách model"""
+        self.update_model_list()
+    
+    def create_model_tooltip(self):
+        """Tạo tooltip hiển thị thông tin model"""
+        try:
+            from core.provider_models import get_model_description
+            
+            def show_tooltip(event):
+                model = self.model_var.get()
+                description = get_model_description(model)
+                
+                # Create tooltip window
+                tooltip = tk.Toplevel()
+                tooltip.wm_overrideredirect(True)
+                tooltip.wm_geometry(f"+{event.x_root+10}+{event.y_root+10}")
+                tooltip.configure(bg="lightyellow")
+                
+                label = tk.Label(tooltip, text=description, 
+                               bg="lightyellow", fg="black",
+                               font=("Segoe UI", 9),
+                               wraplength=300, justify="left")
+                label.pack()
+                
+                # Auto hide after 3 seconds
+                tooltip.after(3000, tooltip.destroy)
+                
+                # Store tooltip reference to destroy on mouse leave
+                self.model_combo.tooltip = tooltip
+            
+            def hide_tooltip(event):
+                if hasattr(self.model_combo, 'tooltip'):
+                    self.model_combo.tooltip.destroy()
+                    delattr(self.model_combo, 'tooltip')
+            
+            # Bind events
+            self.model_combo.bind('<Enter>', show_tooltip)
+            self.model_combo.bind('<Leave>', hide_tooltip)
+            
+        except ImportError:
+            # No tooltip if provider_models not available
+            pass
+    
+    def update_model_list(self):
+        """Cập nhật danh sách model dựa vào provider được chọn"""
+        try:
+            from core.provider_models import get_models_for_provider
+            
+            provider = self.provider_var.get()
+            models = get_models_for_provider(provider)
+            
+            # Update combobox values
+            self.model_combo['values'] = models
+            
+            # Set default value if current value is not in new list
+            current_model = self.model_var.get()
+            if current_model not in models:
+                self.model_var.set('auto')
+                
+        except ImportError:
+            # Fallback if provider_models module not available
+            self.model_combo['values'] = ['auto']
+            self.model_var.set('auto')
+    
     def add_api_key(self):
-        """Thêm API key mới"""
-        from core.api_key_manager import api_key_manager
+        """Thêm API key mới với validation đầy đủ"""
+        from core.api_key_manager import api_key_manager, AIProvider
+        from core.api_key_validator import APIKeyValidator, get_validation_message
+        import threading
         
         new_key = self.new_key_entry.get().strip()
+        provider_str = self.provider_var.get()
+        model = self.model_var.get().strip()
+        name = self.name_var.get().strip()
+        
         if not new_key:
             messagebox.showwarning("Cảnh báo", "Vui lòng nhập API key!")
             return
         
-        if api_key_manager.add_key(new_key):
-            messagebox.showinfo("Thành công", "Đã thêm API key mới!")
-            self.new_key_entry.delete(0, 'end')
-            self.refresh_api_keys()
-        else:
-            messagebox.showerror("Lỗi", "API key đã tồn tại hoặc không hợp lệ!")
+        if not model:
+            model = "auto"
+        
+        # Disable add button during validation
+        add_btn = None
+        for widget in self.api_key_tab.winfo_children():
+            if hasattr(widget, 'winfo_children'):
+                for child in widget.winfo_children():
+                    if hasattr(child, 'winfo_children'):
+                        for subchild in child.winfo_children():
+                            if isinstance(subchild, ttk.Button) and "Thêm Key" in str(subchild.cget('text')):
+                                add_btn = subchild
+                                break
+        
+        if add_btn:
+            add_btn.config(text="🔄 Đang kiểm tra...", state='disabled')
+        
+        def validate_and_add():
+            """Validate API key trong background thread"""
+            try:
+                # Validate API key
+                result, message = APIKeyValidator.validate_api_key(provider_str, new_key, model)
+                validation_info = get_validation_message(result, message)
+                
+                def show_result():
+                    """Hiển thị kết quả validation trong main thread"""
+                    # Restore button
+                    if add_btn:
+                        add_btn.config(text="➕ Thêm Key", state='normal')
+                    
+                    # Show validation result
+                    if validation_info["type"] == "success":
+                        # API key valid - proceed to add
+                        proceed = messagebox.askquestion(
+                            validation_info["title"],
+                            validation_info["message"] + "\n\nBạn có muốn lưu API key này không?",
+                            icon='question'
+                        )
+                        
+                        if proceed == 'yes':
+                            self._save_api_key(new_key, provider_str, model, name)
+                    
+                    elif validation_info["type"] == "warning":
+                        # API key có issue nhưng có thể save
+                        proceed = messagebox.askyesno(
+                            validation_info["title"],
+                            validation_info["message"] + "\n\nBạn vẫn muốn lưu API key này không?",
+                            icon='warning'
+                        )
+                        
+                        if proceed:
+                            self._save_api_key(new_key, provider_str, model, name)
+                    
+                    else:
+                        # API key invalid - không save
+                        messagebox.showerror(
+                            validation_info["title"],
+                            validation_info["message"]
+                        )
+                
+                # Switch back to main thread
+                self.root.after(0, show_result)
+                
+            except Exception as e:
+                def show_error():
+                    if add_btn:
+                        add_btn.config(text="➕ Thêm Key", state='normal')
+                    messagebox.showerror("Lỗi", f"Không thể kiểm tra API key: {str(e)}")
+                
+                self.root.after(0, show_error)
+        
+        # Start validation in background
+        threading.Thread(target=validate_and_add, daemon=True).start()
+    
+    def _save_api_key(self, new_key: str, provider_str: str, model: str, name: str):
+        """Helper method để save API key sau khi đã validate"""
+        from core.api_key_manager import api_key_manager, AIProvider
+        
+        try:
+            provider = AIProvider(provider_str)
+            
+            if api_key_manager.add_key(new_key, provider, model, name):
+                messagebox.showinfo("✅ Thành công!", 
+                    f"Đã thêm API key {provider_str.upper()} mới!\n\n"
+                    f"📋 Provider: {provider_str.title()}\n"
+                    f"🤖 Model: {model}\n"
+                    f"📝 Tên: {name or f'{provider_str.title()} Key'}")
+                
+                # Clear form
+                self.new_key_entry.delete(0, 'end')
+                self.model_var.set('auto')
+                self.name_var.set('')
+                self.refresh_api_keys()
+            else:
+                messagebox.showerror("Lỗi", "API key đã tồn tại trong hệ thống!")
+                
+        except ValueError:
+            messagebox.showerror("Lỗi", f"Provider '{provider_str}' không được hỗ trợ!")
     
     def remove_api_key(self):
         """Xóa API key đã chọn"""
         from core.api_key_manager import api_key_manager
         
-        selection = self.api_key_listbox.curselection()
+        selection = self.api_key_tree.selection()
         if not selection:
             messagebox.showwarning("Cảnh báo", "Vui lòng chọn key cần xóa!")
             return
         
-        index = selection[0]
+        # Get item data
+        item = selection[0]
+        index = self.api_key_tree.index(item)
+        
         if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa API key này?"):
             if api_key_manager.remove_key(index):
                 messagebox.showinfo("Thành công", "Đã xóa API key!")
@@ -407,60 +654,242 @@ class MainGUI:
                 messagebox.showerror("Lỗi", "Không thể xóa API key!")
     
     def set_active_key(self):
-        """Đặt key đã chọn làm active"""
+        """Đặt key được chọn làm active"""
         from core.api_key_manager import api_key_manager
         
-        selection = self.api_key_listbox.curselection()
+        selection = self.api_key_tree.selection()
         if not selection:
-            messagebox.showwarning("Cảnh báo", "Vui lòng chọn key để đặt làm active!")
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn key cần đặt active!")
             return
         
-        index = selection[0]
+        item = selection[0]
+        index = self.api_key_tree.index(item)
+        
         if api_key_manager.set_active_index(index):
             messagebox.showinfo("Thành công", "Đã đặt key làm active!")
             self.refresh_api_keys()
         else:
-            messagebox.showerror("Lỗi", "Không thể đặt key làm active!")
+            messagebox.showerror("Lỗi", "Không thể đặt key này làm active!")
+    
+    def edit_api_key(self):
+        """Chỉnh sửa thông tin API key"""
+        from core.api_key_manager import api_key_manager, AIProvider
+        
+        selection = self.api_key_tree.selection()
+        if not selection:
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn key cần chỉnh sửa!")
+            return
+        
+        item = selection[0]
+        index = self.api_key_tree.index(item)
+        
+        try:
+            key_info = api_key_manager.keys[index]
+            
+            # Create edit dialog
+            edit_win = tk.Toplevel(self.root)
+            edit_win.title("Chỉnh sửa API Key")
+            edit_win.geometry("400x300")
+            edit_win.transient(self.root)
+            edit_win.grab_set()
+            
+            # Center the window
+            edit_win.update_idletasks()
+            x = (edit_win.winfo_screenwidth() // 2) - (400 // 2)
+            y = (edit_win.winfo_screenheight() // 2) - (300 // 2)
+            edit_win.geometry(f"400x300+{x}+{y}")
+            
+            # Form fields
+            main_frame = ttk.Frame(edit_win, padding=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Provider
+            ttk.Label(main_frame, text='Provider:').grid(row=0, column=0, sticky='w', pady=5)
+            provider_var = tk.StringVar(value=key_info.provider.value)
+            provider_combo = ttk.Combobox(main_frame, textvariable=provider_var, 
+                                        values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
+                                        state='readonly', width=30)
+            provider_combo.grid(row=0, column=1, sticky='ew', pady=5, padx=(10,0))
+            
+            # Model - now as dropdown
+            ttk.Label(main_frame, text='Model:').grid(row=1, column=0, sticky='w', pady=5)
+            model_var = tk.StringVar(value=key_info.model)
+            model_combo = ttk.Combobox(main_frame, textvariable=model_var, 
+                                     state='readonly', width=30)
+            model_combo.grid(row=1, column=1, sticky='ew', pady=5, padx=(10,0))
+            
+            # Update model list based on provider
+            def update_edit_model_list():
+                try:
+                    from core.provider_models import get_models_for_provider
+                    provider = provider_var.get()
+                    models = get_models_for_provider(provider)
+                    model_combo['values'] = models
+                    if model_var.get() not in models:
+                        model_var.set('auto')
+                except ImportError:
+                    model_combo['values'] = ['auto']
+                    model_var.set('auto')
+            
+            # Initialize model list and bind provider change
+            update_edit_model_list()
+            provider_combo.bind('<<ComboboxSelected>>', lambda e: update_edit_model_list())
+            
+            # Name
+            ttk.Label(main_frame, text='Tên:').grid(row=2, column=0, sticky='w', pady=5)
+            name_var = tk.StringVar(value=key_info.name)
+            name_entry = ttk.Entry(main_frame, textvariable=name_var, width=33)
+            name_entry.grid(row=2, column=1, sticky='ew', pady=5, padx=(10,0))
+            
+            # API Key (masked)
+            ttk.Label(main_frame, text='API Key:').grid(row=3, column=0, sticky='w', pady=5)
+            key_var = tk.StringVar(value=key_info.key)
+            key_entry = ttk.Entry(main_frame, textvariable=key_var, show='*', width=33)
+            key_entry.grid(row=3, column=1, sticky='ew', pady=5, padx=(10,0))
+            
+            # Status
+            ttk.Label(main_frame, text='Trạng thái:').grid(row=4, column=0, sticky='w', pady=5)
+            status_var = tk.BooleanVar(value=key_info.is_active)
+            status_check = ttk.Checkbutton(main_frame, text='Hoạt động', variable=status_var)
+            status_check.grid(row=4, column=1, sticky='w', pady=5, padx=(10,0))
+            
+            main_frame.columnconfigure(1, weight=1)
+            
+            # Buttons
+            btn_frame = ttk.Frame(main_frame)
+            btn_frame.grid(row=5, column=0, columnspan=2, pady=20, sticky='ew')
+            
+            def save_changes():
+                try:
+                    new_provider = AIProvider(provider_var.get())
+                    new_model = model_var.get().strip() or "auto"
+                    new_name = name_var.get().strip()
+                    new_key = key_var.get().strip()
+                    new_status = status_var.get()
+                    
+                    if not new_key:
+                        messagebox.showwarning("Cảnh báo", "API key không được để trống!")
+                        return
+                    
+                    # Update key info
+                    key_info.provider = new_provider
+                    key_info.model = new_model
+                    key_info.name = new_name or f"{new_provider.value.title()} Key {index + 1}"
+                    key_info.key = new_key
+                    key_info.is_active = new_status
+                    
+                    # Reset failures if reactivated
+                    if new_status and key_info.failed_count > 0:
+                        key_info.failed_count = 0
+                        key_info.last_error = ""
+                    
+                    api_key_manager.save_keys()
+                    messagebox.showinfo("Thành công", "Đã cập nhật API key!")
+                    edit_win.destroy()
+                    self.refresh_api_keys()
+                    
+                except ValueError:
+                    messagebox.showerror("Lỗi", "Provider không hợp lệ!")
+                except Exception as e:
+                    messagebox.showerror("Lỗi", f"Không thể cập nhật: {e}")
+            
+            save_btn = ttk.Button(btn_frame, text='Lưu', command=save_changes, bootstyle=SUCCESS)
+            save_btn.pack(side='left', padx=(0, 10))
+            
+            cancel_btn = ttk.Button(btn_frame, text='Hủy', command=edit_win.destroy, bootstyle=SECONDARY)
+            cancel_btn.pack(side='left')
+            
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể mở form chỉnh sửa: {e}")
     
     def refresh_api_keys(self):
         """Làm mới danh sách API keys"""
         from core.api_key_manager import api_key_manager
         
-        # Clear listbox
-        self.api_key_listbox.delete(0, 'end')
+        # Clear treeview
+        for item in self.api_key_tree.get_children():
+            self.api_key_tree.delete(item)
         
+        # Load keys
         keys = api_key_manager.get_all_keys()
         active_index = api_key_manager.active_index
         
-        for i, key in enumerate(keys):
-            # Mask key for security (show only first 6 and last 4 characters)
-            if len(key) > 10:
-                masked_key = key[:6] + "..." + key[-4:]
+        for i, key_info in enumerate(keys):
+            # Create display values
+            is_active = "✅" if i == active_index else ""
+            provider = key_info.provider.value.title()
+            model = key_info.model
+            name = key_info.name or f"{provider} Key {i+1}"
+            
+            # Status with failure info
+            if not key_info.is_active:
+                status = "❌ Disabled"
+            elif key_info.failed_count > 0:
+                status = f"⚠️ Failed({key_info.failed_count})"
             else:
-                masked_key = key[:3] + "..." + key[-2:] if len(key) > 5 else key
+                status = "✅ OK"
             
-            status = " (ACTIVE)" if i == active_index else ""
-            display_text = f"{i+1}. {masked_key}{status}"
+            # Masked key
+            masked_key = f"...{key_info.key[-8:]}" if len(key_info.key) > 8 else key_info.key
             
-            self.api_key_listbox.insert('end', display_text)
-            
-            # Highlight active key
-            if i == active_index:
-                self.api_key_listbox.itemconfig(i, {'bg': '#e8f5e8', 'fg': '#2e7d32'})
+            # Insert into tree
+            self.api_key_tree.insert('', 'end', text=is_active,
+                                   values=(provider, model, name, status, masked_key))
         
         # Update status
-        key_count = len(keys)
-        if key_count == 0:
-            status_text = "⚠️ Chưa có API key nào. Vui lòng thêm ít nhất 1 key."
-        else:
+        if keys:
             active_key = api_key_manager.get_active_key()
             if active_key:
-                masked_active = active_key[:6] + "..." + active_key[-4:] if len(active_key) > 10 else active_key
-                status_text = f"✅ {key_count} key(s) | Active: {masked_active}"
+                provider_info = api_key_manager.get_provider_info()
+                status_text = f"Đang sử dụng: {provider_info['name']} ({provider_info['provider'].title()}) - {len(keys)} key(s) total"
             else:
-                status_text = f"⚠️ {key_count} key(s) | Không có key active"
+                status_text = f"Không có key active - {len(keys)} key(s) total"
+        else:
+            status_text = "Chưa có API key nào"
         
         self.key_status_label.config(text=status_text)
+        
+        # Update priority list
+        if hasattr(self, 'priority_listbox'):
+            self.priority_listbox.delete(0, 'end')
+            for provider in api_key_manager.provider_priority:
+                self.priority_listbox.insert('end', provider.value.title())
+    
+    def move_priority_up(self):
+        """Di chuyển provider lên trên trong danh sách ưu tiên"""
+        from core.api_key_manager import api_key_manager
+        
+        selection = self.priority_listbox.curselection()
+        if not selection or selection[0] == 0:
+            return
+        
+        index = selection[0]
+        priorities = api_key_manager.provider_priority.copy()
+        
+        # Swap
+        priorities[index], priorities[index-1] = priorities[index-1], priorities[index]
+        
+        api_key_manager.set_provider_priority(priorities)
+        self.refresh_api_keys()
+        self.priority_listbox.selection_set(index-1)
+    
+    def move_priority_down(self):
+        """Di chuyển provider xuống dưới trong danh sách ưu tiên"""
+        from core.api_key_manager import api_key_manager
+        
+        selection = self.priority_listbox.curselection()
+        if not selection or selection[0] >= len(api_key_manager.provider_priority) - 1:
+            return
+        
+        index = selection[0]
+        priorities = api_key_manager.provider_priority.copy()
+        
+        # Swap
+        priorities[index], priorities[index+1] = priorities[index+1], priorities[index]
+        
+        api_key_manager.set_provider_priority(priorities)
+        self.refresh_api_keys()
+        self.priority_listbox.selection_set(index+1)
 
     def create_advanced_tab(self):
         # Khởi động cùng Windows

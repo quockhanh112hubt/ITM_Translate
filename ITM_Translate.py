@@ -113,9 +113,9 @@ def _on_activate_translate():
             if selected_text.strip():
                 # Print current API key info before translation
                 from core.api_key_manager import api_key_manager
-                current_key = api_key_manager.get_active_key()
-                if current_key:
-                    print(f"🔑 [GROUP 1] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                provider_info = api_key_manager.get_provider_info()
+                if provider_info['provider'] != 'none':
+                    print(f"🔑 [GROUP 1] Using {provider_info['provider'].title()}: {provider_info['key_preview']} (index: {api_key_manager.active_index})")
                 else:
                     print("⚠️ [GROUP 1] No API key available!")
                 
@@ -172,9 +172,9 @@ def _on_activate_replace():
             if selected_text.strip():
                 # Print current API key info before translation
                 from core.api_key_manager import api_key_manager
-                current_key = api_key_manager.get_active_key()
-                if current_key:
-                    print(f"🔑 [GROUP 1 REPLACE] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                provider_info = api_key_manager.get_provider_info()
+                if provider_info['provider'] != 'none':
+                    print(f"🔑 [GROUP 1 REPLACE] Using {provider_info['provider'].title()}: {provider_info['key_preview']} (index: {api_key_manager.active_index})")
                 else:
                     print("⚠️ [GROUP 1 REPLACE] No API key available!")
                 
@@ -238,9 +238,9 @@ def _on_activate_translate_group2():
             if selected_text.strip():
                 # Print current API key info before translation
                 from core.api_key_manager import api_key_manager
-                current_key = api_key_manager.get_active_key()
-                if current_key:
-                    print(f"🔑 [GROUP 2] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                provider_info = api_key_manager.get_provider_info()
+                if provider_info['provider'] != 'none':
+                    print(f"🔑 [GROUP 2] Using {provider_info['provider'].title()}: {provider_info['key_preview']} (index: {api_key_manager.active_index})")
                 else:
                     print("⚠️ [GROUP 2] No API key available!")
                 
@@ -297,9 +297,9 @@ def _on_activate_replace_group2():
             if selected_text.strip():
                 # Print current API key info before translation
                 from core.api_key_manager import api_key_manager
-                current_key = api_key_manager.get_active_key()
-                if current_key:
-                    print(f"🔑 [GROUP 2 REPLACE] Using API key: {current_key[:10]}... (index: {api_key_manager.active_index})")
+                provider_info = api_key_manager.get_provider_info()
+                if provider_info['provider'] != 'none':
+                    print(f"🔑 [GROUP 2 REPLACE] Using {provider_info['provider'].title()}: {provider_info['key_preview']} (index: {api_key_manager.active_index})")
                 else:
                     print("⚠️ [GROUP 2 REPLACE] No API key available!")
                 
@@ -600,9 +600,13 @@ try:
     from core.api_key_manager import api_key_manager
     key_count = api_key_manager.get_key_count()
     active_key = api_key_manager.get_active_key()
+    provider_info = api_key_manager.get_provider_info()
+    
     print(f"🚀 ITM Translate started with {key_count} API key(s)")
     if active_key:
-        print(f"🎯 Active key: {active_key[:10]}... (index: {api_key_manager.active_index})")
+        print(f"🎯 Active: {provider_info['name']} ({provider_info['provider'].title()}) - Key: {provider_info['key_preview']}")
+        if provider_info['model'] != "auto":
+            print(f"🤖 Model: {provider_info['model']}")
     else:
         print("⚠️ No active API key found")
 except Exception as e:

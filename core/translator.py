@@ -1,38 +1,71 @@
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
 from .api_key_manager import api_key_manager
 
 load_dotenv()
 
+# Import AI providers with fallback
+try:
+    from .ai_providers import create_ai_provider
+    AI_PROVIDERS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: AI providers not fully available: {e}")
+    AI_PROVIDERS_AVAILABLE = False
+    # Fallback to Gemini only
+    import google.generativeai as genai
+
 def detect_language(text):
-    """Detect language of the input text"""
-    api_key = api_key_manager.get_active_key()
-    if not api_key:
+    """Detect language of the input text with failover support"""
+    active_key = api_key_manager.get_active_key()
+    if not active_key:
         return None
     
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-exp")
+    if not AI_PROVIDERS_AVAILABLE:
+        # Fallback to Gemini only
+        try:
+            genai.configure(api_key=active_key.key)
+            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            
+            prompt = f"""What language is the following text used?.
+            Follow these instructions exactly:
+            - Analyze the text and determine the primary language used. If the message is written mostly in one language but contains words or short phrases from others (e.g., "OK tôi sẽ check cái đó"), treat the main language as the dominant one.
+            - If the dominant language cannot be determined, return "Mixed".
+            - Do not return any explanations or additional text, just the language name
+
+            Text:
+            {text}
+            """
+            
+            response = model.generate_content(prompt)
+            detected_lang = response.text.strip()
+            detected_lang = detected_lang.replace('"', '').replace("'", "").strip()
+            return detected_lang
+        except Exception:
+            return None
     
-    prompt = f"""What language is the following text used?.
-    Follow these instructions exactly:
-    - Analyze the text and determine the primary language used. If the message is written mostly in one language but contains words or short phrases from others (e.g., "OK tôi sẽ check cái đó"), treat the main language as the dominant one.
-    - If the dominant language cannot be determined, return "Mixed".
-    - Do not return any explanations or additional text, just the language name
-
-    Text:
-    {text}
-
-    """
-
-    try:
-        response = model.generate_content(prompt)
-        detected_lang = response.text.strip()
-        # Remove any extra quotes or formatting
-        detected_lang = detected_lang.replace('"', '').replace("'", "").strip()
-        return detected_lang
-    except Exception:
-        return None
+    # Try current provider first
+    for attempt in range(api_key_manager.get_key_count()):
+        current_key = api_key_manager.get_active_key()
+        if not current_key:
+            break
+            
+        try:
+            provider = create_ai_provider(current_key)
+            result = provider.detect_language(text)
+            if result:
+                # Reset failures on success
+                api_key_manager.reset_key_failures(current_key)
+                return result
+        except Exception as e:
+            print(f"Language detection failed with {current_key.provider.value}: {e}")
+            api_key_manager.mark_key_failed(current_key, str(e))
+            
+            # Try to find next working key
+            next_key = api_key_manager.find_next_working_key(exclude_current=True)
+            if not next_key:
+                break
+    
+    return None
 
 def is_same_language(detected_lang, target_lang):
     """Check if detected language matches target language"""
@@ -69,52 +102,49 @@ def is_same_language(detected_lang, target_lang):
 
 def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False):
     """
-    Translate text with automatic API key rotation on errors
+    Translate text with automatic provider failover
     """
-    def _attempt_translation(api_key):
-        """Single translation attempt with given API key"""
-        if not api_key:
+    def _attempt_translation(key_info):
+        """Single translation attempt with given provider"""
+        if not key_info:
             return "Lỗi: Không tìm thấy API key", None, None
 
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        try:
+            if not AI_PROVIDERS_AVAILABLE:
+                # Fallback to Gemini only
+                genai.configure(api_key=key_info.key)
+                model = genai.GenerativeModel("gemini-2.0-flash-exp")
+                
+                # Step 1: Detect language if needed
+                detected_source_lang = None
+                if return_language_info:
+                    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                        detected_source_lang = detect_language(text)
+                        print(f"Detected source language: {detected_source_lang}")
+                    else:
+                        detected_source_lang = Ngon_ngu_dau_tien
+                
+                # Step 2: Determine translation direction
+                if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                    if detected_source_lang and detected_source_lang.lower() == "mixed":
+                        target_lang = Ngon_ngu_thu_2
+                    elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                        target_lang = Ngon_ngu_thu_3
+                    else:
+                        target_lang = Ngon_ngu_thu_2
+                else:
+                    if detected_source_lang and detected_source_lang.lower() == "mixed":
+                        target_lang = Ngon_ngu_thu_2
+                    elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                        target_lang = Ngon_ngu_thu_3
+                    else:
+                        target_lang = Ngon_ngu_thu_2
 
-        # Step 1: Detect language if needed
-        detected_source_lang = None
-        if return_language_info:
-            if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
-                detected_source_lang = detect_language(text)
-                print(f"Detected source language: {detected_source_lang}")
-            else:
-                detected_source_lang = Ngon_ngu_dau_tien
-        
-        # Step 2: Determine translation direction
-        if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
-            # Auto-detect mode
-            if detected_source_lang and detected_source_lang.lower() == "mixed":
-                # Mixed language → always translate to thu_2
-                target_lang = Ngon_ngu_thu_2
-                # Keep detected_source_lang as "Mixed" for display
-            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                target_lang = Ngon_ngu_thu_3  # Source matches thu_2 → translate to thu_3
-            else:
-                target_lang = Ngon_ngu_thu_2  # Source different → translate to thu_2
-        else:
-            # Fixed source mode
-            if detected_source_lang and detected_source_lang.lower() == "mixed":
-                # Mixed language → always translate to thu_2
-                target_lang = Ngon_ngu_thu_2
-            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                target_lang = Ngon_ngu_thu_3
-            else:
-                target_lang = Ngon_ngu_thu_2
-
-        print(f"Translation direction: {detected_source_lang} → {target_lang}")
-        
-        # Step 3: Create translation prompt
-        if detected_source_lang and detected_source_lang.lower() == "mixed":
-            # Special prompt for mixed language content
-            prompt = f"""This text contains multiple languages mixed together. Translate ALL content to {target_lang}.
+                print(f"Translation direction: {detected_source_lang} → {target_lang}")
+                
+                # Create prompt for Gemini
+                if detected_source_lang and detected_source_lang.lower() == "mixed":
+                    prompt = f"""This text contains multiple languages mixed together. Translate ALL content to {target_lang}.
 
 Rules for mixed language translation:
 - Translate every word/phrase to {target_lang}, regardless of original language
@@ -126,9 +156,8 @@ Rules for mixed language translation:
 Mixed language text to translate: {text}
 
 Complete translation to {target_lang}:"""
-        else:
-            # Standard prompt for single language
-            prompt = f"""Translate this text to {target_lang}.
+                else:
+                    prompt = f"""Translate this text to {target_lang}.
 
 Rules:
 - Translate every word/phrase to {target_lang}
@@ -142,28 +171,70 @@ Rules:
 Text to translate: {text}
 
 Translation:"""
-
-        try:
-            response = model.generate_content(prompt)
-            translated_text = response.text.strip()
-            
-            # Return results based on mode
-            if return_language_info:
-                return translated_text, detected_source_lang, target_lang
+                
+                response = model.generate_content(prompt)
+                translated_text = response.text.strip()
+                
+                if return_language_info:
+                    return translated_text, detected_source_lang, target_lang
+                else:
+                    return translated_text
             else:
-                return translated_text
+                # Use AI providers system
+                provider = create_ai_provider(key_info)
+                
+                # Step 1: Detect language if needed
+                detected_source_lang = None
+                if return_language_info:
+                    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                        detected_source_lang = provider.detect_language(text)
+                        print(f"Detected source language: {detected_source_lang}")
+                    else:
+                        detected_source_lang = Ngon_ngu_dau_tien
+                
+                # Step 2: Determine translation direction
+                if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                    if detected_source_lang and detected_source_lang.lower() == "mixed":
+                        target_lang = Ngon_ngu_thu_2
+                    elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                        target_lang = Ngon_ngu_thu_3
+                    else:
+                        target_lang = Ngon_ngu_thu_2
+                else:
+                    if detected_source_lang and detected_source_lang.lower() == "mixed":
+                        target_lang = Ngon_ngu_thu_2
+                    elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                        target_lang = Ngon_ngu_thu_3
+                    else:
+                        target_lang = Ngon_ngu_thu_2
+
+                print(f"Translation direction: {detected_source_lang} → {target_lang}")
+                
+                # Step 3: Translate using provider
+                source_lang = detected_source_lang or Ngon_ngu_dau_tien
+                translated_text = provider.translate_text(text, source_lang, target_lang)
+                
+                # Return results based on mode
+                if return_language_info:
+                    return translated_text, detected_source_lang, target_lang
+                else:
+                    return translated_text
                 
         except Exception as e:
             error_str = str(e).lower()
-            # Check for specific API errors that warrant key rotation
-            if "429" in error_str or "quota" in error_str:
+            # Check for specific API errors that warrant provider rotation
+            if "insufficient balance" in error_str or "402" in error_str:
+                raise Exception("402_INSUFFICIENT_BALANCE")
+            elif "429" in error_str or "quota" in error_str:
                 raise Exception("429_QUOTA_EXCEEDED")
             elif "400" in error_str and ("key not valid" in error_str or "invalid" in error_str):
                 raise Exception("400_INVALID_KEY")
+            elif "401" in error_str or "unauthorized" in error_str:
+                raise Exception("401_UNAUTHORIZED")
             else:
                 raise e
 
-    # Main translation logic with retry mechanism
+    # Main translation logic with failover mechanism
     initial_key_count = api_key_manager.get_key_count()
     
     if initial_key_count == 0:
@@ -175,34 +246,45 @@ Translation:"""
     # Try translation with current active key first
     for attempt in range(initial_key_count):
         current_key = api_key_manager.get_active_key()
-        print(f"🔄 Translation attempt {attempt + 1}/{initial_key_count} with key: {current_key[:10] if current_key else 'None'}... (index: {api_key_manager.active_index})")
+        if not current_key:
+            break
+            
+        provider_info = api_key_manager.get_provider_info()
+        print(f"🔄 Translation attempt {attempt + 1}/{initial_key_count} with {provider_info['provider']} (model: {provider_info['model']}) key: {provider_info['key_preview']}")
         
         try:
             result = _attempt_translation(current_key)
-            # Success - return result
-            print(f"✅ Translation successful with key index {api_key_manager.active_index}")
+            # Success - reset failure count and return result
+            api_key_manager.reset_key_failures(current_key)
+            print(f"✅ Translation successful with {provider_info['provider']} (index: {api_key_manager.active_index})")
             return result
             
         except Exception as e:
             error_str = str(e)
+            provider_name = current_key.provider.value
             
             # Check if this is a retriable error
-            if error_str in ["429_QUOTA_EXCEEDED", "400_INVALID_KEY"]:
-                print(f"🚨 API error detected: {error_str}, rotating to next key...")
+            if error_str in ["402_INSUFFICIENT_BALANCE", "429_QUOTA_EXCEEDED", "400_INVALID_KEY", "401_UNAUTHORIZED"]:
+                # Special message for insufficient balance
+                if error_str == "402_INSUFFICIENT_BALANCE":
+                    print(f"💳 {provider_name} API: Insufficient Balance (Hết tiền) - Chuyển sang provider khác")
+                    print(f"   � Nạp thêm credit tại: https://platform.deepseek.com/")
+                else:
+                    print(f"�🚨 {provider_name} API error detected: {error_str}")
                 
-                # If this is the last attempt, don't rotate, just fail
-                if attempt == initial_key_count - 1:
-                    print(f"❌ Last attempt failed, no more keys to try")
+                api_key_manager.mark_key_failed(current_key, error_str)
+                
+                # Try to find next working key (different provider if possible)
+                next_key = api_key_manager.find_next_working_key(exclude_current=True)
+                if not next_key:
+                    print(f"❌ No more working keys available")
                     break
-                
-                # Rotate to next key
-                old_index = api_key_manager.active_index
-                next_key = api_key_manager.rotate_to_next_key()
-                print(f"🔄 Rotated from key index {old_index} → {api_key_manager.active_index} ({next_key[:10] if next_key else 'None'}...)")
+                    
+                print(f"🔄 Switching from {provider_name} → {next_key.provider.value}")
                 continue
             else:
                 # Non-retriable error - fail immediately
-                result = f"Lỗi dịch: {error_str}"
+                result = f"Lỗi dịch với {provider_name}: {error_str}"
                 if return_language_info:
                     return result, None, None
                 return result
