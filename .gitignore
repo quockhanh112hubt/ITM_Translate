@@ -33,7 +33,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.json
+
+# API Keys and sensitive config files
+api_keys.json
+*.json
 
 # IDE
 .vscode/
