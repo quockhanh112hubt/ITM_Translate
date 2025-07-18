@@ -1052,34 +1052,36 @@ class MainGUI:
 
 🤖 1. GOOGLE GEMINI (KHUYẾN NGHỊ - MIỄN PHÍ):
 Bước 1: Truy cập Google AI Studio
-• Mở: https://aistudio.google.com/
-• Đăng nhập bằng tài khoản Google
+- Mở: https://aistudio.google.com/
+- Đăng nhập bằng tài khoản Google
 
 Bước 2: Tạo API Key
-• Click "Get API key" → "Create API key in new project"
-• Sao chép key (bắt đầu bằng "AIza...")
-• ⚠️ LƯU Ý: Đây là key miễn phí với giới hạn 15 requests/phút
+- Click "Get API key" → "Create API key in new project"
+- Sao chép key (bắt đầu bằng "AIza...")
+- Add vào tab "Quản lý API KEY" trong ứng dụng
+• Chi phí: Đây là key miễn phí với giới hạn 15 requests/phút
 
 🧠 2. OPENAI CHATGPT (TRẢ PHÍ):
-• Vào: https://platform.openai.com/api-keys
-• Tạo API key mới
-• Models: gpt-4o, gpt-4, gpt-3.5-turbo
+- Vào: https://platform.openai.com/api-keys
+- Tạo API key mới
+- Models: gpt-4o, gpt-4, gpt-3.5-turbo
 • Chi phí: ~$0.01-0.06 per 1000 tokens
 
 🎭 3. ANTHROPIC CLAUDE (TRẢ PHÍ):
-• Vào: https://console.anthropic.com/
-• Tạo API key
-• Models: claude-3.5-sonnet, claude-3-opus
+- Vào: https://console.anthropic.com/
+- Tạo API key
+- Models: claude-3.5-sonnet, claude-3-opus
 • Có free tier hạn chế
 
 🐙 4. GITHUB COPILOT:
-• Cần GitHub Copilot subscription
-• Sử dụng GitHub personal access token
+- Cần GitHub Copilot subscription
+- Sử dụng GitHub personal access token
+• Chỉ dành cho token từ Copilot, không phải GitHub API key
 
 🌊 5. DEEPSEEK (GIÁ RẺ):
-• Vào: https://platform.deepseek.com/
-• API key miễn phí với giới hạn
-• Models: deepseek-chat, deepseek-coder
+- Vào: https://platform.deepseek.com/
+- Models: deepseek-chat, deepseek-coder
+• Có free tier hạn chế
 
 💡 KHUYẾN NGHỊ:
 • Bắt đầu với Gemini (miễn phí)
@@ -1087,85 +1089,56 @@ Bước 2: Tạo API Key
 • Sử dụng priority system để ưu tiên provider yêu thích
 
 
-🔑 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
+📋 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 CÁCH THÊM API KEYS:
-
 Bước 1: Mở tab "Quản lý API KEY"
-• Hiển thị trạng thái real-time của từng key
+- Hiển thị trạng thái real-time của từng key
 
 Bước 2: Thêm Key mới
-• Chọn Provider từ danh sách
-• Chọn Model (hoặc để "auto")
-• Nhập tên key (tùy chọn)
-• Dán API key vào ô "API Key"
-• Click "➕ Thêm Key"
+- Chọn Provider từ danh sách
+- Chọn Model (hoặc để "auto")
+- Nhập tên key (tùy chọn)
+- Dán API key vào ô "API Key"
+- Click "➕ Thêm Key"
 
 Bước 3: Hệ thống tự động validate
-• 🔄 Kiểm tra key trong background
-• ✅ Thông báo nếu key hợp lệ
-• ❌ Cảnh báo nếu key có vấn đề
-
-🎯 QUẢN LÝ KEYS:
-• 🎯 Active: Đặt key làm active chính
-• ✏️ Sửa: Chỉnh sửa thông tin key
-• 🗑️ Xóa: Xóa key khỏi hệ thống
-• 🔄 Làm mới: Refresh trạng thái keys
-
-📊 TRẠNG THÁI KEYS:
-• ✅ OK: Key hoạt động bình thường
-• ⚠️ Failed(X): Key gặp X lỗi liên tiếp
-• ❌ Disabled: Key bị vô hiệu hóa
-
-🔄 ƯU TIÊN PROVIDERS:
-• Drag & drop để sắp xếp thứ tự ưu tiên
-• Hệ thống sử dụng theo thứ tự từ trên xuống
-• Failover tự động khi provider chính bị lỗi
+- Kiểm tra key trong background
+- Thông báo nếu key hợp lệ
+- Cảnh báo nếu key có vấn đề
 
 
 🚀 C. CÁCH SỬ DỤNG DỊCH THUẬT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 QUY TRÌNH DỊCH THÔNG MINH:
-
 Bước 1: Chọn văn bản
-• Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào
-• Hoạt động với: Word, Chrome, Email, Chat apps, PDFs...
+- Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào
+- Hoạt động với: Word, Chrome, Email, Chat apps, PDFs...
 
 Bước 2: Sử dụng phím tắt
-• 🔥 Dịch POPUP: Ctrl+Q (mặc định)
-• ⚡ Dịch THAY THẾ: Ctrl+D (mặc định)
+- Dịch POPUP: Ctrl+Q (mặc định)
+- Dịch THAY THẾ: Ctrl+D (mặc định)
 
 Bước 3: Hệ thống AI xử lý
-• 🤖 Tự động chọn provider tối ưu
-• 🧠 AI detect ngôn ngữ nguồn
-• 🔄 Retry thông minh nếu gặp lỗi
-• ⚡ Hiển thị kết quả < 2 giây
-
-🎯 WORKFLOW TỰ ĐỘNG:
-1. Hệ thống thử provider có độ ưu tiên cao nhất
-2. Nếu lỗi → Tự động chuyển sang provider tiếp theo
-3. Retry tối đa 2 lần với providers khác nhau
-4. Hiển thị thông báo provider nào được sử dụng
+- Tự động chọn provider tối ưu
+- AI detect ngôn ngữ nguồn
+- Retry thông minh nếu gặp lỗi
+- Hiển thị kết quả < 2 giây
 
 
-⚙️ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
+⭐ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎮 HOTKEYS CONFIGURATION:
+Nhóm mặc định (Công việc chính):
+- Dịch popup: Ctrl+Q 
+- Dịch thay thế: Ctrl+D
+- Ngôn ngữ: Any Language → Tiếng Việt → English
 
-📋 Nhóm mặc định (Công việc chính):
-• Dịch popup: Ctrl+Q 
-• Dịch thay thế: Ctrl+D
-• Ngôn ngữ: Any Language → Tiếng Việt → English
-
-🎯 Nhóm tùy chỉnh (Học tập/Dự án):
-• Dịch popup: Ctrl+1
-• Dịch thay thế: Ctrl+2  
-• Ngôn ngữ: Tùy chỉnh theo nhu cầu
+Nhóm tùy chỉnh (Học tập/Dự án):
+- Dịch popup: Ctrl+1
+- Dịch thay thế: Ctrl+2  
+- Ngôn ngữ: Tùy chỉnh theo nhu cầu
 
 💡 MẸO HOTKEYS:
-• Hỗ trợ: Ctrl, Alt, Shift kết hợp với A-Z, 0-9
-• Tránh conflict: F1-F12, Windows key combinations
-• Test hotkeys ngay trong tab "Cài Đặt"
+• Tránh các phím F1-F12, hoặc phím hệ thống
+• Không dùng phím đã có ứng dụng khác sử dụng
 
 
 🔧 E. TROUBLESHOOTING & OPTIMIZATION
@@ -1173,27 +1146,27 @@ Bước 3: Hệ thống AI xử lý
 🚨 XỬ LÝ SỰ CỐ THÔNG DỤNG:
 
 ❌ API Keys không hoạt động:
-• Kiểm tra tab "Quản lý API KEY" → Status column
-• Thêm backup keys từ providers khác  
-• Restart app nếu cần thiết
+- Kiểm tra tab "Quản lý API KEY" → Status column
+- Thêm backup keys từ providers khác  
+- Restart app nếu cần thiết
 
 ⌨️ Hotkeys bị conflict:
-• Chạy với quyền Administrator
-• Đổi hotkey combination khác
-• Kiểm tra apps khác có dùng hotkey tương tự
+- Chạy với quyền Administrator
+- Đổi hotkey combination khác
+- Kiểm tra apps khác có dùng hotkey tương tự
 
 🌐 Translation fails:
-• Hệ thống tự retry với provider khác
-• Check kết nối internet
-• Verify API quotas chưa hết
+- Hệ thống tự retry với provider khác
+- Check kết nối internet
+- Verify API quotas chưa hết
 
 ⚡ Performance tối ưu:
-• Sử dụng 2-3 providers
-• Giữ text length < 4000 ký tự
+- Sử dụng 2-3 providers
+- Giữ text length < 4000 ký tự
 
 💡 PRO TIPS:
-• Gemini: Tốt nhất cho most languages
-• ChatGPT: Tốt cho technical content  
+• Gemini: Tốt nhất cho hầu hết ngôn ngữ, tự nhiên
+• ChatGPT: Tốt cho dịch kỹ thuật, công nghệ
 • Setup priority: Gemini → ChatGPT → Claude
 """
         
@@ -1204,15 +1177,18 @@ Bước 3: Hệ thống AI xử lý
                 text_widget.insert('end', line + '\n', 'title')
             elif line.startswith('━━━'):
                 text_widget.insert('end', line + '\n', 'separator')
-            elif line.startswith('📋') or line.startswith('🔧') or line.startswith('🚀') or line.startswith('⭐') or line.startswith('🛠️') or line.startswith('⚡') or line.startswith('🌍') or line.startswith('📞'):
+            elif line.startswith('📋') or line.startswith('🔧') or line.startswith('🚀') or line.startswith('⭐') or line.startswith('🛠️') or line.startswith('🌍') or line.startswith('📞'):
                 text_widget.insert('end', line + '\n', 'header')
             elif line.startswith('🚨') or line.startswith('⚠️'):
                 text_widget.insert('end', line + '\n', 'warning')
             elif line.startswith('💡'):
                 text_widget.insert('end', line + '\n', 'highlight')
-            elif line.startswith('1️⃣') or line.startswith('2️⃣') or line.startswith('Bước'):
+            elif line.startswith('Nhóm') or line.startswith('Bước'):
                 text_widget.insert('end', line + '\n', 'step')
-            elif '•' in line and any(emoji in line for emoji in ['🎯', '🔑', '⚡', '📋', '⚙️', '🌐', '🖥️']):
+            # Provider titles - tạo style riêng cho các tiêu đề provider
+            elif any(line.startswith(prefix) for prefix in ['🤖 1.', '🧠 2.', '🎭 3.', '🐙 4.', '🌊 5.']):
+                text_widget.insert('end', line + '\n', 'provider_title')
+            elif '•' in line and any(emoji in line for emoji in ['🎯', '🔑', '📋', '⚙️', '🌐', '🖥️']):
                 text_widget.insert('end', line + '\n', 'emoji_blue')
             elif '•' in line and any(emoji in line for emoji in ['🧠', '📝', '🔍', '✨', '🎨']):
                 text_widget.insert('end', line + '\n', 'emoji_green')
@@ -1229,6 +1205,7 @@ Bước 3: Hệ thống AI xử lý
         text_widget.tag_configure("title", font=('Segoe UI', 16, 'bold'), foreground='#1a73e8')
         text_widget.tag_configure("header", font=('Segoe UI', 14, 'bold'), foreground='#4285f4')
         text_widget.tag_configure("separator", font=('Segoe UI', 10), foreground='#9aa0a6')
+        text_widget.tag_configure("provider_title", font=('Segoe UI', 13, 'bold'), foreground='#1565c0')  # Provider titles đậm và nổi bật với màu xanh đậm
         text_widget.tag_configure("subheader", font=('Segoe UI', 12, 'bold'), foreground='#34a853')
         text_widget.tag_configure("warning", font=('Segoe UI', 11, 'bold'), foreground='#ea4335')
         text_widget.tag_configure("highlight", font=('Segoe UI', 11, 'bold'), foreground='#9c27b0')
