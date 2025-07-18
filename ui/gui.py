@@ -37,7 +37,7 @@ class MainGUI:
         # Đọc version và set title với version
         app_version = get_app_version()
         self.root.title(f'ITM Translate v{app_version}')
-        self.root.geometry('1050x420')
+        self.root.geometry('1070x420')
         self.hotkey_manager = None
         self.hotkey_updater = None
         self.startup_callback = None
@@ -107,12 +107,12 @@ class MainGUI:
         if tab_text == "Cài Đặt":
             # Tab Cài Đặt: kích thước mặc định hoặc mở rộng nếu có Group 2
             if hasattr(self, 'group2_visible') and self.group2_visible:
-                self.root.geometry('1050x650')
+                self.root.geometry('1070x650')
             else:
-                self.root.geometry('1050x420')
+                self.root.geometry('1070x420')
         elif tab_text == "Quản lý API KEY":
             # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
-            self.root.geometry('1050x1010')
+            self.root.geometry('1070x830')
             # Tự động làm mới danh sách API keys khi chuyển sang tab này
             try:
                 if hasattr(self, 'refresh_api_keys'):
@@ -121,7 +121,7 @@ class MainGUI:
                 print(f"Warning: Could not auto-refresh API keys: {e}")
         elif tab_text == "Nâng Cao":
             # Tab Nâng Cao: kích thước nhỏ gọn
-            self.root.geometry('1050x350')
+            self.root.geometry('1070x350')
         
         # Đảm bảo cửa sổ được cập nhật
         self.root.update_idletasks()
@@ -216,12 +216,12 @@ class MainGUI:
             if self.group2_visible:
                 group2.pack_forget()
                 toggle_btn.config(text='Hiện Tuỳ chọn tuỳ chỉnh')
-                self.root.geometry('1050x420')
+                self.root.geometry('1070x420')
                 self.group2_visible = False
             else:
                 group2.pack(padx=40, pady=(12, 18), fill='x', ipadx=10, ipady=10)
                 toggle_btn.config(text='Ẩn Tuỳ chọn tuỳ chỉnh')
-                self.root.geometry('1050x650')
+                self.root.geometry('1070x650')
                 self.group2_visible = True
         toggle_btn = ttk.Button(self.settings_tab, text='Hiện Tuỳ chọn tuỳ chỉnh', command=toggle_group2, bootstyle=SECONDARY)
         toggle_btn.pack(pady=(0, 2))
@@ -301,11 +301,27 @@ class MainGUI:
         list_frame = ttk.Frame(left_frame)
         list_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # Treeview for better display of provider info
+        # Treeview for better display of provider info with Excel-like styling
         columns = ('Provider', 'Model', 'Name', 'Status', 'Key')
         self.api_key_tree = ttk.Treeview(list_frame, columns=columns, show='tree headings', height=10)
         
-        # Configure columns
+        # Configure Excel-like styling
+        style = ttk.Style()
+        style.configure("Treeview", 
+                       background="white",
+                       foreground="black",
+                       rowheight=25,
+                       fieldbackground="white",
+                       borderwidth=1,
+                       relief="solid")
+        style.configure("Treeview.Heading", 
+                       background="#f0f0f0",
+                       foreground="black",
+                       borderwidth=1,
+                       relief="solid",
+                       font=('Segoe UI', 9, 'bold'))
+        
+        # Configure column headers
         self.api_key_tree.heading('#0', text='Active')
         self.api_key_tree.heading('Provider', text='Provider')
         self.api_key_tree.heading('Model', text='Model')
@@ -313,12 +329,17 @@ class MainGUI:
         self.api_key_tree.heading('Status', text='Status')
         self.api_key_tree.heading('Key', text='API Key')
         
-        self.api_key_tree.column('#0', width=60)
-        self.api_key_tree.column('Provider', width=80)
-        self.api_key_tree.column('Model', width=100)
-        self.api_key_tree.column('Name', width=120)
-        self.api_key_tree.column('Status', width=80)
-        self.api_key_tree.column('Key', width=200)
+        # Auto-sizing columns with minimum widths
+        self.api_key_tree.column('#0', width=60, minwidth=50, anchor='center')
+        self.api_key_tree.column('Provider', width=100, minwidth=80, anchor='center')
+        self.api_key_tree.column('Model', width=150, minwidth=120, anchor='w')
+        self.api_key_tree.column('Name', width=140, minwidth=100, anchor='w')
+        self.api_key_tree.column('Status', width=100, minwidth=80, anchor='center')
+        self.api_key_tree.column('Key', width=180, minwidth=150, anchor='w')
+        
+        # Add alternating row colors for better readability
+        self.api_key_tree.tag_configure('oddrow', background='#f9f9f9')
+        self.api_key_tree.tag_configure('evenrow', background='white')
         
         # Scrollbar for treeview
         scrollbar_keys = ttk.Scrollbar(list_frame, orient='vertical', command=self.api_key_tree.yview)
@@ -338,35 +359,39 @@ class MainGUI:
         right_frame = ttk.LabelFrame(main_frame, text='Thao tác', bootstyle=INFO)
         right_frame.pack(side='right', fill='y', padx=(10, 0))
         
-        # Add key section
+        # Add key section - more compact layout
         add_frame = ttk.Frame(right_frame)
-        add_frame.pack(fill='x', padx=10, pady=10)
+        add_frame.pack(fill='x', padx=10, pady=8)
         
         ttk.Label(add_frame, text='Thêm API Key mới:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        # Provider selection
-        provider_frame = ttk.Frame(add_frame)
-        provider_frame.pack(fill='x', pady=(5, 5))
+        # Provider and Model in horizontal layout
+        provider_model_frame = ttk.Frame(add_frame)
+        provider_model_frame.pack(fill='x', pady=(5, 3))
         
-        ttk.Label(provider_frame, text='Provider:').pack(anchor='w')
+        # Provider column
+        provider_col = ttk.Frame(provider_model_frame)
+        provider_col.pack(side='left', fill='x', expand=True, padx=(0, 5))
+        
+        ttk.Label(provider_col, text='Provider:', font=('Segoe UI', 9)).pack(anchor='w')
         self.provider_var = tk.StringVar(value='gemini')
-        provider_combo = ttk.Combobox(provider_frame, textvariable=self.provider_var, 
+        provider_combo = ttk.Combobox(provider_col, textvariable=self.provider_var, 
                                     values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
-                                    state='readonly', width=37)
+                                    state='readonly', width=18, font=('Segoe UI', 9))
         provider_combo.pack(fill='x')
+        
+        # Model column
+        model_col = ttk.Frame(provider_model_frame)
+        model_col.pack(side='right', fill='x', expand=True, padx=(5, 0))
+        
+        ttk.Label(model_col, text='Model:', font=('Segoe UI', 9)).pack(anchor='w')
+        self.model_var = tk.StringVar(value='auto')
+        self.model_combo = ttk.Combobox(model_col, textvariable=self.model_var, 
+                                       state='readonly', width=18, font=('Segoe UI', 9))
+        self.model_combo.pack(fill='x')
         
         # Bind provider change to update model list
         provider_combo.bind('<<ComboboxSelected>>', self.on_provider_changed)
-        
-        # Model selection - now as dropdown
-        model_frame = ttk.Frame(add_frame)
-        model_frame.pack(fill='x', pady=(5, 5))
-        
-        ttk.Label(model_frame, text='Model:').pack(anchor='w')
-        self.model_var = tk.StringVar(value='auto')
-        self.model_combo = ttk.Combobox(model_frame, textvariable=self.model_var, 
-                                       state='readonly', width=37)
-        self.model_combo.pack(fill='x')
         
         # Add tooltip for model info
         self.create_model_tooltip()
@@ -374,82 +399,94 @@ class MainGUI:
         # Initialize model list for default provider
         self.update_model_list()
         
-        # Name
+        # Name and API Key in compact vertical layout
         name_frame = ttk.Frame(add_frame)
-        name_frame.pack(fill='x', pady=(5, 5))
+        name_frame.pack(fill='x', pady=(3, 3))
         
-        ttk.Label(name_frame, text='Tên (tùy chọn):').pack(anchor='w')
+        ttk.Label(name_frame, text='Tên (tùy chọn):', font=('Segoe UI', 9)).pack(anchor='w')
         self.name_var = tk.StringVar()
-        name_entry = ttk.Entry(name_frame, textvariable=self.name_var, width=40)
+        name_entry = ttk.Entry(name_frame, textvariable=self.name_var, width=35, font=('Segoe UI', 9))
         name_entry.pack(fill='x')
         
         # API Key input
         key_frame = ttk.Frame(add_frame)
-        key_frame.pack(fill='x', pady=(5, 10))
+        key_frame.pack(fill='x', pady=(3, 8))
         
-        ttk.Label(key_frame, text='API Key:').pack(anchor='w')
-        self.new_key_entry = ttk.Entry(key_frame, width=40, show='*')
+        ttk.Label(key_frame, text='API Key:', font=('Segoe UI', 9)).pack(anchor='w')
+        self.new_key_entry = ttk.Entry(key_frame, width=35, show='*', font=('Segoe UI', 9))
         self.new_key_entry.pack(fill='x')
         
         add_btn = ttk.Button(add_frame, text='➕ Thêm Key', command=self.add_api_key, 
                            bootstyle=SUCCESS)
-        add_btn.pack(fill='x', pady=(5, 0))
+        add_btn.pack(fill='x', pady=(3, 0))
         
-        # Control buttons
+        # Control buttons - arranged in compact grid layout
         control_frame = ttk.Frame(right_frame)
-        control_frame.pack(fill='x', padx=10, pady=(20, 10))
+        control_frame.pack(fill='x', padx=10, pady=(15, 8))
         
         ttk.Label(control_frame, text='Quản lý Keys:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        set_active_btn = ttk.Button(control_frame, text='🎯 Đặt làm Active', 
+        # Create grid for buttons - 2 columns
+        btn_grid = ttk.Frame(control_frame)
+        btn_grid.pack(fill='x', pady=(5, 0))
+        
+        # Configure grid columns
+        btn_grid.columnconfigure(0, weight=1)
+        btn_grid.columnconfigure(1, weight=1)
+        
+        set_active_btn = ttk.Button(btn_grid, text='🎯 Active', 
                                   command=self.set_active_key, bootstyle=PRIMARY)
-        set_active_btn.pack(fill='x', pady=(5, 5))
+        set_active_btn.grid(row=0, column=0, sticky='ew', padx=(0, 3), pady=2)
         
-        edit_btn = ttk.Button(control_frame, text='✏️ Chỉnh sửa', 
+        edit_btn = ttk.Button(btn_grid, text='✏️ Sửa', 
                             command=self.edit_api_key, bootstyle=INFO)
-        edit_btn.pack(fill='x', pady=(0, 5))
+        edit_btn.grid(row=0, column=1, sticky='ew', padx=(3, 0), pady=2)
         
-        remove_btn = ttk.Button(control_frame, text='🗑️ Xóa Key', 
+        remove_btn = ttk.Button(btn_grid, text='🗑️ Xóa', 
                               command=self.remove_api_key, bootstyle=DANGER)
-        remove_btn.pack(fill='x', pady=(0, 5))
+        remove_btn.grid(row=1, column=0, sticky='ew', padx=(0, 3), pady=2)
         
-        refresh_btn = ttk.Button(control_frame, text='🔄 Làm mới', 
+        refresh_btn = ttk.Button(btn_grid, text='🔄 Làm mới', 
                                command=self.refresh_api_keys, bootstyle=SECONDARY)
-        refresh_btn.pack(fill='x')
+        refresh_btn.grid(row=1, column=1, sticky='ew', padx=(3, 0), pady=2)
         
-        # Provider priority section
+        # Provider priority section - more compact
         priority_frame = ttk.Frame(right_frame)
-        priority_frame.pack(fill='x', padx=10, pady=(20, 10))
+        priority_frame.pack(fill='x', padx=10, pady=(10, 8))
         
         ttk.Label(priority_frame, text='Ưu tiên Providers:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        self.priority_listbox = tk.Listbox(priority_frame, height=5, font=('Segoe UI', 9))
-        self.priority_listbox.pack(fill='x', pady=(5, 5))
+        # Priority controls in horizontal layout
+        priority_content = ttk.Frame(priority_frame)
+        priority_content.pack(fill='x', pady=(5, 0))
         
-        priority_btn_frame = ttk.Frame(priority_frame)
-        priority_btn_frame.pack(fill='x')
+        self.priority_listbox = tk.Listbox(priority_content, height=4, font=('Segoe UI', 9))
+        self.priority_listbox.pack(side='left', fill='both', expand=True)
+        
+        priority_btn_frame = ttk.Frame(priority_content)
+        priority_btn_frame.pack(side='right', fill='y', padx=(5, 0))
         
         up_btn = ttk.Button(priority_btn_frame, text='↑', command=self.move_priority_up, width=3)
-        up_btn.pack(side='left', padx=(0, 5))
+        up_btn.pack(pady=(0, 3))
         
         down_btn = ttk.Button(priority_btn_frame, text='↓', command=self.move_priority_down, width=3)
-        down_btn.pack(side='left')
+        down_btn.pack()
         
-        # Info section
+        # Info section - more compact
         info_frame = ttk.Frame(right_frame)
-        info_frame.pack(fill='x', padx=10, pady=(20, 10))
+        info_frame.pack(fill='x', padx=10, pady=(10, 10))
         
         ttk.Label(info_frame, text='💡 Thông tin:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        info_text = """• Hỗ trợ Gemini, ChatGPT, GitHub Copilot, DeepSeek, Claude
+        info_text = """• Hỗ trợ 5 providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude
 • Auto failover khi provider gặp lỗi
-• Model 'auto' = model mặc định của provider
-• Thứ tự ưu tiên quyết định failover order"""
+• Model 'auto' = model mặc định
+• Thứ tự ưu tiên quyết định failover"""
         
         info_label = ttk.Label(info_frame, text=info_text, 
-                             font=('Segoe UI', 9), bootstyle=SECONDARY,
-                             wraplength=250, justify='left')
-        info_label.pack(anchor='w', pady=(5, 0))
+                             font=('Segoe UI', 8), bootstyle=SECONDARY,
+                             wraplength=240, justify='left')
+        info_label.pack(anchor='w', pady=(3, 0))
         
         # Load and display keys
         self.refresh_api_keys()
@@ -832,9 +869,16 @@ class MainGUI:
             # Masked key
             masked_key = f"...{key_info.key[-8:]}" if len(key_info.key) > 8 else key_info.key
             
-            # Insert into tree
-            self.api_key_tree.insert('', 'end', text=is_active,
-                                   values=(provider, model, name, status, masked_key))
+            # Apply alternating row colors
+            row_tag = 'evenrow' if i % 2 == 0 else 'oddrow'
+            
+            # Insert into tree with alternating colors
+            item = self.api_key_tree.insert('', 'end', text=is_active,
+                                           values=(provider, model, name, status, masked_key),
+                                           tags=(row_tag,))
+        
+        # Auto-resize columns based on content
+        self._auto_resize_columns()
         
         # Update status
         if keys:
@@ -1819,3 +1863,70 @@ del "%~f0"
         # Thoát hoàn toàn
         self.root.destroy()
         os._exit(0)
+    
+    def _auto_resize_columns(self):
+        """Tự động điều chỉnh kích thước cột dựa trên nội dung"""
+        try:
+            # Dictionary to store max width for each column
+            column_widths = {}
+            
+            # Get all column identifiers
+            all_columns = ['#0'] + list(self.api_key_tree['columns'])
+            
+            # Initialize with header widths
+            for col in all_columns:
+                if col == '#0':
+                    header_text = 'Active'
+                else:
+                    header_text = self.api_key_tree.heading(col)['text']
+                # Calculate header width (approximate)
+                column_widths[col] = max(len(header_text) * 8, 50)
+            
+            # Check all items in the tree
+            for item in self.api_key_tree.get_children():
+                # Get the text for #0 column
+                text_0 = self.api_key_tree.item(item, 'text')
+                column_widths['#0'] = max(column_widths['#0'], len(str(text_0)) * 8 + 20)
+                
+                # Get values for other columns
+                values = self.api_key_tree.item(item, 'values')
+                for i, value in enumerate(values):
+                    col = self.api_key_tree['columns'][i]
+                    # Calculate width based on content (approximate pixel width)
+                    content_width = len(str(value)) * 8 + 20  # 8 pixels per char + padding
+                    column_widths[col] = max(column_widths[col], content_width)
+            
+            # Apply the calculated widths with reasonable limits
+            for col, width in column_widths.items():
+                # Set minimum and maximum widths
+                min_width = 60
+                max_width = 250
+                
+                # Special cases for specific columns
+                if col == '#0':
+                    min_width = 50
+                    max_width = 80
+                elif col == 'Provider':
+                    min_width = 80
+                    max_width = 120
+                elif col == 'Model':
+                    min_width = 120
+                    max_width = 200
+                elif col == 'Name':
+                    min_width = 100
+                    max_width = 180
+                elif col == 'Status':
+                    min_width = 80
+                    max_width = 120
+                elif col == 'Key':
+                    min_width = 150
+                    max_width = 200
+                
+                # Apply the width within limits
+                final_width = max(min_width, min(width, max_width))
+                self.api_key_tree.column(col, width=final_width)
+                
+        except Exception as e:
+            print(f"Error in auto-resize columns: {e}")
+    
+    # ...existing code...
