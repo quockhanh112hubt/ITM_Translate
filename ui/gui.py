@@ -112,7 +112,7 @@ class MainGUI:
                 self.root.geometry('1070x420')
         elif tab_text == "Quản lý API KEY":
             # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
-            self.root.geometry('1070x830')
+            self.root.geometry('1070x860')
             # Tự động làm mới danh sách API keys khi chuyển sang tab này
             try:
                 if hasattr(self, 'refresh_api_keys'):
@@ -478,10 +478,10 @@ class MainGUI:
         
         ttk.Label(info_frame, text='💡 Thông tin:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        info_text = """• Hỗ trợ 5 providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude
-• Auto failover khi provider gặp lỗi
-• Model 'auto' = model mặc định
-• Thứ tự ưu tiên quyết định failover"""
+        info_text = """• Hỗ trợ 5 Providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude
+• Khi gặp lỗi, hệ thống sẽ tự động chuyển sang key OK tiếp theo
+• Model 'auto' = Model mặc định chương trình tự động nhận diện
+• Thứ tự ưu tiên từ trên xuống, quyết định Provider nào sẽ được sử dụng trước"""
         
         info_label = ttk.Label(info_frame, text=info_text, 
                              font=('Segoe UI', 8), bootstyle=SECONDARY,
