@@ -986,7 +986,7 @@ class MainGUI:
     def show_help(self):
         # Beautiful modern help window with light theme
         help_window = tk.Toplevel(self.root)
-        help_window.title("🌟 ITM Translate - User Guide")
+        help_window.title("🌟 ITM Translate - Multi-AI User Guide")
         help_window.geometry("950x900")
         help_window.resizable(True, True)
         help_window.transient(self.root)
@@ -1013,7 +1013,7 @@ class MainGUI:
         
         # Subtitle
         subtitle_label = tk.Label(header_frame, 
-                                 text="Complete Guide for Professional AI Translation", 
+                                 text="Multi-AI Translation Platform - Complete Professional Guide", 
                                  font=('Segoe UI', 11), 
                                  fg='#e8f0fe', bg='#4285f4')
         subtitle_label.pack()
@@ -1046,135 +1046,156 @@ class MainGUI:
         scrollbar.pack(side='right', fill='y')
         
         help_content = """
-🔧 A. CÀI ĐẶT VÀ CẤU HÌNH
+🔧 A. CÀI ĐẶT API KEYS - MULTI PROVIDER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 LƯU Ý QUAN TRỌNG: Bạn cần có mã API Gemini để sử dụng ITM Translate. Dưới đây là hướng dẫn chi tiết:
+🚨 LƯU Ý QUAN TRỌNG: Bạn cần có ít nhất 1 API key từ bất kỳ provider nào để sử dụng ITM Translate.
 
+🤖 1. GOOGLE GEMINI (KHUYẾN NGHỊ - MIỄN PHÍ):
 Bước 1: Truy cập Google AI Studio
-• Mở trình duyệt và truy cập: https://aistudio.google.com/
-• Đảm bảo bạn đã đăng nhập bằng tài khoản Google
+• Mở: https://aistudio.google.com/
+• Đăng nhập bằng tài khoản Google
 
-Bước 2: Truy cập mục API Keys
-• Tìm mục “Get API key” trong menu hoặc bảng điều khiển
-• Nhấn “Create API key” hoặc “Get API key”
+Bước 2: Tạo API Key
+• Click "Get API key" → "Create API key in new project"
+• Sao chép key (bắt đầu bằng "AIza...")
+• ⚠️ LƯU Ý: Đây là key miễn phí với giới hạn 15 requests/phút
 
-Bước 3: Tạo khoá API mới
-• Nhấn “Create API key in new project” (khuyến nghị)
-• Hoặc chọn một project Google Cloud sẵn có
-• Đặt tên cho project, ví dụ: “ITM Translate”
+🧠 2. OPENAI CHATGPT (TRẢ PHÍ):
+• Vào: https://platform.openai.com/api-keys
+• Tạo API key mới
+• Models: gpt-4o, gpt-4, gpt-3.5-turbo
+• Chi phí: ~$0.01-0.06 per 1000 tokens
 
-Bước 4: Sao chép khoá API của bạn
-• Sau khi tạo, sao chép khoá API (bắt đầu bằng “AIza...”)
-• ⚠️ LƯU Ý QUAN TRỌNG: Lưu trữ khóa cẩn thận – không chia sẻ công khai
-• Ví dụ khóa: AIzaSyD...abcd123
+🎭 3. ANTHROPIC CLAUDE (TRẢ PHÍ):
+• Vào: https://console.anthropic.com/
+• Tạo API key
+• Models: claude-3.5-sonnet, claude-3-opus
+• Có free tier hạn chế
 
-Bước 5: Cấu hình trong ITM Translate
-• Mở ITM Translate → Vào tab “Nâng Cao”
-• Dán khoá vào trường "ITM_TRANSLATE_KEY"
-• Nhấn “Lưu cấu hình” để lưu lại
+🐙 4. GITHUB COPILOT:
+• Cần GitHub Copilot subscription
+• Sử dụng GitHub personal access token
 
-💡 LƯU Ý VỀ CHI PHÍ: API Gemini có giới hạn miễn phí
-• 15 yêu cầu mỗi phút với gói miễn phí
-• 1 triệu token mỗi tháng miễn phí
-• Phù hợp cho nhu cầu cá nhân và công việc
+🌊 5. DEEPSEEK (GIÁ RẺ):
+• Vào: https://platform.deepseek.com/
+• API key miễn phí với giới hạn
+• Models: deepseek-chat, deepseek-coder
 
-💡 CẤU HÌNH PHÍM TẮT & NGÔN NGỮ
-Nhóm mặc định:
-• Dịch popup: Ctrl+Q (mặc định)
-• Dịch thay thế: Ctrl+D (mặc định)
-
-Nhóm tùy chỉnh:
-• Dịch popup 2: Ctrl+1 (mặc định)
-• Dịch thay thế 2: Ctrl+2 (mặc định)
-
-💡 LƯU Ý VỀ PHÍM TẮT: 
-• Phím tắt có thể bị trùng với ứng dụng khác. Nên chọn phím tắt ít xung đột nhất
-• Hỗ trợ phím Ctrl, Alt, Shift kết hợp với phím chính. Ví dụ: Ctrl+Alt+T, Shift+F1, Ctrl+Shift+Q
-• Không hỗ trợ phím tắt đơn giản như F1, F2...
-• Không hỗ trợ phím tắt có ký tự đặc biệt (ví dụ: @, #, $, v.v.)
-• Nên tránh phím tắt trùng với các ứng dụng khác. Nếu gặp lỗi, hãy thử đổi phím tắt khác
+💡 KHUYẾN NGHỊ:
+• Bắt đầu với Gemini (miễn phí)
+• Thêm 2-3 providers khác để tăng độ tin cậy
+• Sử dụng priority system để ưu tiên provider yêu thích
 
 
-🚀 B. CÁCH SỬ DỤNG ITM TRANSLATE
+🔑 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 QUY TRÌNH DỊCH CƠ BẢN:
+📋 CÁCH THÊM API KEYS:
+
+Bước 1: Mở tab "Quản lý API KEY"
+• Hiển thị trạng thái real-time của từng key
+
+Bước 2: Thêm Key mới
+• Chọn Provider từ danh sách
+• Chọn Model (hoặc để "auto")
+• Nhập tên key (tùy chọn)
+• Dán API key vào ô "API Key"
+• Click "➕ Thêm Key"
+
+Bước 3: Hệ thống tự động validate
+• 🔄 Kiểm tra key trong background
+• ✅ Thông báo nếu key hợp lệ
+• ❌ Cảnh báo nếu key có vấn đề
+
+🎯 QUẢN LÝ KEYS:
+• 🎯 Active: Đặt key làm active chính
+• ✏️ Sửa: Chỉnh sửa thông tin key
+• 🗑️ Xóa: Xóa key khỏi hệ thống
+• 🔄 Làm mới: Refresh trạng thái keys
+
+📊 TRẠNG THÁI KEYS:
+• ✅ OK: Key hoạt động bình thường
+• ⚠️ Failed(X): Key gặp X lỗi liên tiếp
+• ❌ Disabled: Key bị vô hiệu hóa
+
+🔄 ƯU TIÊN PROVIDERS:
+• Drag & drop để sắp xếp thứ tự ưu tiên
+• Hệ thống sử dụng theo thứ tự từ trên xuống
+• Failover tự động khi provider chính bị lỗi
+
+
+🚀 C. CÁCH SỬ DỤNG DỊCH THUẬT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 QUY TRÌNH DỊCH THÔNG MINH:
+
 Bước 1: Chọn văn bản
-• Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào (Word, Chrome, Notepad, v.v.)
-• Hoạt động với email, tài liệu, trang web, ứng dụng chat...
+• Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào
+• Hoạt động với: Word, Chrome, Email, Chat apps, PDFs...
 
-Bước 2: Dùng phím tắt
-• Dịch POPUP: Nhấn phím tắt đã cấu hình (mặc định: Ctrl+Q)
-• Dịch THAY THẾ: Nhấn phím tắt đã cấu hình (mặc định: Ctrl+D)
+Bước 2: Sử dụng phím tắt
+• 🔥 Dịch POPUP: Ctrl+Q (mặc định)
+• ⚡ Dịch THAY THẾ: Ctrl+D (mặc định)
 
-Bước 3: Xem kết quả
-• Chế độ Popup: Hiển thị kết quả dịch trong cửa sổ nổi
-• Chế độ Thay thế: Văn bản được thay bằng bản dịch
+Bước 3: Hệ thống AI xử lý
+• 🤖 Tự động chọn provider tối ưu
+• 🧠 AI detect ngôn ngữ nguồn
+• 🔄 Retry thông minh nếu gặp lỗi
+• ⚡ Hiển thị kết quả < 2 giây
 
-🎯 TÍNH NĂNG THÔNG MINH:
-• Tự động nhận diện ngôn ngữ (kể cả khi có nhiều ngôn ngữ pha trộn)
-• Giữ nguyên định dạng văn bản và ngữ cảnh
-• Popup hiển thị thông tin ngôn ngữ ở tiêu đề
-• Dùng Ctrl+C để sao chép kết quả
+🎯 WORKFLOW TỰ ĐỘNG:
+1. Hệ thống thử provider có độ ưu tiên cao nhất
+2. Nếu lỗi → Tự động chuyển sang provider tiếp theo
+3. Retry tối đa 2 lần với providers khác nhau
+4. Hiển thị thông báo provider nào được sử dụng
 
 
-⭐ C. TÍNH NĂNG NÂNG CAO
+⚙️ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 NHẬN DIỆN NGÔN NGỮ BẰNG AI:
-• Tự động phát hiện ngôn ngữ gốc
-• Xử lý thông minh văn bản pha trộn
-• Hiển thị “Nhiều ngôn ngữ → Ngôn ngữ đích”
+🎮 HOTKEYS CONFIGURATION:
 
-🎨 NHÓM NGÔN NGỮ KÉP:
-• Hai nhóm phím tắt độc lập
-• Mỗi nhóm dùng cặp ngôn ngữ khác nhau
-• Ví dụ ứng dụng:
+📋 Nhóm mặc định (Công việc chính):
+• Dịch popup: Ctrl+Q 
+• Dịch thay thế: Ctrl+D
+• Ngôn ngữ: Any Language → Tiếng Việt → English
 
-Nhóm 1: Dùng trong công việc (Anh ↔ Việt)
+🎯 Nhóm tùy chỉnh (Học tập/Dự án):
+• Dịch popup: Ctrl+1
+• Dịch thay thế: Ctrl+2  
+• Ngôn ngữ: Tùy chỉnh theo nhu cầu
 
-Nhóm 2: Dùng học tập (Hàn ↔ Việt)
+💡 MẸO HOTKEYS:
+• Hỗ trợ: Ctrl, Alt, Shift kết hợp với A-Z, 0-9
+• Tránh conflict: F1-F12, Windows key combinations
+• Test hotkeys ngay trong tab "Cài Đặt"
 
 
-⚡ D. MẸO TỐI ƯU HIỆU NĂNG
+🔧 E. TROUBLESHOOTING & OPTIMIZATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 MẸO SỬ DỤNG TỐT HƠN:
-• Giữ khoá API an toàn, không chia sẻ
-• Dùng “Any Language” để tăng hiệu quả phát hiện ngôn ngữ
-• Đóng popup bằng cách click ra ngoài hoặc làm mất focus
-• Chế độ thay thế hoạt động tốt nhất với đoạn văn bản ngắn
+🚨 XỬ LÝ SỰ CỐ THÔNG DỤNG:
 
-🔧 XỬ LÝ SỰ CỐ:
-• Nếu dịch thất bại: Kiểm tra kết nối mạng và khóa API
-• Nếu phím tắt không hoạt động: Khởi động lại ứng dụng hoặc kiểm tra xung đột
-• Nếu không hiện popup: Kiểm tra lại đoạn văn đã chọn
-• Với văn bản pha ngôn ngữ: Dùng chế độ tự động phát hiện
+❌ API Keys không hoạt động:
+• Kiểm tra tab "Quản lý API KEY" → Status column
+• Thêm backup keys từ providers khác  
+• Restart app nếu cần thiết
 
+⌨️ Hotkeys bị conflict:
+• Chạy với quyền Administrator
+• Đổi hotkey combination khác
+• Kiểm tra apps khác có dùng hotkey tương tự
 
-🌍 E. CÁC NGÔN NGỮ HỖ TRỢ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🌐 DANH SÁCH NGÔN NGỮ:
-• English (Tiếng Anh)
-• Tiếng Việt (Vietnamese)
-• 한국어 (Tiếng Hàn)
-• 中文 (Tiếng Trung)
-• 日本語 (Tiếng Nhật)
-• Français (Tiếng Pháp)
-• Deutsch (Tiếng Đức)
-• Русский (Tiếng Nga)
-• Español (Tiếng Tây Ban Nha)
-• ไทย (Tiếng Thái)
-• + Hỗ trợ tự động nhận diện hơn 100 ngôn ngữ qua AI Gemini
+🌐 Translation fails:
+• Hệ thống tự retry với provider khác
+• Check kết nối internet
+• Verify API quotas chưa hết
 
+⚡ Performance tối ưu:
+• Sử dụng 2-3 providers
+• Giữ text length < 4000 ký tự
 
-📞 F. HỖ TRỢ & LIÊN HỆ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏢 Công ty TNHH ITM Semiconductor Việt Nam
-📧 Liên hệ: Đội IT ITM
-🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
-🔄 Cập nhật: Vào tab “Nâng Cao” → chọn “Cập nhật chương trình”
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 TĂNG NĂNG SUẤT LÀM VIỆC VỚI DỊCH THUẬT THÔNG MINH
-Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
+💡 PRO TIPS:
+• Gemini: Tốt nhất cho most languages
+• ChatGPT: Tốt cho technical content  
+• Setup priority: Gemini → ChatGPT → Claude
+"""
         
         # Insert content với màu sắc đẹp mắt cho cả icon và text
         lines = help_content.split('\n')
@@ -1221,34 +1242,86 @@ Sẵn sàng để dịch cả thế giới chỉ với một cú nhấn!"""
         text_widget.config(state='disabled')
         
         # Beautiful button frame with clean design
-        btn_frame = tk.Frame(main_frame, bg='white', height=70)
+        btn_frame = tk.Frame(main_frame, bg='white', height=120)
         btn_frame.pack(fill='x', pady=(20, 0))
         btn_frame.pack_propagate(False)
         
-        # Buttons with beautiful modern styling
+        # Provider URL functions
         def open_gemini_studio():
             import webbrowser
             webbrowser.open('https://aistudio.google.com/')
         
+        def open_openai_platform():
+            import webbrowser
+            webbrowser.open('https://platform.openai.com/api-keys')
+        
+        def open_anthropic_console():
+            import webbrowser
+            webbrowser.open('https://console.anthropic.com/')
+        
+        def open_deepseek_platform():
+            import webbrowser
+            webbrowser.open('https://platform.deepseek.com/')
+        
+        def open_github_copilot():
+            import webbrowser
+            webbrowser.open('https://github.com/settings/copilot')
+        
         def copy_guide():
             help_window.clipboard_clear()
             help_window.clipboard_append(help_content)
-            tk.messagebox.showinfo("✅ Đã sao chép", "Hướng dẫn đã được sao chép vào clipboard!")
+            tk.messagebox.showinfo("✅ Đã sao chép", "Hướng dẫn Multi-AI đã được sao chép vào clipboard!")
         
-        # Beautiful modern buttons inspired by Google Material Design
-        open_btn = tk.Button(btn_frame, text="🌐 Open Google AI Studio", command=open_gemini_studio,
-                 font=('Segoe UI', 11, 'bold'), bg='#4285f4', fg='white', 
-                 padx=35, pady=15, relief='flat', cursor='hand2',
+        # First row - AI Provider platforms
+        provider_frame = tk.Frame(btn_frame, bg='white')
+        provider_frame.pack(fill='x', pady=(0, 10))
+        
+        # Gemini button
+        gemini_btn = tk.Button(provider_frame, text="🤖 Gemini Studio", command=open_gemini_studio,
+                 font=('Segoe UI', 10, 'bold'), bg='#4285f4', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
                  activebackground='#3367d6', activeforeground='white')
-        open_btn.pack(side='left', padx=(0, 15))
+        gemini_btn.pack(side='left', padx=(0, 8))
         
-        copy_btn = tk.Button(btn_frame, text="📋 Copy User Guide", command=copy_guide,
+        # OpenAI button
+        openai_btn = tk.Button(provider_frame, text="🧠 OpenAI Platform", command=open_openai_platform,
+                 font=('Segoe UI', 10, 'bold'), bg='#00a67e', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#008060', activeforeground='white')
+        openai_btn.pack(side='left', padx=(0, 8))
+        
+        # Anthropic button
+        anthropic_btn = tk.Button(provider_frame, text="� Claude Console", command=open_anthropic_console,
+                 font=('Segoe UI', 10, 'bold'), bg='#d97706', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#b45309', activeforeground='white')
+        anthropic_btn.pack(side='left', padx=(0, 8))
+        
+        # DeepSeek button
+        deepseek_btn = tk.Button(provider_frame, text="🌊 DeepSeek Platform", command=open_deepseek_platform,
+                 font=('Segoe UI', 10, 'bold'), bg='#7c3aed', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#5b21b6', activeforeground='white')
+        deepseek_btn.pack(side='left', padx=(0, 8))
+        
+        # GitHub Copilot button
+        copilot_btn = tk.Button(provider_frame, text="🐙 GitHub Copilot", command=open_github_copilot,
+                 font=('Segoe UI', 10, 'bold'), bg='#24292e', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#1b1f23', activeforeground='white')
+        copilot_btn.pack(side='left')
+        
+        # Second row - Actions
+        action_frame = tk.Frame(btn_frame, bg='white')
+        action_frame.pack(fill='x')
+        
+        copy_btn = tk.Button(action_frame, text="📋 Copy Multi-AI Guide", command=copy_guide,
                  font=('Segoe UI', 11, 'bold'), bg='#34a853', fg='white', 
                  padx=35, pady=15, relief='flat', cursor='hand2',
                  activebackground='#2d7d32', activeforeground='white')
         copy_btn.pack(side='left', padx=(0, 15))
         
-        close_btn = tk.Button(btn_frame, text="✕ Close", command=help_window.destroy, 
+        close_btn = tk.Button(action_frame, text="✕ Close", command=help_window.destroy, 
                  font=('Segoe UI', 11, 'bold'), bg='#f1f3f4', fg='#5f6368', 
                  padx=40, pady=15, relief='flat', cursor='hand2',
                  activebackground='#e8eaed', activeforeground='#202124')
@@ -1282,7 +1355,7 @@ Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
 └─ Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
 
 ⭐ TÍNH NĂNG NÂNG CAO:
-├─ Tích hợp AI Gemini cho kết quả dịch chính xác
+├─ Tích hợp AI cho kết quả dịch chính xác
 ├─ Tự động phát hiện ngôn ngữ gốc
 ├─ Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
 ├─ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
