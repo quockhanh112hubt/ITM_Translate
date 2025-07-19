@@ -51,11 +51,12 @@ class MainGUI:
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
         self.startup_callback = callback
-    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True):
+    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, floating_button=True):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
         self.initial_startup = startup_enabled
         self.initial_show_on_startup = show_on_startup
+        self.initial_floating_button = floating_button
         # Đọc lại ngôn ngữ nếu có
         self.initial_langs = {
             'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Any Language'),
@@ -951,6 +952,14 @@ class MainGUI:
             text="Bật hộp thoại này khi khởi động",
             variable=self.show_on_startup_var,
             command=self.on_show_on_startup_toggle
+        ).pack(anchor='w', padx=20, pady=(0, 5))
+        # Phát hiện văn bản tô đen
+        self.floating_button_enabled = tk.BooleanVar(value=getattr(self, 'initial_floating_button', True))
+        tk.Checkbutton(
+            self.advanced_tab,
+            text="Phát hiện văn bản tô đen (hiển thị nút DỊCH khi chọn text)",
+            variable=self.floating_button_enabled,
+            command=self.on_floating_button_toggle
         ).pack(anchor='w', padx=20, pady=(0, 10))
         # Hướng dẫn sử dụng
         tk.Button(self.advanced_tab, text="Hướng dẫn sử dụng", command=self.show_help).pack(fill='x', padx=20, pady=5)
@@ -963,26 +972,47 @@ class MainGUI:
         enabled = self.startup_var.get()
         # Lưu trạng thái vào file (để nhớ khi khởi động lại)
         try:
-            # Đọc trạng thái show_on_startup hiện tại
+            # Đọc trạng thái show_on_startup và floating_button hiện tại
             show_on_startup = self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
+            floating_button = self.floating_button_enabled.get() if hasattr(self, 'floating_button_enabled') else True
             with open("startup.json", "w", encoding="utf-8") as f:
-                json.dump({"startup": enabled, "show_on_startup": show_on_startup}, f)
+                json.dump({"startup": enabled, "show_on_startup": show_on_startup, "floating_button": floating_button}, f)
         except Exception:
             pass
         # Gọi callback để main.py xử lý shortcut
         if self.startup_callback:
             self.startup_callback(enabled)
     def on_show_on_startup_toggle(self):
-        # Lưu cả hai trạng thái vào file
+        # Lưu cả ba trạng thái vào file
         try:
             startup = self.startup_var.get() if hasattr(self, 'startup_var') else False
             show_on_startup = self.show_on_startup_var.get()
+            floating_button = self.floating_button_enabled.get() if hasattr(self, 'floating_button_enabled') else True
             with open("startup.json", "w", encoding="utf-8") as f:
-                json.dump({"startup": startup, "show_on_startup": show_on_startup}, f)
+                json.dump({"startup": startup, "show_on_startup": show_on_startup, "floating_button": floating_button}, f)
         except Exception:
             pass
+    def on_floating_button_toggle(self):
+        # Lưu cả ba trạng thái vào file
+        try:
+            startup = self.startup_var.get() if hasattr(self, 'startup_var') else False
+            show_on_startup = self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
+            floating_button = self.floating_button_enabled.get()
+            with open("startup.json", "w", encoding="utf-8") as f:
+                json.dump({"startup": startup, "show_on_startup": show_on_startup, "floating_button": floating_button}, f)
+        except Exception:
+            pass
+        # Gọi callback để main.py xử lý floating button
+        if hasattr(self, 'floating_button_callback'):
+            self.floating_button_callback(floating_button)
+    
+    def set_floating_button_callback(self, callback):
+        self.floating_button_callback = callback
+    
     def get_show_on_startup(self):
         return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
+    def get_floating_button_enabled(self):
+        return self.floating_button_enabled.get() if hasattr(self, 'floating_button_enabled') else True
     def show_help(self):
         # Beautiful modern help window with light theme
         help_window = tk.Toplevel(self.root)

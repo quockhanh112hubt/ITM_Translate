@@ -88,6 +88,176 @@ def check_queue():
         pass
     root.after(50, check_queue)
 
+# --- Floating Translate Button Feature ---
+floating_btn = None
+floating_btn_timer = None
+last_clipboard_text = ''
+mouse_drag_start = None
+is_dragging = False
+
+def show_floating_translate_button(mouse_x, mouse_y):
+    """Hiển thị nút dịch floating cạnh vị trí chuột"""
+    global floating_btn, floating_btn_timer
+    
+    # Đóng nút cũ nếu có
+    if floating_btn is not None:
+        try:
+            if floating_btn.winfo_exists():
+                floating_btn.destroy()
+        except:
+            pass
+        floating_btn = None
+    
+    # Tạo nút mới
+    floating_btn = tk.Toplevel(root)
+    floating_btn.overrideredirect(True)  # Không có title bar
+    floating_btn.attributes('-topmost', True)  # Luôn ở trên cùng
+    floating_btn.attributes('-alpha', 0.95)  # Hơi trong suốt
+    
+    # Đặt vị trí cạnh chuột (offset để không che text)
+    floating_btn.geometry(f'+{mouse_x + 15}+{mouse_y + 10}')
+    
+    # Styling cho nút
+    floating_btn.configure(bg='#1976d2')
+    
+    # Nút dịch với icon và text
+    btn = tk.Button(floating_btn, 
+                   text='🌐 Dịch', 
+                   font=('Segoe UI', 9, 'bold'), 
+                   bg='#1976d2', 
+                   fg='white',
+                   relief='flat', 
+                   padx=8, 
+                   pady=3, 
+                   cursor='hand2',
+                   border=0,
+                   command=lambda: on_floating_translate_click())
+    btn.pack()
+    
+    # Hover effects
+    def on_enter(e):
+        btn.configure(bg='#1565c0')
+    
+    def on_leave(e):
+        btn.configure(bg='#1976d2')
+    
+    btn.bind('<Enter>', on_enter)
+    btn.bind('<Leave>', on_leave)
+    
+    # Auto hide sau 5 giây
+    if floating_btn_timer:
+        root.after_cancel(floating_btn_timer)
+    floating_btn_timer = root.after(5000, hide_floating_button)
+    
+    # Hide khi click ra ngoài (lose focus)
+    def on_focus_out(event):
+        # Delay một chút để tránh hide ngay khi click vào nút
+        root.after(100, hide_floating_button)
+    
+    floating_btn.bind('<FocusOut>', on_focus_out)
+    
+    # Focus để có thể nhận FocusOut event
+    try:
+        floating_btn.focus_force()
+    except:
+        pass
+
+def hide_floating_button():
+    """Ẩn nút floating"""
+    global floating_btn, floating_btn_timer
+    
+    if floating_btn_timer:
+        root.after_cancel(floating_btn_timer)
+        floating_btn_timer = None
+    
+    if floating_btn is not None:
+        try:
+            if floating_btn.winfo_exists():
+                floating_btn.destroy()
+        except:
+            pass
+        floating_btn = None
+
+def on_floating_translate_click():
+    """Xử lý khi click vào nút floating translate"""
+    hide_floating_button()  # Ẩn nút trước
+    # Trigger translate như Ctrl+Q
+    action_queue.put(('translate', 'group1'))
+    print("🖱️ [FLOATING] Translation triggered from floating button")
+
+def on_mouse_click(x, y, button, pressed):
+    """Xử lý mouse click events"""
+    global mouse_drag_start, is_dragging
+    
+    if button == mouse.Button.left:
+        if pressed:
+            # Bắt đầu có thể drag (select text)
+            mouse_drag_start = (x, y)
+            is_dragging = False
+        else:
+            # Kết thúc click/drag
+            if mouse_drag_start and is_dragging:
+                # Đã drag (select text), check clipboard sau một chút
+                root.after(200, lambda: check_for_new_selection(x, y))
+            
+            mouse_drag_start = None
+            is_dragging = False
+
+def on_mouse_move(x, y):
+    """Xử lý mouse move events"""
+    global mouse_drag_start, is_dragging
+    
+    if mouse_drag_start:
+        # Tính khoảng cách drag
+        dx = abs(x - mouse_drag_start[0])
+        dy = abs(y - mouse_drag_start[1])
+        
+        # Nếu drag đủ xa (> 10 pixels) thì coi là đang select text
+        if dx > 10 or dy > 10:
+            is_dragging = True
+
+def check_for_new_selection(mouse_x, mouse_y):
+    """Kiểm tra xem có text mới được select không"""
+    global last_clipboard_text
+    
+    try:
+        # Copy text đã select (simulate Ctrl+C)
+        kb.press(Key.ctrl)
+        kb.press('c')
+        kb.release('c')
+        kb.release(Key.ctrl)
+        
+        # Đợi clipboard update
+        time.sleep(0.1)
+        
+        current_text = get_clipboard()
+        
+        # Nếu có text mới và khác text trước đó
+        if current_text and current_text.strip() and current_text != last_clipboard_text:
+            last_clipboard_text = current_text
+            # Hiển thị floating button
+            show_floating_translate_button(mouse_x, mouse_y)
+            print(f"🖱️ [FLOATING] New text selected: {current_text[:30]}...")
+            
+    except Exception as e:
+        print(f"❌ [FLOATING] Error checking selection: {e}")
+
+# Khởi tạo mouse listener
+mouse_listener = mouse.Listener(
+    on_click=on_mouse_click,
+    on_move=on_mouse_move
+)
+
+def start_mouse_listener():
+    """Khởi tạo và bắt đầu mouse listener"""
+    global mouse_listener
+    if mouse_listener is None or not mouse_listener.running:
+        mouse_listener = mouse.Listener(
+            on_click=on_mouse_click,
+            on_move=on_mouse_move
+        )
+        mouse_listener.start()
+
 def load_language_settings_from_file():
     if os.path.exists(HOTKEYS_FILE):
         try:
@@ -433,6 +603,16 @@ def load_startup_enabled():
             pass
     return False
 
+def load_floating_button_enabled():
+    if os.path.exists(STARTUP_FILE):
+        try:
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("floating_button", True))  # Mặc định bật
+        except Exception:
+            pass
+    return True  # Mặc định bật
+
 def load_show_on_startup():
     if os.path.exists(STARTUP_FILE):
         try:
@@ -472,6 +652,21 @@ def set_startup_windows(enable):
                 os.remove(shortcut_path)
         except Exception as e:
             print("Không thể xóa shortcut khởi động cùng Windows:", e)
+
+def set_floating_button_enabled(enabled):
+    """Callback để bật/tắt chức năng floating button từ GUI"""
+    global mouse_listener
+    if enabled:
+        # Bật mouse listener nếu chưa có
+        if mouse_listener is None or not mouse_listener.running:
+            start_mouse_listener()
+    else:
+        # Tắt mouse listener nếu đang chạy
+        if mouse_listener is not None and mouse_listener.running:
+            mouse_listener.stop()
+            mouse_listener = None
+        # Ẩn floating button nếu đang hiển thị
+        hide_floating_button()
 
 # Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
 default_hotkeys = {
@@ -558,7 +753,7 @@ def update_hotkeys_from_gui(new_hotkeys, app=None):
     load_hotkey_actions_from_file()
     # Không cần khởi động lại listener
     if app is not None:
-        app.set_initial_settings(new_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled(), load_show_on_startup())
+        app.set_initial_settings(new_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled(), load_show_on_startup(), load_floating_button_enabled())
 
 # Khởi tạo listener một lần duy nhất
 listener = keyboard.Listener()
@@ -587,13 +782,22 @@ except Exception:
     pass
 show_on_startup = load_show_on_startup()
 startup_enabled = load_startup_enabled()
+floating_button_enabled = load_floating_button_enabled()
 if startup_enabled and not show_on_startup:
     root.withdraw()
 app = MainGUI(root)
 app.set_hotkey_manager(multi_hotkey)
 app.set_hotkey_updater(update_hotkeys_from_gui)
-app.set_initial_settings(user_hotkeys, "", startup_enabled, show_on_startup)
+app.set_initial_settings(user_hotkeys, "", startup_enabled, show_on_startup, floating_button_enabled)
 app.set_startup_callback(set_startup_windows)
+app.set_floating_button_callback(set_floating_button_enabled)
+
+# Khởi động mouse listener cho floating button feature (nếu được bật)
+if floating_button_enabled:
+    mouse_listener.start()
+    print("🖱️ Mouse listener started for floating translate button")
+else:
+    print("🖱️ Mouse listener disabled by user settings")
 
 # Print API key status on startup
 try:
@@ -614,5 +818,21 @@ except Exception as e:
 
 tray = create_tray_icon(root, app)
 check_queue()
+
+# Cleanup function
+def cleanup_on_exit():
+    """Cleanup khi thoát chương trình"""
+    try:
+        if mouse_listener:
+            mouse_listener.stop()
+        if listener:
+            listener.stop()
+        hide_floating_button()
+    except:
+        pass
+
+# Register cleanup
+atexit.register(cleanup_on_exit)
+
 root.mainloop()
 # KHÔNG join listener, KHÔNG dùng with để tránh lỗi thread với Tkinter/ttkbootstrap
