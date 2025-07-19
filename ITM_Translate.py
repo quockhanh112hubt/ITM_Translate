@@ -15,6 +15,7 @@ import json
 import atexit
 from ttkbootstrap import Window
 import queue
+from core.i18n import get_language_manager, _
 
 
 acquire_lock()
@@ -122,7 +123,7 @@ def show_floating_translate_button(mouse_x, mouse_y):
     
     # Nút dịch với icon và text
     btn = tk.Button(floating_btn, 
-                   text='🌐 Dịch', 
+                   text=_('translate_button'), 
                    font=('Segoe UI', 9, 'bold'), 
                    bg='#1976d2', 
                    fg='white',

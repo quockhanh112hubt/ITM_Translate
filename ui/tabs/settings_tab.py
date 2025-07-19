@@ -5,6 +5,7 @@ import json
 import os
 import sys
 from tkinter import messagebox
+from core.i18n import get_language_manager, _
 
 
 class SettingsTab:
@@ -26,6 +27,9 @@ class SettingsTab:
         self.lang_selects = {}
         self.initial_hotkeys = {}
         
+        # Initialize language manager
+        self.language_manager = get_language_manager()
+        
         # Setup UI
         self.setup_settings_ui()
         
@@ -37,7 +41,7 @@ class SettingsTab:
         # Add title with styling
         style = ttk.Style()
         style.theme_use('flatly')
-        title = ttk.Label(self.parent_frame, text='Cài đặt phím tắt & ngôn ngữ', 
+        title = ttk.Label(self.parent_frame, text=_('settings_title'), 
                          font=('Segoe UI', 18, 'bold'), bootstyle='primary')
         title.pack(pady=(18, 18))
         
@@ -64,7 +68,7 @@ class SettingsTab:
         ]
         
         # Group 1: Tuỳ chọn mặc định
-        group1 = ttk.LabelFrame(parent, text="Tuỳ chọn mặc định:", bootstyle='info')
+        group1 = ttk.LabelFrame(parent, text=_('shortcuts_group1'), bootstyle='info')
         group1.pack(padx=0, pady=(16, 20), fill='x', ipadx=10, ipady=10)
         
         # Configure grid
@@ -72,20 +76,20 @@ class SettingsTab:
             group1.columnconfigure(i, weight=1)
         
         # Description
-        ttk.Label(group1, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', 
+        ttk.Label(group1, text=_('auto_choose_hint'), 
                  font=('Segoe UI', 9, 'italic'), bootstyle='secondary').grid(row=0, column=0, columnspan=8, sticky='w', padx=8, pady=(10,6))
         
         # Headers
-        ttk.Label(group1, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
-        ttk.Label(group1, text='Modifier 1').grid(row=1, column=1, sticky='n', padx=2, pady=(8,4))
-        ttk.Label(group1, text='Modifier 2').grid(row=1, column=2, sticky='n', padx=2, pady=(8,4))
-        ttk.Label(group1, text='Phím chính').grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
-        ttk.Label(group1, text='Ngôn ngữ đầu tiên:').grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
-        ttk.Label(group1, text='Ngôn ngữ thứ 2:').grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
-        ttk.Label(group1, text='Ngôn ngữ thứ 3:').grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group1, text=_('shortcuts_group1') + ':', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
+        ttk.Label(group1, text=_('modifier1')).grid(row=1, column=1, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text=_('modifier2')).grid(row=1, column=2, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text=_('main_key')).grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group1, text=_('first_language')).grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
+        ttk.Label(group1, text=_('second_language')).grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group1, text=_('third_language')).grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
         
         # Dịch popup row
-        ttk.Label(group1, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
+        ttk.Label(group1, text=_('popup_translate')).grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
         self.entries['translate_popup_mod1'] = ttk.Combobox(group1, values=modifier_options, width=7, state='readonly')
         self.entries['translate_popup_mod1'].grid(row=2, column=1, padx=2, pady=8)
         self.entries['translate_popup_mod2'] = ttk.Combobox(group1, values=modifier_options, width=7, state='readonly')
@@ -102,7 +106,7 @@ class SettingsTab:
         self.lang_selects['Ngon_ngu_thu_3'].grid(row=2, column=6, padx=2, pady=8)
         
         # Dịch & thay thế row
-        ttk.Label(group1, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
+        ttk.Label(group1, text=_('replace_translate')).grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
         self.entries['replace_translate_mod1'] = ttk.Combobox(group1, values=modifier_options, width=7, state='readonly')
         self.entries['replace_translate_mod1'].grid(row=3, column=1, padx=2, pady=8)
         self.entries['replace_translate_mod2'] = ttk.Combobox(group1, values=modifier_options, width=7, state='readonly')

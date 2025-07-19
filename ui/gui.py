@@ -9,6 +9,8 @@ from ttkbootstrap.constants import *
 import keyboard
 import threading
 import subprocess
+from core.i18n import get_language_manager, _
+from ui.components.language_flags import LanguageFlagButtons
 
 
 def get_app_version():
@@ -34,6 +36,9 @@ def get_app_version():
 class MainGUI:
     def __init__(self, root):
         self.root = root
+        # Initialize language manager
+        self.language_manager = get_language_manager()
+        
         # Đọc version và set title với version
         app_version = get_app_version()
         self.root.title(f'ITM Translate v{app_version}')
@@ -45,6 +50,9 @@ class MainGUI:
         self.initial_api_key = None
         self.initial_startup = False
         self.initial_show_on_startup = True
+        
+        # Initialize language flags
+        self.language_flags = None
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
     def set_hotkey_updater(self, updater):
@@ -79,17 +87,21 @@ class MainGUI:
         right_btn_frame.pack(side='right', anchor='e', padx=(0, 24), pady=(8, 2))
         def on_cancel():
             self.root.withdraw()
-        ttk.Button(right_btn_frame, text='Lưu cấu hình', style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
-        ttk.Button(right_btn_frame, text='Huỷ bỏ', style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
+        ttk.Button(right_btn_frame, text=_('save_close_settings'), style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
+        ttk.Button(right_btn_frame, text=_('cancel'), style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
         
         # Tạo notebook sau footer để footer luôn ở dưới cùng
         self.tab_control = ttk.Notebook(self.root, bootstyle=PRIMARY)
         self.settings_tab = ttk.Frame(self.tab_control)
         self.api_key_tab = ttk.Frame(self.tab_control)
         self.advanced_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(self.settings_tab, text='Cài Đặt')
-        self.tab_control.add(self.api_key_tab, text='Quản lý API KEY')
-        self.tab_control.add(self.advanced_tab, text='Nâng Cao')
+        self.tab_control.add(self.settings_tab, text=_('tab_settings'))
+        self.tab_control.add(self.api_key_tab, text=_('tab_api_keys'))
+        self.tab_control.add(self.advanced_tab, text=_('tab_advanced'))
+        
+        # Language flags positioned in top-right corner (overlaid on window, near minimize button)
+        self.language_flags = LanguageFlagButtons(self.root, on_language_change=self.on_language_change)
+        self.language_flags.place(relx=1.0, rely=0.0, anchor='ne', x=0, y=30)
         
         # Bind sự kiện chuyển tab để tự động điều chỉnh kích thước
         self.tab_control.bind("<<NotebookTabChanged>>", self.on_tab_changed)
@@ -727,3 +739,62 @@ del "%~f0"
         # Thoát hoàn toàn
         self.root.destroy()
         os._exit(0)
+    
+    def on_language_change(self, language):
+        """Xử lý thay đổi ngôn ngữ - refresh toàn bộ UI"""
+        try:
+            print(f"🌐 Language changed to: {language}")
+            
+            # Update window title
+            app_version = get_app_version()
+            self.root.title(_(
+                "app_title",
+                language
+            ).replace("v1.2.3", f"v{app_version}"))
+            
+            # Update tab titles
+            current_tab_index = self.tab_control.index(self.tab_control.select())
+            self.tab_control.tab(0, text=_("tab_settings", language))
+            self.tab_control.tab(1, text=_("tab_api_keys", language))
+            self.tab_control.tab(2, text=_("tab_advanced", language))
+            
+            # Refresh all UI components by recreating them
+            self._refresh_all_components(language)
+            
+            # Restore selected tab
+            self.tab_control.select(current_tab_index)
+            
+        except Exception as e:
+            print(f"❌ Error changing language: {e}")
+    
+    def _refresh_all_components(self, language):
+        """Refresh tất cả components với ngôn ngữ mới"""
+        try:
+            # Clear existing content
+            for widget in self.settings_tab.winfo_children():
+                widget.destroy()
+            for widget in self.api_key_tab.winfo_children():
+                widget.destroy()
+            for widget in self.advanced_tab.winfo_children():
+                widget.destroy()
+            
+            # Recreate tabs with new language
+            self.create_settings_tab()
+            self.create_api_key_tab()
+            self.create_advanced_tab()
+            
+            # Update footer buttons
+            for widget in self.root.winfo_children():
+                if isinstance(widget, ttk.Frame):
+                    for child in widget.winfo_children():
+                        if isinstance(child, ttk.Frame):
+                            for btn in child.winfo_children():
+                                if isinstance(btn, ttk.Button):
+                                    btn_text = btn.cget('text')
+                                    if 'Lưu cấu hình' in btn_text or 'Save' in btn_text:
+                                        btn.configure(text=_("save_close_settings", language))
+                                    elif 'Huỷ bỏ' in btn_text or 'Cancel' in btn_text:
+                                        btn.configure(text=_("cancel", language))
+            
+        except Exception as e:
+            print(f"❌ Error refreshing components: {e}")

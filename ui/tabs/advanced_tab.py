@@ -7,6 +7,7 @@ import tkinter as tk
 import json
 import threading
 from tkinter import messagebox
+from core.i18n import get_language_manager, _
 
 
 class AdvancedTab:
@@ -23,6 +24,9 @@ class AdvancedTab:
         self.frame = parent_frame
         self.main_gui = main_gui_instance
         
+        # Initialize language manager
+        self.language_manager = get_language_manager()
+        
         # Initialize variables
         self.startup_var = None
         self.show_on_startup_var = None
@@ -36,7 +40,7 @@ class AdvancedTab:
         self.startup_var = tk.BooleanVar(value=getattr(self.main_gui, 'initial_startup', False))
         startup_check = tk.Checkbutton(
             self.frame,
-            text="Khởi động cùng Windows",
+            text=_('startup_with_windows'),
             variable=self.startup_var,
             command=self.on_startup_toggle
         )
@@ -46,7 +50,7 @@ class AdvancedTab:
         self.show_on_startup_var = tk.BooleanVar(value=getattr(self.main_gui, 'initial_show_on_startup', True))
         show_on_startup_check = tk.Checkbutton(
             self.frame,
-            text="Bật hộp thoại này khi khởi động",
+            text=_('show_window_startup'),
             variable=self.show_on_startup_var,
             command=self.on_show_on_startup_toggle
         )

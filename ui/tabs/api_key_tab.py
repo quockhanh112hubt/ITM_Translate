@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 from ttkbootstrap import SUCCESS, SECONDARY, INFO, DANGER, PRIMARY
+from core.i18n import get_language_manager, _
 
 
 class ApiKeyTab:
@@ -23,6 +24,9 @@ class ApiKeyTab:
         self.frame = parent_frame
         self.main_gui = main_gui_instance
         
+        # Initialize language manager
+        self.language_manager = get_language_manager()
+        
         # Initialize UI elements
         self.api_key_tree = None
         self.new_key_entry = None
@@ -37,7 +41,7 @@ class ApiKeyTab:
     def _create_api_key_tab_ui(self):
         """Tạo giao diện cho API Key tab với design đẹp như ban đầu"""
         # Title và subtitle
-        title = ttk.Label(self.frame, text='Quản lý API Keys & Providers', 
+        title = ttk.Label(self.frame, text=_('api_keys_title'), 
                          font=('Segoe UI', 16, 'bold'))
         title.pack(pady=(20, 5))
         
