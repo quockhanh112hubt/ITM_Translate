@@ -504,38 +504,62 @@ class ApiKeyTab:
             
             key_info = keys[index]
             
-            # Create edit window
-            edit_win = tk.Toplevel(self.frame)
+            # Create edit window đơn giản hơn để tránh lỗi
+            edit_win = tk.Toplevel()
             edit_win.title("Chỉnh sửa API Key")
-            edit_win.geometry("500x400")
+            edit_win.geometry("500x450")
             edit_win.resizable(False, False)
             edit_win.transient(self.main_gui.root)
             edit_win.grab_set()
             
             # Center window
             edit_win.update_idletasks()
-            x = (edit_win.winfo_screenwidth() // 2) - (500 // 2)
-            y = (edit_win.winfo_screenheight() // 2) - (400 // 2)
-            edit_win.geometry(f"500x400+{x}+{y}")
+            x = (edit_win.winfo_screenwidth() // 2) - (250)
+            y = (edit_win.winfo_screenheight() // 2) - (225)
+            edit_win.geometry(f"500x450+{x}+{y}")
             
             # Main frame
             main_frame = ttk.Frame(edit_win, padding=20)
             main_frame.pack(fill='both', expand=True)
             
+            # Title
+            title_label = ttk.Label(main_frame, 
+                                  text="🔧 Chỉnh sửa API Key", 
+                                  font=('Segoe UI', 14, 'bold'))
+            title_label.pack(anchor='w', pady=(0, 15))
+            
+            # Form fields
             # Provider
-            ttk.Label(main_frame, text='Provider:').grid(row=0, column=0, sticky='w', pady=5)
+            ttk.Label(main_frame, text='Provider:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             provider_var = tk.StringVar(value=key_info.provider.value)
             provider_combo = ttk.Combobox(main_frame, textvariable=provider_var, 
                                         values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
-                                        state='readonly', width=30)
-            provider_combo.grid(row=0, column=1, sticky='ew', pady=5, padx=(10,0))
+                                        state='readonly', width=50)
+            provider_combo.pack(fill='x', pady=(0, 10))
             
-            # Model - now as dropdown
-            ttk.Label(main_frame, text='Model:').grid(row=1, column=0, sticky='w', pady=5)
+            # Model
+            ttk.Label(main_frame, text='Model:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             model_var = tk.StringVar(value=key_info.model)
             model_combo = ttk.Combobox(main_frame, textvariable=model_var, 
-                                     state='readonly', width=30)
-            model_combo.grid(row=1, column=1, sticky='ew', pady=5, padx=(10,0))
+                                     state='readonly', width=50)
+            model_combo.pack(fill='x', pady=(0, 10))
+            
+            # Name
+            ttk.Label(main_frame, text='Tên:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
+            name_var = tk.StringVar(value=key_info.name or "")
+            name_entry = ttk.Entry(main_frame, textvariable=name_var, width=50)
+            name_entry.pack(fill='x', pady=(0, 10))
+            
+            # API Key
+            ttk.Label(main_frame, text='API Key:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
+            key_var = tk.StringVar(value=key_info.key)
+            key_entry = ttk.Entry(main_frame, textvariable=key_var, show='*', width=50)
+            key_entry.pack(fill='x', pady=(0, 10))
+            
+            # Status
+            status_var = tk.BooleanVar(value=key_info.is_active)
+            status_check = ttk.Checkbutton(main_frame, text='Hoạt động', variable=status_var)
+            status_check.pack(anchor='w', pady=10)
             
             # Update model list based on provider
             def update_edit_model_list():
@@ -554,29 +578,9 @@ class ApiKeyTab:
             update_edit_model_list()
             provider_combo.bind('<<ComboboxSelected>>', lambda e: update_edit_model_list())
             
-            # Name
-            ttk.Label(main_frame, text='Tên:').grid(row=2, column=0, sticky='w', pady=5)
-            name_var = tk.StringVar(value=key_info.name or "")
-            name_entry = ttk.Entry(main_frame, textvariable=name_var, width=33)
-            name_entry.grid(row=2, column=1, sticky='ew', pady=5, padx=(10,0))
-            
-            # API Key (masked)
-            ttk.Label(main_frame, text='API Key:').grid(row=3, column=0, sticky='w', pady=5)
-            key_var = tk.StringVar(value=key_info.key)
-            key_entry = ttk.Entry(main_frame, textvariable=key_var, show='*', width=33)
-            key_entry.grid(row=3, column=1, sticky='ew', pady=5, padx=(10,0))
-            
-            # Status
-            ttk.Label(main_frame, text='Trạng thái:').grid(row=4, column=0, sticky='w', pady=5)
-            status_var = tk.BooleanVar(value=key_info.is_active)
-            status_check = ttk.Checkbutton(main_frame, text='Hoạt động', variable=status_var)
-            status_check.grid(row=4, column=1, sticky='w', pady=5, padx=(10,0))
-            
-            main_frame.columnconfigure(1, weight=1)
-            
             # Buttons
-            btn_frame = ttk.Frame(main_frame)
-            btn_frame.grid(row=5, column=0, columnspan=2, pady=20, sticky='ew')
+            button_frame = ttk.Frame(main_frame)
+            button_frame.pack(fill='x', pady=(20, 0))
             
             def save_changes():
                 try:
@@ -616,7 +620,7 @@ class ApiKeyTab:
                                 def handle_validation_result():
                                     """Handle validation result in main thread"""
                                     # Re-enable buttons
-                                    save_btn.configure(state='normal', text='Lưu')
+                                    save_btn.configure(state='normal', text='💾 Lưu')
                                     cancel_btn.configure(state='normal')
                                     
                                     if validation_info["type"] == "success":
@@ -653,7 +657,7 @@ class ApiKeyTab:
                             else:
                                 # No validation needed, just save
                                 def just_save():
-                                    save_btn.configure(state='normal', text='Lưu')
+                                    save_btn.configure(state='normal', text='💾 Lưu')
                                     cancel_btn.configure(state='normal')
                                     perform_save()
                                 
@@ -661,7 +665,7 @@ class ApiKeyTab:
                                 
                         except Exception as e:
                             def show_validation_error():
-                                save_btn.configure(state='normal', text='Lưu')
+                                save_btn.configure(state='normal', text='💾 Lưu')
                                 cancel_btn.configure(state='normal')
                                 messagebox.showerror("Lỗi xác thực", f"Không thể kiểm tra API key: {str(e)}")
                             
@@ -699,10 +703,11 @@ class ApiKeyTab:
                 except Exception as e:
                     messagebox.showerror("Lỗi", f"Không thể cập nhật: {e}")
             
-            save_btn = ttk.Button(btn_frame, text='Lưu', command=save_changes, bootstyle=SUCCESS)
+            # Buttons
+            save_btn = ttk.Button(button_frame, text='💾 Lưu', command=save_changes)
             save_btn.pack(side='left', padx=(0, 10))
             
-            cancel_btn = ttk.Button(btn_frame, text='Hủy', command=edit_win.destroy, bootstyle=SECONDARY)
+            cancel_btn = ttk.Button(button_frame, text='❌ Hủy', command=edit_win.destroy)
             cancel_btn.pack(side='left')
             
         except Exception as e:
