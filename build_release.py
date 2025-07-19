@@ -49,7 +49,7 @@ def main():
         new_version = current_version
     
     # Tạo build number
-    build_num = datetime.now().strftime("%Y%m%d%H")
+    build_num = datetime.now().strftime("%Y%m%d%H%M")
     
     print(f"\nVersion: {new_version}")
     print(f"Build: {build_num}")
