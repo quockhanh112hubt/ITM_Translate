@@ -51,11 +51,12 @@ class MainGUI:
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
         self.startup_callback = callback
-    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True):
+    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, auto_close_popup=True):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
         self.initial_startup = startup_enabled
         self.initial_show_on_startup = show_on_startup
+        self.initial_auto_close_popup = auto_close_popup
         # Đọc lại ngôn ngữ nếu có
         self.initial_langs = {
             'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Any Language'),
@@ -478,7 +479,17 @@ class MainGUI:
             text="Bật hộp thoại này khi khởi động",
             variable=self.show_on_startup_var,
             command=self.on_show_on_startup_toggle
+        ).pack(anchor='w', padx=20, pady=(0, 5))
+        
+        # Tự động đóng cửa sổ dịch
+        self.auto_close_popup_var = tk.BooleanVar(value=getattr(self, 'initial_auto_close_popup', True))
+        tk.Checkbutton(
+            self.advanced_tab,
+            text="Tự động đóng cửa sổ dịch",
+            variable=self.auto_close_popup_var,
+            command=self.on_auto_close_popup_toggle
         ).pack(anchor='w', padx=20, pady=(0, 10))
+        
         # Hướng dẫn sử dụng
         tk.Button(self.advanced_tab, text="Hướng dẫn sử dụng", command=self.show_help).pack(fill='x', padx=20, pady=5)
         # Thông tin về chương trình
@@ -504,10 +515,23 @@ class MainGUI:
         try:
             startup = self.startup_var.get() if hasattr(self, 'startup_var') else False
             show_on_startup = self.show_on_startup_var.get()
+            auto_close_popup = self.auto_close_popup_var.get() if hasattr(self, 'auto_close_popup_var') else True
             with open("startup.json", "w", encoding="utf-8") as f:
-                json.dump({"startup": startup, "show_on_startup": show_on_startup}, f)
+                json.dump({"startup": startup, "show_on_startup": show_on_startup, "auto_close_popup": auto_close_popup}, f)
         except Exception:
             pass
+    
+    def on_auto_close_popup_toggle(self):
+        # Lưu trạng thái auto close popup vào file
+        try:
+            startup = self.startup_var.get() if hasattr(self, 'startup_var') else False
+            show_on_startup = self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
+            auto_close_popup = self.auto_close_popup_var.get()
+            with open("startup.json", "w", encoding="utf-8") as f:
+                json.dump({"startup": startup, "show_on_startup": show_on_startup, "auto_close_popup": auto_close_popup}, f)
+        except Exception as e:
+            print(f"❌ Error saving auto close popup setting: {e}")
+    
     def get_show_on_startup(self):
         return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
     def show_help(self):

@@ -81,7 +81,7 @@ def show_loading_popup(root):
     animate()
     return loading_win
 
-def show_popup(text, master=None, source_lang=None, target_lang=None, version=None):
+def show_popup(text, master=None, source_lang=None, target_lang=None, version=None, auto_close_enabled=True):
     if master is None:
         master = tk._default_root
     
@@ -158,11 +158,14 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     x = win.winfo_pointerx()
     y = win.winfo_pointery()
     win.geometry(f"{width}x{height}+{x}+{y}")
-    # Chỉ đóng khi focus ra ngoài toàn bộ popup
-    def on_popup_focus_out(event):
-        # Nếu focus ra ngoài cửa sổ popup (không phải text_widget)
-        if win.focus_get() not in (text_widget, win):
-            win.destroy()
-    win.bind('<FocusOut>', on_popup_focus_out)
+    
+    # Chỉ đóng tự động khi auto_close_enabled=True
+    if auto_close_enabled:
+        def on_popup_focus_out(event):
+            # Nếu focus ra ngoài cửa sổ popup (không phải text_widget)
+            if win.focus_get() not in (text_widget, win):
+                win.destroy()
+        win.bind('<FocusOut>', on_popup_focus_out)
+    
     win.deiconify()
     win.lift()

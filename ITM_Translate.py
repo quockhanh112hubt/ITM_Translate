@@ -146,7 +146,8 @@ def _on_activate_translate():
                     show_popup(translated, master=root, 
                               source_lang=display_source,
                               target_lang=display_target,
-                              version=version)
+                              version=version,
+                              auto_close_enabled=load_auto_close_popup())
                 root.after(0, show_result)
             else:
                 def close_loading():
@@ -211,7 +212,7 @@ def _on_activate_replace():
                             from ui.popup import get_app_version
                             version = get_app_version()
                             show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
-                                      master=root, version=version)
+                                      master=root, version=version, auto_close_enabled=load_auto_close_popup())
                         root.after(0, show_fail)
                 root.after(0, do_paste)
             else:
@@ -271,7 +272,8 @@ def _on_activate_translate_group2():
                     show_popup(translated, master=root, 
                               source_lang=display_source,
                               target_lang=display_target,
-                              version=version)
+                              version=version,
+                              auto_close_enabled=load_auto_close_popup())
                 root.after(0, show_result)
             else:
                 def close_loading():
@@ -336,7 +338,7 @@ def _on_activate_replace_group2():
                             from ui.popup import get_app_version
                             version = get_app_version()
                             show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
-                                      master=root, version=version)
+                                      master=root, version=version, auto_close_enabled=load_auto_close_popup())
                         root.after(0, show_fail)
                 root.after(0, do_paste)
             else:
@@ -442,6 +444,31 @@ def load_show_on_startup():
         except Exception:
             pass
     return True
+
+def load_auto_close_popup():
+    if os.path.exists(STARTUP_FILE):
+        try:
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("auto_close_popup", True))  # Mặc định bật
+        except Exception:
+            pass
+    return True  # Mặc định bật
+
+def save_auto_close_popup(enabled):
+    """Lưu setting auto close popup vào startup.json"""
+    try:
+        data = {}
+        if os.path.exists(STARTUP_FILE):
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        
+        data["auto_close_popup"] = enabled
+        
+        with open(STARTUP_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"❌ Error saving auto close popup setting: {e}")
 
 def set_startup_windows(enable):
     # Chỉ hỗ trợ Windows
@@ -558,7 +585,7 @@ def update_hotkeys_from_gui(new_hotkeys, app=None):
     load_hotkey_actions_from_file()
     # Không cần khởi động lại listener
     if app is not None:
-        app.set_initial_settings(new_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled(), load_show_on_startup())
+        app.set_initial_settings(new_hotkeys, load_ITM_TRANSLATE_KEY(), load_startup_enabled(), load_show_on_startup(), load_auto_close_popup())
 
 # Khởi tạo listener một lần duy nhất
 listener = keyboard.Listener()
@@ -587,12 +614,13 @@ except Exception:
     pass
 show_on_startup = load_show_on_startup()
 startup_enabled = load_startup_enabled()
+auto_close_popup = load_auto_close_popup()
 if startup_enabled and not show_on_startup:
     root.withdraw()
 app = MainGUI(root)
 app.set_hotkey_manager(multi_hotkey)
 app.set_hotkey_updater(update_hotkeys_from_gui)
-app.set_initial_settings(user_hotkeys, "", startup_enabled, show_on_startup)
+app.set_initial_settings(user_hotkeys, "", startup_enabled, show_on_startup, auto_close_popup)
 app.set_startup_callback(set_startup_windows)
 
 # Print API key status on startup
