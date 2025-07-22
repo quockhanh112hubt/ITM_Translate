@@ -67,8 +67,8 @@ class SettingsTab:
             'Deutsch', 'Русский', 'Español', 'ไทย'
         ]
         
-        # Group 1: Tuỳ chọn mặc định
-        group1 = ttk.LabelFrame(parent, text=_('shortcuts_group1'), bootstyle='info')
+        # Group 1: Default options
+        group1 = ttk.LabelFrame(parent, text=_('default_options'), bootstyle='info')
         group1.pack(padx=0, pady=(16, 20), fill='x', ipadx=10, ipady=10)
         
         # Configure grid
@@ -119,13 +119,13 @@ class SettingsTab:
         def toggle_group2():
             if self.group2_visible:
                 group2.pack_forget()
-                toggle_btn.config(text='Hiện Tuỳ chọn tuỳ chỉnh')
+                toggle_btn.config(text=_('show_custom_options'))
                 self.group2_visible = False
                 # Điều chỉnh kích thước cửa sổ về nhỏ
                 self.main_app.root.geometry('1070x440')
             else:
                 group2.pack(padx=0, pady=(12, 18), fill='x', ipadx=10, ipady=10)
-                toggle_btn.config(text='Ẩn Tuỳ chọn tuỳ chỉnh')
+                toggle_btn.config(text=_('hide_custom_options'))
                 self.group2_visible = True
                 # Điều chỉnh kích thước cửa sổ về lớn
                 self.main_app.root.geometry('1070x650')
@@ -133,31 +133,31 @@ class SettingsTab:
             # Cập nhật trạng thái trong main app để on_tab_changed biết
             self.main_app.group2_visible = self.group2_visible
         
-        toggle_btn = ttk.Button(parent, text='Hiện Tuỳ chọn tuỳ chỉnh', command=toggle_group2, bootstyle='secondary')
+        toggle_btn = ttk.Button(parent, text=_('show_custom_options'), command=toggle_group2, bootstyle='secondary')
         toggle_btn.pack(pady=(0, 2))
         
-        # Group 2: Tuỳ chọn tuỳ chỉnh
-        group2 = ttk.LabelFrame(parent, text="Tuỳ chọn tuỳ chỉnh:", bootstyle='info')
+        # Group 2: Custom options
+        group2 = ttk.LabelFrame(parent, text=_('custom_options'), bootstyle='info')
         
         # Configure grid
         for i in range(8):
             group2.columnconfigure(i, weight=1)
         
         # Description
-        ttk.Label(group2, text='Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.', 
+        ttk.Label(group2, text=_('language_description'), 
                  font=('Segoe UI', 9, 'italic'), bootstyle='secondary').grid(row=0, column=0, columnspan=8, sticky='w', padx=8, pady=(10,6))
         
         # Headers
-        ttk.Label(group2, text='Phím tắt:', font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
+        ttk.Label(group2, text=_('hotkey'), font=('Segoe UI', 10, 'bold')).grid(row=1, column=0, sticky='e', padx=(8,2), pady=(8,4))
         ttk.Label(group2, text='Modifier 1').grid(row=1, column=1, sticky='n', padx=2, pady=(8,4))
         ttk.Label(group2, text='Modifier 2').grid(row=1, column=2, sticky='n', padx=2, pady=(8,4))
-        ttk.Label(group2, text='Phím chính').grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
-        ttk.Label(group2, text='Ngôn ngữ đầu tiên:').grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
-        ttk.Label(group2, text='Ngôn ngữ thứ 2:').grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
-        ttk.Label(group2, text='Ngôn ngữ thứ 3:').grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group2, text=_('main_key')).grid(row=1, column=3, sticky='n', padx=2, pady=(8,4))
+        ttk.Label(group2, text=_('first_language')).grid(row=1, column=4, sticky='n', padx=(18,2), pady=(8,4))
+        ttk.Label(group2, text=_('second_language')).grid(row=1, column=5, sticky='n', padx=(8,2), pady=(8,4))
+        ttk.Label(group2, text=_('third_language')).grid(row=1, column=6, sticky='n', padx=(8,2), pady=(8,4))
         
         # Dịch popup 2 row
-        ttk.Label(group2, text='Dịch popup').grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
+        ttk.Label(group2, text=_('translate_popup')).grid(row=2, column=0, sticky='e', padx=(8,2), pady=8)
         self.entries['translate_popup2_mod1'] = ttk.Combobox(group2, values=modifier_options, width=7, state='readonly')
         self.entries['translate_popup2_mod1'].grid(row=2, column=1, padx=2, pady=8)
         self.entries['translate_popup2_mod2'] = ttk.Combobox(group2, values=modifier_options, width=7, state='readonly')
@@ -174,7 +174,8 @@ class SettingsTab:
         self.lang_selects['Nhom2_Ngon_ngu_thu_3'].grid(row=2, column=6, padx=2, pady=8)
         
         # Dịch & thay thế 2 row
-        ttk.Label(group2, text='Dịch & thay thế').grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
+        # Dịch & thay thế
+        ttk.Label(group2, text=_('translate_and_replace')).grid(row=3, column=0, sticky='e', padx=(8,2), pady=8)
         self.entries['replace_translate2_mod1'] = ttk.Combobox(group2, values=modifier_options, width=7, state='readonly')
         self.entries['replace_translate2_mod1'].grid(row=3, column=1, padx=2, pady=8)
         self.entries['replace_translate2_mod2'] = ttk.Combobox(group2, values=modifier_options, width=7, state='readonly')
@@ -297,7 +298,7 @@ class SettingsTab:
         if none_count < 3:
             non_empty_count = sum([1 for v in values if v != '<none>' and v != ''])
             if non_empty_count < 2:
-                return False, "Chưa chọn phím tắt hợp lệ!"
+                return False, _('not_selected_hotkey')
         
         return True, self.join_hotkey(mod1, mod2, key)
     
@@ -309,7 +310,7 @@ class SettingsTab:
         
         # Nếu có 1 hoặc 2 ngôn ngữ trống trong 3 (không phải tất cả trống hoặc tất cả đầy)
         if 0 < empty_count < 3:
-            return False, f"Bạn phải chọn đủ 3 ngôn ngữ cho {group_name}!"
+            return False, _('must_select_languages').format(group_name=group_name)
         
         # Nếu cả 3 ngôn ngữ đã chọn nhưng có trùng lặp
         if len(filled) == 3 and len(set(lang_group)) < 3:
@@ -344,13 +345,13 @@ class SettingsTab:
                 else:
                     return
             else:
-                messagebox.showinfo("Thông báo", "Cấu hình đã được lưu thành công.")
+                messagebox.showinfo(_('notification'), _('config_saved'))
             
             # Update initial hotkeys
             self.initial_hotkeys = hotkey_data.copy()
             
         except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể lưu cấu hình: {str(e)}")
+            messagebox.showerror(_('error'), f"{_('cannot_save_config')} {str(e)}")
     
     def collect_hotkey_data_basic(self):
         """Collect hotkey data không validate - chỉ thu thập"""
@@ -405,7 +406,7 @@ class SettingsTab:
         group1_langs = [language_data['Ngon_ngu_dau_tien'], language_data['Ngon_ngu_thu_2'], language_data['Ngon_ngu_thu_3']]
         group2_langs = [language_data['Nhom2_Ngon_ngu_dau_tien'], language_data['Nhom2_Ngon_ngu_thu_2'], language_data['Nhom2_Ngon_ngu_thu_3']]
         lang_groups = [group1_langs, group2_langs]
-        group_names = ['Tuỳ chọn mặc định', 'Tuỳ chọn tuỳ chỉnh']
+        group_names = [_('default_options'), _('custom_options')]
         
         # 1. Kiểm tra tổng thể: nếu tất cả đều rỗng thì cho lưu
         all_hotkeys_empty = all(
@@ -417,11 +418,11 @@ class SettingsTab:
         if all_hotkeys_empty and all_langs_empty:
             return True  # Cho lưu bình thường
         
-        # 2. Kiểm tra từng tổ hợp phím tắt
+        # 2. Check each hotkey combination
         for idx, (mod1, mod2, key) in enumerate(combos):
             is_valid, error_msg = self.validate_hotkey_combination(mod1, mod2, key)
             if not is_valid:
-                messagebox.showerror("Lỗi cấu hình", error_msg)
+                messagebox.showerror(_('config_error'), error_msg)
                 return False
         
         # 3. Kiểm tra trùng phím tắt (normalize và compare)
@@ -441,14 +442,14 @@ class SettingsTab:
         filtered_hotkeys = [h for h in normalized_hotkeys if h != '__empty__']
         
         if len(set(filtered_hotkeys)) < len(filtered_hotkeys):
-            messagebox.showerror("Lỗi cấu hình", "Các tổ hợp phím tắt không được trùng nhau!")
+            messagebox.showerror(_('config_error'), _('duplicate_hotkeys'))
             return False
         
-        # 4. Kiểm tra ngôn ngữ từng group
+        # 4. Check language for each group
         for group_langs, group_name in zip(lang_groups, group_names):
             is_valid, error_msg = self.validate_language_group(group_langs, group_name)
             if not is_valid:
-                messagebox.showerror("Lỗi cấu hình", error_msg)
+                messagebox.showerror(_('config_error'), error_msg)
                 return False
         
         # 5. Kiểm tra logic phức tạp: nếu có hotkey thì phải có ngôn ngữ
@@ -495,4 +496,9 @@ class SettingsTab:
             self.main_app._restart_with_batch()
         else:
             # Fallback restart method
-            messagebox.showinfo("Thông báo", "Vui lòng khởi động lại ứng dụng thủ công để áp dụng thay đổi.")
+            messagebox.showinfo(_('notification'), "Vui lòng khởi động lại ứng dụng thủ công để áp dụng thay đổi.")
+    
+    def refresh_language(self):
+        """Refresh UI text when language changes"""
+        # Không cần rebuild vì GUI đã recreate tabs rồi
+        pass

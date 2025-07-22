@@ -59,12 +59,13 @@ class MainGUI:
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
         self.startup_callback = callback
-    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, floating_button=True):
+    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, floating_button=True, auto_close_popup=True):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
         self.initial_startup = startup_enabled
         self.initial_show_on_startup = show_on_startup
         self.initial_floating_button = floating_button
+        self.initial_auto_close_popup = auto_close_popup
         # Đọc lại ngôn ngữ nếu có
         self.initial_langs = {
             'Ngon_ngu_dau_tien': hotkeys_dict.get('Ngon_ngu_dau_tien', 'Any Language'),
@@ -87,8 +88,11 @@ class MainGUI:
         right_btn_frame.pack(side='right', anchor='e', padx=(0, 24), pady=(8, 2))
         def on_cancel():
             self.root.withdraw()
-        ttk.Button(right_btn_frame, text=_('save_close_settings'), style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY).pack(side='left', padx=(0,8))
-        ttk.Button(right_btn_frame, text=_('cancel'), style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY).pack(side='left')
+        # Lưu reference đến footer buttons để có thể update text
+        self.save_button = ttk.Button(right_btn_frame, text=_('save_close_settings'), style='Custom.TButton', command=self.save_settings, bootstyle=PRIMARY)
+        self.save_button.pack(side='left', padx=(0,8))
+        self.cancel_button = ttk.Button(right_btn_frame, text=_('cancel'), style='Custom.TButton', command=on_cancel, bootstyle=SECONDARY)
+        self.cancel_button.pack(side='left')
         
         # Tạo notebook sau footer để footer luôn ở dưới cùng
         self.tab_control = ttk.Notebook(self.root, bootstyle=PRIMARY)
@@ -144,12 +148,12 @@ class MainGUI:
         from ui.tabs.settings_tab import SettingsTab
         
         # Tạo SettingsTab component và pass initial_langs
-        self.settings_tab_component = SettingsTab(self.settings_tab, self, self.initial_langs)
+        self.settings_tab_instance = SettingsTab(self.settings_tab, self, self.initial_langs)
         
         # Export các variables để các method khác có thể access
-        self.entries = self.settings_tab_component.entries
-        self.lang_selects = self.settings_tab_component.lang_selects
-        self.initial_hotkeys = self.settings_tab_component.initial_hotkeys
+        self.entries = self.settings_tab_instance.entries
+        self.lang_selects = self.settings_tab_instance.lang_selects
+        self.initial_hotkeys = self.settings_tab_instance.initial_hotkeys
 
 
     def create_api_key_tab(self):
@@ -208,6 +212,7 @@ class MainGUI:
         self.startup_var = self.advanced_tab_component.startup_var
         self.show_on_startup_var = self.advanced_tab_component.show_on_startup_var
         self.floating_button_enabled = self.advanced_tab_component.floating_button_enabled
+        self.auto_close_popup_var = self.advanced_tab_component.auto_close_popup_var
 
     def on_startup_toggle(self):
         enabled = self.startup_var.get()
@@ -507,10 +512,10 @@ Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thô
         threading.Thread(target=check_update_worker, daemon=True).start()
     def save_settings(self):
         """Delegate to Settings tab component"""
-        if hasattr(self, 'settings_tab_component'):
-            self.settings_tab_component.save_settings()
+        if hasattr(self, 'settings_tab_instance'):
+            self.settings_tab_instance.save_settings()
         else:
-            messagebox.showerror("Lỗi", "Settings tab component chưa được khởi tạo")
+            messagebox.showerror(_('error'), _('settings_not_initialized'))
     
     def load_settings(self):
         # Đọc hotkeys từ file
@@ -778,23 +783,24 @@ del "%~f0"
             for widget in self.advanced_tab.winfo_children():
                 widget.destroy()
             
-            # Recreate tabs with new language
+            # Recreate tabs with new language - không cần gọi refresh_language nữa
             self.create_settings_tab()
             self.create_api_key_tab()
             self.create_advanced_tab()
             
-            # Update footer buttons
-            for widget in self.root.winfo_children():
-                if isinstance(widget, ttk.Frame):
-                    for child in widget.winfo_children():
-                        if isinstance(child, ttk.Frame):
-                            for btn in child.winfo_children():
-                                if isinstance(btn, ttk.Button):
-                                    btn_text = btn.cget('text')
-                                    if 'Lưu cấu hình' in btn_text or 'Save' in btn_text:
-                                        btn.configure(text=_("save_close_settings", language))
-                                    elif 'Huỷ bỏ' in btn_text or 'Cancel' in btn_text:
-                                        btn.configure(text=_("cancel", language))
+            # Update footer buttons - cải thiện logic
+            self._update_footer_buttons(language)
             
         except Exception as e:
             print(f"❌ Error refreshing components: {e}")
+    
+    def _update_footer_buttons(self, language):
+        """Cập nhật text cho footer buttons"""
+        try:
+            # Update footer buttons directly using references
+            if hasattr(self, 'save_button'):
+                self.save_button.configure(text=_("save_close_settings", language))
+            if hasattr(self, 'cancel_button'):
+                self.cancel_button.configure(text=_("cancel", language))
+        except Exception as e:
+            print(f"❌ Error updating footer buttons: {e}")

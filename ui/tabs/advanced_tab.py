@@ -60,16 +60,26 @@ class AdvancedTab:
         self.floating_button_enabled = tk.BooleanVar(value=getattr(self.main_gui, 'initial_floating_button', True))
         floating_button_check = tk.Checkbutton(
             self.frame,
-            text="Phát hiện văn bản tô đen (hiển thị nút DỊCH khi chọn text)",
+            text=_('floating_translate_button'),
             variable=self.floating_button_enabled,
             command=self.on_floating_button_toggle
         )
-        floating_button_check.pack(anchor='w', padx=20, pady=(0, 10))
+        floating_button_check.pack(anchor='w', padx=20, pady=(0, 5))
+        
+        # Tự động đóng cửa sổ dịch
+        self.auto_close_popup_var = tk.BooleanVar(value=getattr(self.main_gui, 'initial_auto_close_popup', True))
+        auto_close_popup_check = tk.Checkbutton(
+            self.frame,
+            text=_('auto_close_popup'),
+            variable=self.auto_close_popup_var,
+            command=self.on_auto_close_popup_toggle
+        )
+        auto_close_popup_check.pack(anchor='w', padx=20, pady=(0, 10))
         
         # Hướng dẫn sử dụng
         help_btn = tk.Button(
             self.frame, 
-            text="Hướng dẫn sử dụng", 
+            text=_('usage_guide'), 
             command=self._show_help
         )
         help_btn.pack(fill='x', padx=20, pady=5)
@@ -77,7 +87,7 @@ class AdvancedTab:
         # Thông tin về chương trình
         about_btn = tk.Button(
             self.frame, 
-            text="Thông tin về chương trình", 
+            text=_('app_info'), 
             command=self._show_about
         )
         about_btn.pack(fill='x', padx=20, pady=5)
@@ -85,7 +95,7 @@ class AdvancedTab:
         # Nút cập nhật chương trình
         update_btn = tk.Button(
             self.frame, 
-            text="Cập nhật chương trình", 
+            text=_('check_updates'), 
             command=self._update_program
         )
         update_btn.pack(fill='x', padx=20, pady=5)
@@ -98,12 +108,14 @@ class AdvancedTab:
         try:
             show_on_startup = self.show_on_startup_var.get() if self.show_on_startup_var else True
             floating_button = self.floating_button_enabled.get() if self.floating_button_enabled else True
+            auto_close_popup = self.auto_close_popup_var.get() if self.auto_close_popup_var else True
             
             with open("startup.json", "w", encoding="utf-8") as f:
                 json.dump({
                     "startup": enabled, 
                     "show_on_startup": show_on_startup, 
-                    "floating_button": floating_button
+                    "floating_button": floating_button,
+                    "auto_close_popup": auto_close_popup
                 }, f)
         except Exception:
             pass
@@ -118,12 +130,14 @@ class AdvancedTab:
             startup = self.startup_var.get() if self.startup_var else False
             show_on_startup = self.show_on_startup_var.get()
             floating_button = self.floating_button_enabled.get() if self.floating_button_enabled else True
+            auto_close_popup = self.auto_close_popup_var.get() if self.auto_close_popup_var else True
             
             with open("startup.json", "w", encoding="utf-8") as f:
                 json.dump({
                     "startup": startup, 
                     "show_on_startup": show_on_startup, 
-                    "floating_button": floating_button
+                    "floating_button": floating_button,
+                    "auto_close_popup": auto_close_popup
                 }, f)
         except Exception:
             pass
@@ -134,12 +148,14 @@ class AdvancedTab:
             startup = self.startup_var.get() if self.startup_var else False
             show_on_startup = self.show_on_startup_var.get() if self.show_on_startup_var else True
             floating_button = self.floating_button_enabled.get()
+            auto_close_popup = self.auto_close_popup_var.get() if self.auto_close_popup_var else True
             
             with open("startup.json", "w", encoding="utf-8") as f:
                 json.dump({
                     "startup": startup, 
                     "show_on_startup": show_on_startup, 
-                    "floating_button": floating_button
+                    "floating_button": floating_button,
+                    "auto_close_popup": auto_close_popup
                 }, f)
         except Exception:
             pass
@@ -147,6 +163,24 @@ class AdvancedTab:
         # Gọi callback để main.py xử lý floating button
         if hasattr(self.main_gui, 'floating_button_callback') and self.main_gui.floating_button_callback:
             self.main_gui.floating_button_callback(floating_button)
+    
+    def on_auto_close_popup_toggle(self):
+        """Xử lý khi toggle auto close popup setting"""
+        try:
+            startup = self.startup_var.get() if self.startup_var else False
+            show_on_startup = self.show_on_startup_var.get() if self.show_on_startup_var else True
+            floating_button = self.floating_button_enabled.get() if self.floating_button_enabled else True
+            auto_close_popup = self.auto_close_popup_var.get()
+            
+            with open("startup.json", "w", encoding="utf-8") as f:
+                json.dump({
+                    "startup": startup, 
+                    "show_on_startup": show_on_startup, 
+                    "floating_button": floating_button,
+                    "auto_close_popup": auto_close_popup
+                }, f)
+        except Exception as e:
+            print(f"❌ Error saving auto close popup setting: {e}")
     
     def _show_help(self):
         """Delegate to main GUI's show_help method"""

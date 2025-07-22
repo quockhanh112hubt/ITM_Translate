@@ -17,7 +17,8 @@ class ApiKeyTab:
         """
         Khởi tạo API Key Tab component
         
-        Args:
+                                         text=_('edit_api_key'), 
+                                  font=('Segoe UI', 12, 'bold')rgs:
             parent_frame: Frame cha để chứa tab
             main_gui_instance: Instance của MainGUI để access các method và callback
         """
@@ -45,7 +46,7 @@ class ApiKeyTab:
                          font=('Segoe UI', 16, 'bold'))
         title.pack(pady=(20, 5))
         
-        subtitle = ttk.Label(self.frame, text='Thêm, quản lý và thiết lập ưu tiên các API keys', 
+        subtitle = ttk.Label(self.frame, text=_('api_keys_subtitle'), 
                             font=('Segoe UI', 9), bootstyle=SECONDARY)
         subtitle.pack(pady=(0, 20))
         
@@ -54,11 +55,11 @@ class ApiKeyTab:
         main_frame.pack(fill='both', expand=True, padx=40, pady=20)
         
         # Left side - Key list  
-        left_frame = ttk.LabelFrame(main_frame, text='Danh sách API Keys & Providers', bootstyle=INFO)
+        left_frame = ttk.LabelFrame(main_frame, text=_('api_keys_list'), bootstyle=INFO)
         left_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
         
         # Right side - Controls
-        right_frame = ttk.LabelFrame(main_frame, text='Thao tác', bootstyle=INFO)
+        right_frame = ttk.LabelFrame(main_frame, text=_('actions'), bootstyle=INFO)
         right_frame.pack(side='right', fill='y', padx=(10, 0))
         
         # Create left side content
@@ -79,7 +80,7 @@ class ApiKeyTab:
         add_frame = ttk.Frame(parent)
         add_frame.pack(fill='x', padx=10, pady=8)
         
-        ttk.Label(add_frame, text='Thêm API Key mới:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        ttk.Label(add_frame, text=_('add_new_api_key'), font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
         # Provider and Model in horizontal layout
         provider_model_frame = ttk.Frame(add_frame)
@@ -89,7 +90,7 @@ class ApiKeyTab:
         provider_col = ttk.Frame(provider_model_frame)
         provider_col.pack(side='left', fill='x', expand=True, padx=(0, 5))
         
-        ttk.Label(provider_col, text='Provider:', font=('Segoe UI', 9)).pack(anchor='w')
+        ttk.Label(provider_col, text=_('provider'), font=('Segoe UI', 9)).pack(anchor='w')
         self.provider_var = tk.StringVar(value='gemini')
         provider_combo = ttk.Combobox(provider_col, textvariable=self.provider_var, 
                                     values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
@@ -100,7 +101,7 @@ class ApiKeyTab:
         model_col = ttk.Frame(provider_model_frame)
         model_col.pack(side='right', fill='x', expand=True, padx=(5, 0))
         
-        ttk.Label(model_col, text='Model:', font=('Segoe UI', 9)).pack(anchor='w')
+        ttk.Label(model_col, text=_('model'), font=('Segoe UI', 9)).pack(anchor='w')
         self.model_var = tk.StringVar(value='auto')
         self.model_combo = ttk.Combobox(model_col, textvariable=self.model_var, 
                                        state='readonly', width=18, font=('Segoe UI', 9))
@@ -119,7 +120,7 @@ class ApiKeyTab:
         name_frame = ttk.Frame(add_frame)
         name_frame.pack(fill='x', pady=(3, 3))
         
-        ttk.Label(name_frame, text='Tên (tùy chọn):', font=('Segoe UI', 9)).pack(anchor='w')
+        ttk.Label(name_frame, text=_('name_optional'), font=('Segoe UI', 9)).pack(anchor='w')
         self.name_var = tk.StringVar()
         name_entry = ttk.Entry(name_frame, textvariable=self.name_var, width=35, font=('Segoe UI', 9))
         name_entry.pack(fill='x')
@@ -128,11 +129,11 @@ class ApiKeyTab:
         key_frame = ttk.Frame(add_frame)
         key_frame.pack(fill='x', pady=(3, 8))
         
-        ttk.Label(key_frame, text='API Key:', font=('Segoe UI', 9)).pack(anchor='w')
+        ttk.Label(key_frame, text=_('api_key'), font=('Segoe UI', 9)).pack(anchor='w')
         self.new_key_entry = ttk.Entry(key_frame, width=35, show='*', font=('Segoe UI', 9))
         self.new_key_entry.pack(fill='x')
         
-        add_btn = ttk.Button(add_frame, text='➕ Thêm Key', command=self.add_api_key, 
+        add_btn = ttk.Button(add_frame, text=_('add_key'), command=self.add_api_key, 
                            bootstyle=SUCCESS)
         add_btn.pack(fill='x', pady=(3, 0))
     
@@ -163,12 +164,12 @@ class ApiKeyTab:
                        font=('Segoe UI', 9, 'bold'))
         
         # Configure column headers
-        self.api_key_tree.heading('#0', text='Active')
-        self.api_key_tree.heading('Provider', text='Provider')
-        self.api_key_tree.heading('Model', text='Model')
-        self.api_key_tree.heading('Name', text='Name')
-        self.api_key_tree.heading('Status', text='Status')
-        self.api_key_tree.heading('Key', text='API Key')
+        self.api_key_tree.heading('#0', text=_('active'))
+        self.api_key_tree.heading('Provider', text=_('provider'))
+        self.api_key_tree.heading('Model', text=_('model'))
+        self.api_key_tree.heading('Name', text=_('name'))
+        self.api_key_tree.heading('Status', text=_('status'))
+        self.api_key_tree.heading('Key', text=_('api_key'))
         
         # Auto-sizing columns with minimum widths
         self.api_key_tree.column('#0', width=60, minwidth=50, anchor='center')
@@ -202,7 +203,7 @@ class ApiKeyTab:
         control_frame = ttk.Frame(parent)
         control_frame.pack(fill='x', padx=10, pady=(15, 8))
         
-        ttk.Label(control_frame, text='Quản lý Keys:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        ttk.Label(control_frame, text=_('manage_keys'), font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
         # Create grid for buttons - 2 columns
         btn_grid = ttk.Frame(control_frame)
@@ -212,19 +213,19 @@ class ApiKeyTab:
         btn_grid.columnconfigure(0, weight=1)
         btn_grid.columnconfigure(1, weight=1)
         
-        set_active_btn = ttk.Button(btn_grid, text='🎯 Active', 
+        set_active_btn = ttk.Button(btn_grid, text=_('set_active'), 
                                   command=self.set_active_key, bootstyle=PRIMARY)
         set_active_btn.grid(row=0, column=0, sticky='ew', padx=(0, 3), pady=2)
         
-        edit_btn = ttk.Button(btn_grid, text='✏️ Sửa', 
+        edit_btn = ttk.Button(btn_grid, text=_('edit'), 
                             command=self.edit_api_key, bootstyle=INFO)
         edit_btn.grid(row=0, column=1, sticky='ew', padx=(3, 0), pady=2)
         
-        remove_btn = ttk.Button(btn_grid, text='🗑️ Xóa', 
+        remove_btn = ttk.Button(btn_grid, text=_('remove'), 
                               command=self.remove_api_key, bootstyle=DANGER)
         remove_btn.grid(row=1, column=0, sticky='ew', padx=(0, 3), pady=2)
         
-        refresh_btn = ttk.Button(btn_grid, text='🔄 Làm mới', 
+        refresh_btn = ttk.Button(btn_grid, text=_('refresh'), 
                                command=self.refresh_api_keys, bootstyle=SECONDARY)
         refresh_btn.grid(row=1, column=1, sticky='ew', padx=(3, 0), pady=2)
     
@@ -234,7 +235,7 @@ class ApiKeyTab:
         priority_frame = ttk.Frame(parent)
         priority_frame.pack(fill='x', padx=10, pady=(10, 8))
         
-        ttk.Label(priority_frame, text='Ưu tiên Providers:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        ttk.Label(priority_frame, text=_('priority_providers'), font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
         # Priority controls in horizontal layout
         priority_content = ttk.Frame(priority_frame)
@@ -258,12 +259,9 @@ class ApiKeyTab:
         info_frame = ttk.Frame(parent)
         info_frame.pack(fill='x', padx=10, pady=(10, 10))
         
-        ttk.Label(info_frame, text='💡 Thông tin:', font=('Segoe UI', 10, 'bold')).pack(anchor='w')
+        ttk.Label(info_frame, text=_('information'), font=('Segoe UI', 10, 'bold')).pack(anchor='w')
         
-        info_text = """• Hỗ trợ 5 Providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude
-• Khi gặp lỗi, hệ thống sẽ tự động chuyển sang key OK tiếp theo
-• Model 'auto' = Model mặc định chương trình tự động nhận diện
-• Thứ tự ưu tiên từ trên xuống, quyết định Provider nào sẽ được sử dụng trước"""
+        info_text = _('info_text')
         
         info_label = ttk.Label(info_frame, text=info_text, 
                              font=('Segoe UI', 8), bootstyle=SECONDARY,
@@ -347,7 +345,7 @@ class ApiKeyTab:
         name = self.name_var.get().strip()
         
         if not new_key:
-            messagebox.showwarning("Cảnh báo", "Vui lòng nhập API key!")
+            messagebox.showwarning(_('warning'), _('please_enter_api_key'))
             return
         
         if not model:
@@ -365,7 +363,7 @@ class ApiKeyTab:
                                 break
         
         if add_btn:
-            add_btn.config(text="🔄 Đang kiểm tra...", state='disabled')
+            add_btn.config(text=_('checking'), state='disabled')
         
         def validate_and_add():
             """Validate API key trong background thread"""
@@ -378,14 +376,14 @@ class ApiKeyTab:
                     """Hiển thị kết quả validation trong main thread"""
                     # Restore button
                     if add_btn:
-                        add_btn.config(text="➕ Thêm Key", state='normal')
+                        add_btn.config(text=_('add_key'), state='normal')
                     
                     # Show validation result
                     if validation_info["type"] == "success":
                         # API key valid - proceed to add
                         proceed = messagebox.askquestion(
                             validation_info["title"],
-                            validation_info["message"] + "\n\nBạn có muốn lưu API key này không?",
+                            validation_info["message"] + f"\n\n{_('confirm_save_api_key')}",
                             icon='question'
                         )
                         
@@ -396,7 +394,7 @@ class ApiKeyTab:
                         # API key có issue nhưng có thể save
                         proceed = messagebox.askyesno(
                             validation_info["title"],
-                            validation_info["message"] + "\n\nBạn vẫn muốn lưu API key này không?",
+                            validation_info["message"] + f"\n\n{_('confirm_save_still')}",
                             icon='warning'
                         )
                         
@@ -416,8 +414,8 @@ class ApiKeyTab:
             except Exception as e:
                 def show_error():
                     if add_btn:
-                        add_btn.config(text="➕ Thêm Key", state='normal')
-                    messagebox.showerror("Lỗi", f"Không thể kiểm tra API key: {str(e)}")
+                        add_btn.config(text=_('add_key'), state='normal')
+                    messagebox.showerror(_('error'), f"{_('cannot_check_api_key')} {str(e)}")
                 
                 self.frame.after(0, show_error)
         
@@ -432,11 +430,13 @@ class ApiKeyTab:
             provider = AIProvider(provider_str)
             
             if api_key_manager.add_key(new_key, provider, model, name):
-                messagebox.showinfo("✅ Thành công!", 
-                    f"Đã thêm API key {provider_str.upper()} mới!\n\n"
-                    f"📋 Provider: {provider_str.title()}\n"
-                    f"🤖 Model: {model}\n"
-                    f"📝 Tên: {name or f'{provider_str.title()} Key'}")
+                messagebox.showinfo(f"✅ {_('success')}!", 
+                    _('added_api_key_success').format(
+                        provider=provider_str.upper(),
+                        provider_title=provider_str.title(),
+                        model=model,
+                        name=name or f'{provider_str.title()} Key'
+                    ))
                 
                 # Clear form
                 self.new_key_entry.delete(0, 'end')
@@ -444,10 +444,10 @@ class ApiKeyTab:
                 self.name_var.set('')
                 self.refresh_api_keys()
             else:
-                messagebox.showerror("Lỗi", "API key đã tồn tại trong hệ thống!")
+                messagebox.showerror(_('error'), _('api_key_exists'))
                 
         except ValueError:
-            messagebox.showerror("Lỗi", f"Provider '{provider_str}' không được hỗ trợ!")
+            messagebox.showerror(_('error'), _('provider_not_supported').format(provider=provider_str))
     
     def remove_api_key(self):
         """Xóa API key đã chọn"""
@@ -455,19 +455,19 @@ class ApiKeyTab:
         
         selection = self.api_key_tree.selection()
         if not selection:
-            messagebox.showwarning("Chưa chọn", "Vui lòng chọn API key cần xóa!")
+            messagebox.showwarning(_('warning'), _('please_select_api_key_to_delete'))
             return
         
         # Get item data
         item = selection[0]
         index = self.api_key_tree.index(item)
         
-        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa API key này?"):
+        if messagebox.askyesno(_('confirm'), _('confirm_delete_api_key')):
             if api_key_manager.remove_key(index):
                 self.refresh_api_keys()
-                messagebox.showinfo("Thành công", "API key đã được xóa!")
+                messagebox.showinfo(_('success'), _('api_key_deleted'))
             else:
-                messagebox.showerror("Lỗi", "Không thể xóa API key!")
+                messagebox.showerror(_('error'), _('cannot_delete_api_key'))
     
     def set_active_key(self):
         """Đặt key được chọn làm active"""
@@ -475,7 +475,7 @@ class ApiKeyTab:
         
         selection = self.api_key_tree.selection()
         if not selection:
-            messagebox.showwarning("Chưa chọn", "Vui lòng chọn API key cần đặt active!")
+            messagebox.showwarning(_('warning'), _('please_select_api_key_to_activate'))
             return
         
         item = selection[0]
@@ -483,9 +483,9 @@ class ApiKeyTab:
         
         if api_key_manager.set_active_index(index):
             self.refresh_api_keys()
-            messagebox.showinfo("Thành công", "API key đã được đặt làm active!")
+            messagebox.showinfo(_('success'), _('api_key_activated'))
         else:
-            messagebox.showerror("Lỗi", "Không thể đặt API key này làm active!")
+            messagebox.showerror(_('error'), _('cannot_activate_api_key'))
     
     def edit_api_key(self):
         """Chỉnh sửa thông tin API key"""
@@ -493,7 +493,7 @@ class ApiKeyTab:
         
         selection = self.api_key_tree.selection()
         if not selection:
-            messagebox.showwarning("Chưa chọn", "Vui lòng chọn API key cần chỉnh sửa!")
+            messagebox.showwarning(_('warning'), _('please_select_api_key_to_edit'))
             return
         
         item = selection[0]
@@ -503,14 +503,14 @@ class ApiKeyTab:
             # Get key info from manager
             keys = api_key_manager.get_all_keys()
             if index >= len(keys):
-                messagebox.showerror("Lỗi", "Không thể lấy thông tin API key!")
+                messagebox.showerror(_('error'), _('cannot_get_api_key_info'))
                 return
             
             key_info = keys[index]
             
             # Create edit window đơn giản hơn để tránh lỗi
             edit_win = tk.Toplevel()
-            edit_win.title("Chỉnh sửa API Key")
+            edit_win.title(_('edit_api_key'))
             edit_win.geometry("500x450")
             edit_win.resizable(False, False)
             edit_win.transient(self.main_gui.root)
@@ -534,7 +534,7 @@ class ApiKeyTab:
             
             # Form fields
             # Provider
-            ttk.Label(main_frame, text='Provider:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
+            ttk.Label(main_frame, text=_('provider'), font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             provider_var = tk.StringVar(value=key_info.provider.value)
             provider_combo = ttk.Combobox(main_frame, textvariable=provider_var, 
                                         values=['gemini', 'chatgpt', 'copilot', 'deepseek', 'claude'],
@@ -562,7 +562,7 @@ class ApiKeyTab:
             
             # Status
             status_var = tk.BooleanVar(value=key_info.is_active)
-            status_check = ttk.Checkbutton(main_frame, text='Hoạt động', variable=status_var)
+            status_check = ttk.Checkbutton(main_frame, text=_('active_status'), variable=status_var)
             status_check.pack(anchor='w', pady=10)
             
             # Update model list based on provider
@@ -596,15 +596,15 @@ class ApiKeyTab:
                     
                     # Validate inputs
                     if not new_key:
-                        messagebox.showwarning("Cảnh báo", "API key không được để trống!")
+                        messagebox.showwarning(_('warning'), _('api_key_empty'))
                         return
                     
                     if len(new_key) < 10:
-                        messagebox.showwarning("Cảnh báo", "API key quá ngắn! Vui lòng kiểm tra lại.")
+                        messagebox.showwarning(_('warning'), _('api_key_too_short'))
                         return
                     
                     # Disable save button during validation
-                    save_btn.configure(state='disabled', text='🔄 Đang kiểm tra...')
+                    save_btn.configure(state='disabled', text=_('checking'))
                     cancel_btn.configure(state='disabled')
                     
                     def validate_and_save():
@@ -630,8 +630,8 @@ class ApiKeyTab:
                                     if validation_info["type"] == "success":
                                         # API key valid - proceed to save
                                         proceed = messagebox.askquestion(
-                                            "Xác thực thành công",
-                                            f"{validation_info['message']}\n\nBạn có muốn lưu thay đổi không?",
+                                            _('validation_success'),
+                                            f"{validation_info['message']}\n\n{_('confirm_save_changes')}",
                                             icon='question'
                                         )
                                         
@@ -642,7 +642,7 @@ class ApiKeyTab:
                                         # API key có issue nhưng có thể save
                                         proceed = messagebox.askyesno(
                                             validation_info["title"],
-                                            f"{validation_info['message']}\n\nBạn vẫn muốn lưu thay đổi không?",
+                                            f"{validation_info['message']}\n\n{_('confirm_save_changes_anyway')}",
                                             icon='warning'
                                         )
                                         
@@ -653,7 +653,7 @@ class ApiKeyTab:
                                         # API key invalid - không save
                                         messagebox.showerror(
                                             validation_info["title"],
-                                            f"{validation_info['message']}\n\nVui lòng kiểm tra lại API key."
+                                            f"{validation_info['message']}\n\n{_('check_api_key_again')}"
                                         )
                                 
                                 # Schedule validation result handling in main thread
@@ -671,7 +671,7 @@ class ApiKeyTab:
                             def show_validation_error():
                                 save_btn.configure(state='normal', text='💾 Lưu')
                                 cancel_btn.configure(state='normal')
-                                messagebox.showerror("Lỗi xác thực", f"Không thể kiểm tra API key: {str(e)}")
+                                messagebox.showerror(_('validation_error_title'), f"{_('cannot_check_api_key_validation')} {str(e)}")
                             
                             edit_win.after(0, show_validation_error)
                     
@@ -691,21 +691,21 @@ class ApiKeyTab:
                                 key_info.last_error = ""
                             
                             api_key_manager.save_keys()
-                            messagebox.showinfo("✅ Thành công", "API key đã được cập nhật thành công!")
+                            messagebox.showinfo(f"✅ {_('success')}", _('api_key_updated_success'))
                             edit_win.destroy()
                             self.refresh_api_keys()
                             
                         except Exception as e:
-                            messagebox.showerror("Lỗi", f"Không thể lưu thay đổi: {e}")
+                            messagebox.showerror(_('error'), f"{_('cannot_save_changes')} {e}")
                     
                     # Start validation in background
                     import threading
                     threading.Thread(target=validate_and_save, daemon=True).start()
                     
                 except ValueError:
-                    messagebox.showerror("Lỗi", "Provider không hợp lệ!")
+                    messagebox.showerror(_('error'), _('invalid_provider'))
                 except Exception as e:
-                    messagebox.showerror("Lỗi", f"Không thể cập nhật: {e}")
+                    messagebox.showerror(_('error'), f"{_('cannot_update')} {e}")
             
             # Buttons
             save_btn = ttk.Button(button_frame, text='💾 Lưu', command=save_changes)
@@ -715,7 +715,7 @@ class ApiKeyTab:
             cancel_btn.pack(side='left')
             
         except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể mở form chỉnh sửa: {e}")
+            messagebox.showerror(_('error'), f"{_('cannot_open_edit_form')} {e}")
     
     def refresh_api_keys(self):
         """Làm mới danh sách API keys"""
@@ -738,11 +738,11 @@ class ApiKeyTab:
             
             # Status with failure info
             if not key_info.is_active:
-                status = "❌ Vô hiệu"
+                status = _('status_disabled')
             elif key_info.failed_count > 0:
-                status = f"⚠️ Lỗi {key_info.failed_count}"
+                status = f"{_('status_error')} {key_info.failed_count}"
             else:
-                status = "✅ Hoạt động"
+                status = _('status_active')
             
             # Masked key
             masked_key = f"...{key_info.key[-8:]}" if len(key_info.key) > 8 else key_info.key
@@ -762,11 +762,11 @@ class ApiKeyTab:
         if keys:
             active_key = api_key_manager.get_active_key()
             if active_key:
-                status_text = f"✅ Key active: {active_key.provider.value.title()} - {active_key.model}"
+                status_text = f"{_('key_active_status')} {active_key.provider.value.title()} - {active_key.model}"
             else:
-                status_text = "⚠️ Không có key nào được đặt active"
+                status_text = _('no_active_key')
         else:
-            status_text = "Chưa có API key nào"
+            status_text = _('no_api_keys')
         
         self.key_status_label.config(text=status_text)
         
@@ -876,3 +876,8 @@ class ApiKeyTab:
                 
         except Exception as e:
             print(f"Error in auto-resize columns: {e}")
+    
+    def refresh_language(self):
+        """Refresh UI text when language changes"""
+        # Không cần rebuild vì GUI đã recreate tabs rồi
+        pass
