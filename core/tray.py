@@ -1,5 +1,4 @@
 import pystray
-from pystray import mouse
 from PIL import Image, ImageDraw
 import threading
 import os
@@ -224,12 +223,33 @@ def create_tray_icon(root, app):
     # Thêm click handler trực tiếp cho pystray
     def on_click(icon, button, time):
         """Handler cho click events của pystray"""
-        if button == mouse.Button.left:
-            print("🖱️ Tray: pystray left-click detected")
-            try:
+        # Debug: in ra type và value của button
+        print(f"🔍 Tray: Click detected - button: {button}, type: {type(button)}")
+        
+        # Kiểm tra left click bằng cách so sánh với string hoặc value
+        try:
+            # Method 1: So sánh string representation
+            if "left" in str(button).lower():
+                print("🖱️ Tray: pystray left-click detected (string match)")
                 toggle_floating_button()
-            except Exception as e:
-                print(f"❌ Tray: Error in pystray click handler: {e}")
+                return
+            
+            # Method 2: So sánh với enum value nếu có
+            if hasattr(button, 'name') and button.name == 'left':
+                print("🖱️ Tray: pystray left-click detected (enum name)")
+                toggle_floating_button()
+                return
+                
+            # Method 3: So sánh value number (left = 1, right = 2 thường)
+            if hasattr(button, 'value') and button.value == 1:
+                print("🖱️ Tray: pystray left-click detected (enum value)")
+                toggle_floating_button()
+                return
+                
+            print(f"🖱️ Tray: Other click detected - {button}")
+            
+        except Exception as e:
+            print(f"❌ Tray: Error in pystray click handler: {e}")
     
     # Gán click handler
     try:

@@ -11,7 +11,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     import pystray
-    from pystray import mouse
     from PIL import Image, ImageDraw
     import threading
     
@@ -25,10 +24,15 @@ try:
 
     def on_click(icon, button, time):
         """Test click handler"""
-        if button == mouse.Button.left:
+        print(f"🔍 Click detected - button: {button}, type: {type(button)}")
+        
+        # Kiểm tra left/right click
+        if "left" in str(button).lower():
             print("✅ LEFT CLICK DETECTED! Function works!")
-        elif button == mouse.Button.right:
+        elif "right" in str(button).lower():
             print("✅ RIGHT CLICK DETECTED! Menu will show!")
+        else:
+            print(f"✅ OTHER CLICK: {button}")
 
     def on_menu_test():
         print("✅ MENU TEST CLICKED! Menu works!")
