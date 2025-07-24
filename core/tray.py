@@ -111,7 +111,19 @@ def create_tray_icon(root, app):
         try:
             new_image = create_image(floating_button_enabled)
             icon.icon = new_image
-            print(f"🔄 Tray icon updated: floating_button_enabled = {floating_button_enabled}")
+            
+            # Cập nhật menu
+            icon.menu = pystray.Menu(
+                pystray.MenuItem(
+                    f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
+                    menu_toggle_floating
+                ),
+                pystray.Menu.SEPARATOR,
+                pystray.MenuItem(_('tray_show_window'), menu_show_window),
+                pystray.MenuItem(_('tray_exit'), menu_exit)
+            )
+            
+            print(f"🔄 Tray icon and menu updated: floating_button_enabled = {floating_button_enabled}")
         except Exception as e:
             print(f"❌ Error updating tray icon: {e}")
 
@@ -163,32 +175,61 @@ def create_tray_icon(root, app):
     
     def on_left_click(icon, item):
         """Xử lý left-click - Toggle floating button"""
-        print("Tray: Left click detected - Toggling floating button")
-        toggle_floating_button()
+        print("🖱️ Tray: Left click detected - Toggling floating button")
+        try:
+            toggle_floating_button()
+        except Exception as e:
+            print(f"❌ Tray: Error in on_left_click: {e}")
     
     def on_double_click(icon, item):
         """Xử lý double-click - Hiện cửa sổ chính"""
-        print("Tray: Double-click detected - Showing main window")
-        on_show()
+        print("🖱️ Tray: Double-click detected - Showing main window")
+        try:
+            on_show()
+        except Exception as e:
+            print(f"❌ Tray: Error in on_double_click: {e}")
     
     
     # Tạo tray icon với trạng thái hiện tại
     app_version = get_app_version()
+    
+    # Menu items với click handlers
+    def menu_toggle_floating():
+        """Menu item để toggle floating button"""
+        print("📋 Tray Menu: Toggle floating button clicked")
+        toggle_floating_button()
+    
+    def menu_show_window():
+        """Menu item để hiện cửa sổ"""
+        print("📋 Tray Menu: Show window clicked")
+        on_show()
+    
+    def menu_exit():
+        """Menu item để thoát"""
+        print("📋 Tray Menu: Exit clicked")
+        on_quit()
+    
     icon = pystray.Icon(
         f'ITM Translate v{app_version}', 
         create_image(floating_button_enabled), 
         menu=pystray.Menu(
-            pystray.MenuItem(_('tray_show_window'), on_show),
-            pystray.MenuItem(_('tray_exit'), on_quit)
+            pystray.MenuItem(
+                f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
+                menu_toggle_floating
+            ),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem(_('tray_show_window'), menu_show_window),
+            pystray.MenuItem(_('tray_exit'), menu_exit)
         )
     )
     
     def setup_click_handlers():
         """Setup click handlers cho tray icon"""
+        print("🔧 Tray: Setting up click handlers...")
         try:
             if WIN32_AVAILABLE:
                 # Sử dụng Windows API để xử lý tray messages
-                print("Tray: Setting up Windows API handlers")  # Debug log
+                print("🔧 Tray: Setting up Windows API handlers")
                 
                 # Monkey patch pystray's message handling
                 if hasattr(icon, '_listener') and hasattr(icon._listener, '_on_notify'):
@@ -198,43 +239,53 @@ def create_tray_icon(root, app):
                         try:
                             # WM_LBUTTONDBLCLK = 0x203 (double-click chuột trái)
                             if msg == 0x203:
-                                print("Tray: Double-click message received")  # Debug log
+                                print("🖱️ Tray: Double-click message received via Windows API")
                                 on_double_click(icon, None)
                                 return 0
                             elif msg == 0x201:  # WM_LBUTTONDOWN
-                                print("Tray: Single-click message received")  # Debug log
+                                print("🖱️ Tray: Single-click message received via Windows API")
                                 on_left_click(icon, None)
                                 return 0
                         except Exception as e:
-                            print(f"Tray: Error in enhanced_on_notify: {e}")
+                            print(f"❌ Tray: Error in enhanced_on_notify: {e}")
                         
                         # Gọi handler gốc
                         try:
                             return original_on_notify(hwnd, msg, wparam, lparam)
                         except Exception as e:
-                            print(f"Tray: Error in original_on_notify: {e}")
+                            print(f"❌ Tray: Error in original_on_notify: {e}")
                             return 0
                     
                     icon._listener._on_notify = enhanced_on_notify
+                    print("✅ Tray: Windows API handlers installed successfully")
                 else:
-                    print("Tray: Could not find _listener._on_notify")
+                    print("⚠️ Tray: Could not find _listener._on_notify, using fallback")
             else:
-                print("Tray: Windows API not available, using fallback")
+                print("⚠️ Tray: Windows API not available, using fallback")
             
-            # Default action cho double-click
-            def default_action(icon):
-                """Default action khi double-click"""
-                print("Tray: Default action triggered - Showing main window")
-                on_show()
+            # Default action cho single-click (fallback)
+            def default_action(icon, item=None):
+                """Default action khi click"""
+                print("🖱️ Tray: Default action triggered - Toggling floating button")
+                try:
+                    toggle_floating_button()
+                except Exception as e:
+                    print(f"❌ Tray: Error in default_action: {e}")
             
             # Gán default action
             icon.default_action = default_action
-            print("Tray: Default action set")  # Debug log
+            print("✅ Tray: Default action set")
             
         except Exception as e:
-            print(f"Tray: Error in setup_click_handlers: {e}")
+            print(f"❌ Tray: Error in setup_click_handlers: {e}")
             # Fallback minimal
-            icon.default_action = lambda icon: on_show()
+            def minimal_fallback(icon, item=None):
+                print("🖱️ Tray: Minimal fallback action - Toggling floating button")
+                try:
+                    toggle_floating_button()
+                except Exception as e:
+                    print(f"❌ Tray: Error in minimal fallback: {e}")
+            icon.default_action = minimal_fallback
     
     def run():
         """Chạy tray icon"""
@@ -256,8 +307,32 @@ def create_tray_icon(root, app):
     # Thêm method để update icon từ external modules
     icon.update_floating_button_state = lambda enabled: (
         setattr(icon, '_floating_button_enabled', enabled),
-        setattr(icon, 'icon', create_image(enabled)),
-        print(f"🔄 External tray icon update: floating_button_enabled = {enabled}")
+        update_icon_and_menu(enabled)
     )
+    
+    def update_icon_and_menu(enabled):
+        """Update both icon and menu for external calls"""
+        try:
+            # Update internal state
+            nonlocal floating_button_enabled
+            floating_button_enabled = enabled
+            
+            # Update icon
+            icon.icon = create_image(enabled)
+            
+            # Update menu
+            icon.menu = pystray.Menu(
+                pystray.MenuItem(
+                    f"{'✅' if enabled else '❌'} {_('floating_button_toggle')}", 
+                    menu_toggle_floating
+                ),
+                pystray.Menu.SEPARATOR,
+                pystray.MenuItem(_('tray_show_window'), menu_show_window),
+                pystray.MenuItem(_('tray_exit'), menu_exit)
+            )
+            
+            print(f"🔄 External tray icon and menu update: floating_button_enabled = {enabled}")
+        except Exception as e:
+            print(f"❌ Error in external update: {e}")
     
     return icon

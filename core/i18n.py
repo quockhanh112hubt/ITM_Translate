@@ -16,6 +16,9 @@ TRANSLATIONS = {
         # Tray menu
         "tray_show_window": "Hiện cửa sổ",
         "tray_exit": "Thoát",
+        "floating_button_toggle": "Nút dịch nổi",
+        "floating_button_on": "BẬT",
+        "floating_button_off": "TẮT",
         
         # Tab names
         "tab_settings": "Cài đặt",
@@ -493,6 +496,9 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         # Tray menu
         "tray_show_window": "Show Window",
         "tray_exit": "Exit",
+        "floating_button_toggle": "Floating Button",
+        "floating_button_on": "ON",
+        "floating_button_off": "OFF",
         
         # Tab names
         "tab_settings": "Settings",
