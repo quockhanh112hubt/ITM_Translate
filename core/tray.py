@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw
 import threading
 import os
 import sys
+from core.i18n import get_language_manager, _
 
 # Import Windows GUI libraries for advanced tray handling
 try:
@@ -91,8 +92,8 @@ def create_tray_icon(root, app):
     # Tạo tray icon với menu (có version trong title)
     app_version = get_app_version()
     icon = pystray.Icon(f'ITM Translate v{app_version}', create_image(), menu=pystray.Menu(
-        pystray.MenuItem('Hiện cửa sổ', on_show, default=True),  # Đặt làm default action
-        pystray.MenuItem('Thoát', on_quit)
+        pystray.MenuItem(_('tray_show_window'), on_show, default=True),  # Đặt làm default action
+        pystray.MenuItem(_('tray_exit'), on_quit)
     ))
     
     def setup_click_handlers():

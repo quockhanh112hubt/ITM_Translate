@@ -118,16 +118,16 @@ class MainGUI:
     def on_tab_changed(self, event):
         """Xử lý sự kiện chuyển tab và tự động điều chỉnh kích thước cửa sổ"""
         selected_tab = event.widget.select()
-        tab_text = event.widget.tab(selected_tab, "text")
+        tab_index = event.widget.index(selected_tab)
         
-        # Điều chỉnh kích thước cửa sổ theo tab được chọn
-        if tab_text == "Cài Đặt":
+        # Điều chỉnh kích thước cửa sổ theo tab được chọn (sử dụng index thay vì text)
+        if tab_index == 0:  # Settings tab
             # Tab Cài Đặt: kích thước mặc định hoặc mở rộng nếu có Group 2
             if hasattr(self, 'group2_visible') and self.group2_visible:
                 self.root.geometry('1070x650')
             else:
                 self.root.geometry('1070x440')
-        elif tab_text == "Quản lý API KEY":
+        elif tab_index == 1:  # API Keys tab
             # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
             self.root.geometry('1070x860')
             # Tự động làm mới danh sách API keys khi chuyển sang tab này
@@ -136,7 +136,7 @@ class MainGUI:
                     self.refresh_api_keys()
             except Exception as e:
                 print(f"Warning: Could not auto-refresh API keys: {e}")
-        elif tab_text == "Nâng Cao":
+        elif tab_index == 2:  # Advanced tab
             # Tab Nâng Cao: kích thước nhỏ gọn
             self.root.geometry('1070x350')
         

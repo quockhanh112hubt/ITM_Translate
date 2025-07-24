@@ -10,6 +10,7 @@ import threading
 import zipfile
 import shutil
 from datetime import datetime
+from core.i18n import get_language_manager, _
 
 class Updater:
     def __init__(self, current_version="1.0.0"):
@@ -81,7 +82,7 @@ class Updater:
                 if self.download_url and self._compare_versions(self.new_version, self.current_version) > 0:
                     return True, self.new_version, release_data.get('body', 'Cập nhật mới có sẵn')
                 else:
-                    return False, self.current_version, "Bạn đang sử dụng phiên bản mới nhất"
+                    return False, self.current_version, _("already_latest_version")
             elif response.status_code == 404:
                 # Repository không tồn tại hoặc không có quyền truy cập
                 if github_token:
@@ -99,7 +100,7 @@ class Updater:
                 return False, None, f"Không thể kết nối đến GitHub.\nKiểm tra kết nối internet hoặc GitHub có bị chặn.\nLỗi: {error_msg}"
             return False, None, f"Lỗi kết nối: {error_msg}"
         except Exception as e:
-            return False, None, f"Lỗi kiểm tra cập nhật: {str(e)}"
+            return False, None, f"{_('update_check_error')} {str(e)}"
     
     def _compare_versions(self, v1, v2):
         """So sánh 2 version string (1.0.0 format)"""
@@ -361,7 +362,7 @@ class UpdateDialog:
     def show_dialog(self, has_update, new_version, changelog):
         """Hiển thị dialog cập nhật"""
         self.dialog = tk.Toplevel(self.parent)
-        self.dialog.title("ITM Translate - Kiểm tra cập nhật")
+        self.dialog.title(_("update_check_title"))
         self.dialog.geometry("500x500")
         self.dialog.resizable(False, False)
         self.dialog.transient(self.parent)
@@ -434,7 +435,7 @@ class UpdateDialog:
             
         else:
             # No update available
-            title_label = tk.Label(main_frame, text="✅ Đã cập nhật!", 
+            title_label = tk.Label(main_frame, text=_("update_available_title"), 
                                  font=('Segoe UI', 16, 'bold'), fg='#1976d2')
             title_label.pack(pady=(50, 20))
             
@@ -522,7 +523,7 @@ class UpdateDialog:
                                    "Khởi động lại ngay để áp dụng phiên bản mới?\n\n" +
                                    "• YES: Khởi động lại ứng dụng ngay\n" +
                                    "• NO: Tiếp tục sử dụng, khởi động lại sau\n\n" +
-                                   "Lưu ý: Luôn sử dụng phiên bản mới nhất để đảm bảo có trải nghiệm tốt.\n",
+                                   _("update_note"),
                                    parent=self.dialog)
         if result:  # YES - Restart now
             try:

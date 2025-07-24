@@ -7,6 +7,7 @@ import tkinter as tk
 import webbrowser
 import json
 import os
+from core.i18n import get_language_manager, _
 
 
 class AboutDialog:
@@ -118,62 +119,11 @@ class AboutDialog:
     
     def _insert_about_content(self, version_info, build_info, release_date):
         """Chèn nội dung about vào text widget"""
-        about_text = f"""
-🚀 TRÌNH QUẢN LÝ DỊCH THUẬT THÔNG MINH
-Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
-
-📋 CÁC TÍNH NĂNG CHÍNH:
-├─ Chọn và dịch văn bản thông minh
-├─ Dịch nhanh tức thì bằng phím tắt
-├─ Thay thế văn bản theo thời gian thực
-├─ Tự động nhận diện ngôn ngữ bằng AI (Hỗ trợ ngôn ngữ pha trộn)
-├─ Nhóm ngôn ngữ kép với phím tắt tuỳ chỉnh
-└─ Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
-
-⭐ TÍNH NĂNG NÂNG CAO:
-├─ Tích hợp AI cho kết quả dịch chính xác
-├─ Tự động phát hiện ngôn ngữ gốc
-├─ Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
-├─ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
-├─ Ghi nhớ thiết lập và sao lưu tự động
-└─ Quản lý khóa API an toàn
-
-🔧 TÍCH HỢP HỆ THỐNG:
-├─ Tự khởi động cùng Windows
-├─ Chạy nền trong khay hệ thống
-├─ Tối ưu hiệu suất sử dụng bộ nhớ
-├─ Hỗ trợ phím tắt toàn cục (Dùng được trong mọi ứng dụng)
-└─ Bảo vệ khỏi khởi động nhiều phiên bản
-
-🔄 HỆ THỐNG CẬP NHẬT:
-├─ Cập nhật tự động/thủ công dựa trên phiên bản mới nhất
-├─ Cập nhật nền yên lặng với quyền quản trị viên
-├─ Cơ chế cập nhật dựa trên kết nối GitHub
-└─ Di chuyển phiên bản mượt mà
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 THÔNG TIN PHIÊN BẢN:
-├─ Phiên bản: {version_info}
-├─ Bản dựng: {build_info}
-├─ Ngày phát hành: {release_date}
-└─ Kiến trúc: Windows x64
-
-👥 ĐỘI NGŨ PHÁT TRIỂN:
-├─ Lập trình viên: KhanhIT – Nhóm ITM
-├─ Tích hợp AI: Sử dụng API Gemini
-├─ Thiết kế UI/UX: Giao diện hiện đại với Bootstrap
-└─ Đảm bảo chất lượng: Kiểm thử chuẩn doanh nghiệp
-
-🏢 CÔNG TY:
-Công ty TNHH ITM Semiconductor Việt Nam
-🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
-📧 Hỗ trợ: Liên hệ đội IT ITM Việt Nam, 2025
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 MỤC TIÊU ỨNG DỤNG
-Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thông minh ngay trong tầm tay
-
-© 2025 Công ty TNHH ITM Semiconductor Việt Nam. Bảo lưu mọi quyền."""
+        about_text = _("about_content").format(
+            version_info=version_info,
+            build_info=build_info,
+            release_date=release_date
+        )
         
         # Insert content với màu sắc sinh động cho cả icon và text
         lines = about_text.split('\n')
@@ -246,7 +196,7 @@ Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thô
         """Copy version info to clipboard"""
         self.about_window.clipboard_clear()
         self.about_window.clipboard_append(f"ITM Translate v{version_info} (Build: {build_info})")
-        tk.messagebox.showinfo("✅ Đã sao chép", "Thông tin phiên bản đã được sao chép vào clipboard!")
+        tk.messagebox.showinfo(_("about_copied"), _("about_copied_message"))
     
     def _open_github(self):
         """Open GitHub repository"""

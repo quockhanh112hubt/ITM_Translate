@@ -7,6 +7,7 @@ import tkinter as tk
 import webbrowser
 import os
 import sys
+from core.i18n import get_language_manager, _
 
 
 class HelpDialog:
@@ -226,130 +227,7 @@ class HelpDialog:
     
     def _get_help_content(self):
         """Trả về nội dung help"""
-        return """
-🔧 A. CÀI ĐẶT API KEYS - MULTI PROVIDER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 LƯU Ý QUAN TRỌNG: Bạn cần có ít nhất 1 API key từ bất kỳ provider nào để sử dụng ITM Translate.
-
-🤖 1. GOOGLE GEMINI (KHUYẾN NGHỊ - MIỄN PHÍ):
-Bước 1: Truy cập Google AI Studio
-- Mở: https://aistudio.google.com/
-- Đăng nhập bằng tài khoản Google
-
-Bước 2: Tạo API Key
-- Click "Get API key" → "Create API key in new project"
-- Sao chép key (bắt đầu bằng "AIza...")
-- Add vào tab "Quản lý API KEY" trong ứng dụng
-• Chi phí: Đây là key miễn phí với giới hạn 15 requests/phút
-
-🧠 2. OPENAI CHATGPT (TRẢ PHÍ):
-- Vào: https://platform.openai.com/api-keys
-- Tạo API key mới
-- Models: gpt-4o, gpt-4, gpt-3.5-turbo
-• Chi phí: ~$0.01-0.06 per 1000 tokens
-
-🎭 3. ANTHROPIC CLAUDE (TRẢ PHÍ):
-- Vào: https://console.anthropic.com/
-- Tạo API key
-- Models: claude-3.5-sonnet, claude-3-opus
-• Có free tier hạn chế
-
-🐙 4. GITHUB COPILOT:
-- Cần GitHub Copilot subscription
-- Sử dụng GitHub personal access token
-• Chỉ dành cho token từ Copilot, không phải GitHub API key
-
-🌊 5. DEEPSEEK (GIÁ RẺ):
-- Vào: https://platform.deepseek.com/
-- Models: deepseek-chat, deepseek-coder
-• Có free tier hạn chế
-
-💡 KHUYẾN NGHỊ:
-• Bắt đầu với Gemini (miễn phí)
-• Thêm 2-3 providers khác để tăng độ tin cậy
-• Sử dụng priority system để ưu tiên provider yêu thích
-
-
-📋 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bước 1: Mở tab "Quản lý API KEY"
-- Hiển thị trạng thái real-time của từng key
-
-Bước 2: Thêm Key mới
-- Chọn Provider từ danh sách
-- Chọn Model (hoặc để "auto")
-- Nhập tên key (tùy chọn)
-- Dán API key vào ô "API Key"
-- Click "➕ Thêm Key"
-
-Bước 3: Hệ thống tự động validate
-- Kiểm tra key trong background
-- Thông báo nếu key hợp lệ
-- Cảnh báo nếu key có vấn đề
-
-
-🚀 C. CÁCH SỬ DỤNG DỊCH THUẬT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bước 1: Chọn văn bản
-- Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào
-- Hoạt động với: Word, Chrome, Email, Chat apps, PDFs...
-
-Bước 2: Sử dụng phím tắt
-- Dịch POPUP: Ctrl+Q (mặc định)
-- Dịch THAY THẾ: Ctrl+D (mặc định)
-
-Bước 3: Hệ thống AI xử lý
-- Tự động chọn provider tối ưu
-- AI detect ngôn ngữ nguồn
-- Retry thông minh nếu gặp lỗi
-- Hiển thị kết quả < 2 giây
-
-
-⭐ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Nhóm mặc định (Công việc chính):
-- Dịch popup: Ctrl+Q 
-- Dịch thay thế: Ctrl+D
-- Ngôn ngữ: Any Language → Tiếng Việt → English
-
-Nhóm tùy chỉnh (Học tập/Dự án):
-- Dịch popup: Ctrl+1
-- Dịch thay thế: Ctrl+2  
-- Ngôn ngữ: Tùy chỉnh theo nhu cầu
-
-💡 MẸO HOTKEYS:
-• Tránh các phím F1-F12, hoặc phím hệ thống
-• Không dùng phím đã có ứng dụng khác sử dụng
-
-
-🔧 E. TROUBLESHOOTING & OPTIMIZATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 XỬ LÝ SỰ CỐ THÔNG DỤNG:
-
-❌ API Keys không hoạt động:
-- Kiểm tra tab "Quản lý API KEY" → Status column
-- Thêm backup keys từ providers khác  
-- Restart app nếu cần thiết
-
-⌨️ Hotkeys bị conflict:
-- Chạy với quyền Administrator
-- Đổi hotkey combination khác
-- Kiểm tra apps khác có dùng hotkey tương tự
-
-🌐 Translation fails:
-- Hệ thống tự retry với provider khác
-- Check kết nối internet
-- Verify API quotas chưa hết
-
-⚡ Performance tối ưu:
-- Sử dụng 2-3 providers
-- Giữ text length < 4000 ký tự
-
-💡 PRO TIPS:
-• Gemini: Tốt nhất cho hầu hết ngôn ngữ, tự nhiên
-• ChatGPT: Tốt cho dịch kỹ thuật, công nghệ
-• Setup priority: Gemini → ChatGPT → Claude
-"""
+        return _("help_content")
     
     # Provider URL opening methods
     def _open_gemini_studio(self):
@@ -372,4 +250,4 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         help_content = self._get_help_content()
         self.help_window.clipboard_clear()
         self.help_window.clipboard_append(help_content)
-        tk.messagebox.showinfo("✅ Đã sao chép", "Hướng dẫn Multi-AI đã được sao chép vào clipboard!")
+        tk.messagebox.showinfo(_("help_copied"), _("help_copied_message"))

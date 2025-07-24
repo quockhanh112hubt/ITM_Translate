@@ -13,6 +13,10 @@ TRANSLATIONS = {
         # Window title
         "app_title": "ITM Translate v1.2.3",
         
+        # Tray menu
+        "tray_show_window": "Hiện cửa sổ",
+        "tray_exit": "Thoát",
+        
         # Tab names
         "tab_settings": "Cài đặt",
         "tab_api_keys": "Quản lý API KEY",
@@ -35,7 +39,7 @@ TRANSLATIONS = {
         "group2_second_language": "Ngôn ngữ thứ 2:",
         "group2_third_language": "Ngôn ngữ thứ 3:",
         "auto_save_option": "Hiện tùy chọn tự chỉnh",
-        "save_close_settings": "Lưu & Khép Cửa Sổ Cài Đặt",
+        "save_close_settings": "Lưu",
         "cancel": "Hủy bỏ",
         "close": "Đóng",
         "ok": "Đồng ý",
@@ -132,7 +136,7 @@ TRANSLATIONS = {
         "shortcuts_group1": "Tuỳ chọn mặc định",
         "auto_choose_hint": "Tuỳ chọn mặc định. Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3",
         "settings_not_initialized": "Settings tab component chưa được khởi tạo",
-        "save_close_settings": "Lưu & Đóng Cài Đặt",
+        "save_close_settings": "Lưu",
         "cancel": "Hủy bỏ",
         
         # API Key tab translations
@@ -202,6 +206,198 @@ TRANSLATIONS = {
         "invalid_provider": "Provider không hợp lệ!",
         "cannot_update": "Không thể cập nhật:",
         "cannot_open_edit_form": "Không thể mở form chỉnh sửa:",
+        
+        # Updater messages
+        "update_check_title": "ITM Translate - Kiểm tra cập nhật",
+        "update_available_title": "✅ Đã cập nhật!",
+        "already_latest_version": "Bạn đang sử dụng phiên bản mới nhất",
+        "update_check_error": "Lỗi kiểm tra cập nhật:",
+        "update_note": "Lưu ý: Luôn sử dụng phiên bản mới nhất để đảm bảo có trải nghiệm tốt.\n",
+        
+        # About Dialog
+        "about_copied": "✅ Đã sao chép",
+        "about_copied_message": "Thông tin phiên bản đã được sao chép vào clipboard!",
+        "about_content": """🚀 TRÌNH QUẢN LÝ DỊCH THUẬT THÔNG MINH
+Công cụ dịch thuật chuyên nghiệp sử dụng AI dành cho Windows
+
+📋 CÁC TÍNH NĂNG CHÍNH:
+├─ Chọn và dịch văn bản thông minh
+├─ Dịch nhanh tức thì bằng phím tắt
+├─ Thay thế văn bản theo thời gian thực
+├─ Tự động nhận diện ngôn ngữ bằng AI (Hỗ trợ ngôn ngữ pha trộn)
+├─ Nhóm ngôn ngữ kép với phím tắt tuỳ chỉnh
+└─ Hỗ trợ hơn 10 ngôn ngữ (Anh, Việt, Hàn, Trung, Nhật, Pháp, Đức, Nga, Tây Ban Nha, Thái...)
+
+⭐ TÍNH NĂNG NÂNG CAO:
+├─ Tích hợp AI cho kết quả dịch chính xác
+├─ Tự động phát hiện ngôn ngữ gốc
+├─ Dịch theo ngữ cảnh (Giữ nguyên ý nghĩa và giọng điệu)
+├─ Tuỳ chỉnh phím tắt linh hoạt (Kết hợp Ctrl/Alt/Shift)
+├─ Ghi nhớ thiết lập và sao lưu tự động
+└─ Quản lý khóa API an toàn
+
+🔧 TÍCH HỢP HỆ THỐNG:
+├─ Tự khởi động cùng Windows
+├─ Chạy nền trong khay hệ thống
+├─ Tối ưu hiệu suất sử dụng bộ nhớ
+├─ Hỗ trợ phím tắt toàn cục (Dùng được trong mọi ứng dụng)
+└─ Bảo vệ khỏi khởi động nhiều phiên bản
+
+🔄 HỆ THỐNG CẬP NHẬT:
+├─ Cập nhật tự động/thủ công dựa trên phiên bản mới nhất
+├─ Cập nhật nền yên lặng với quyền quản trị viên
+├─ Cơ chế cập nhật dựa trên kết nối GitHub
+└─ Di chuyển phiên bản mượt mà
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 THÔNG TIN PHIÊN BẢN:
+├─ Phiên bản: {version_info}
+├─ Bản dựng: {build_info}
+├─ Ngày phát hành: {release_date}
+└─ Kiến trúc: Windows x64
+
+👥 ĐỘI NGŨ PHÁT TRIỂN:
+├─ Lập trình viên: KhanhIT – Nhóm ITM
+├─ Tích hợp AI: Sử dụng API Gemini
+├─ Thiết kế UI/UX: Giao diện hiện đại với Bootstrap
+└─ Đảm bảo chất lượng: Kiểm thử chuẩn doanh nghiệp
+
+🏢 CÔNG TY:
+Công ty TNHH ITM Semiconductor Việt Nam
+🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
+📧 Hỗ trợ: Liên hệ đội IT ITM Việt Nam, 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 MỤC TIÊU ỨNG DỤNG
+Tăng hiệu suất làm việc của bạn với công cụ dịch thuật thông minh ngay trong tầm tay
+
+© 2025 Công ty TNHH ITM Semiconductor Việt Nam. Bảo lưu mọi quyền.""",
+        
+        # Help Dialog
+        "help_copied": "✅ Đã sao chép",
+        "help_copied_message": "Hướng dẫn Multi-AI đã được sao chép vào clipboard!",
+        "help_content": """🔧 A. CÀI ĐẶT API KEYS - MULTI PROVIDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 LƯU Ý QUAN TRỌNG: Bạn cần có ít nhất 1 API key từ bất kỳ provider nào để sử dụng ITM Translate.
+
+🤖 1. GOOGLE GEMINI (KHUYẾN NGHỊ - MIỄN PHÍ):
+Bước 1: Truy cập Google AI Studio
+- Mở: https://aistudio.google.com/
+- Đăng nhập bằng tài khoản Google
+
+Bước 2: Tạo API Key
+- Click "Get API key" → "Create API key in new project"
+- Sao chép key (bắt đầu bằng "AIza...")
+- Add vào tab "Quản lý API KEY" trong ứng dụng
+• Chi phí: Đây là key miễn phí với giới hạn 15 requests/phút
+
+🧠 2. OPENAI CHATGPT (TRẢ PHÍ):
+- Vào: https://platform.openai.com/api-keys
+- Tạo API key mới
+- Models: gpt-4o, gpt-4, gpt-3.5-turbo
+• Chi phí: ~$0.01-0.06 per 1000 tokens
+
+🎭 3. ANTHROPIC CLAUDE (TRẢ PHÍ):
+- Vào: https://console.anthropic.com/
+- Tạo API key
+- Models: claude-3.5-sonnet, claude-3-opus
+• Có free tier hạn chế
+
+🐙 4. GITHUB COPILOT:
+- Cần GitHub Copilot subscription
+- Sử dụng GitHub personal access token
+• Chỉ dành cho token từ Copilot, không phải GitHub API key
+
+🌊 5. DEEPSEEK (GIÁ RẺ):
+- Vào: https://platform.deepseek.com/
+- Models: deepseek-chat, deepseek-coder
+• Có free tier hạn chế
+
+💡 KHUYẾN NGHỊ:
+• Bắt đầu với Gemini (miễn phí)
+• Thêm 2-3 providers khác để tăng độ tin cậy
+• Sử dụng priority system để ưu tiên provider yêu thích
+
+
+📋 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bước 1: Mở tab "Quản lý API KEY"
+- Hiển thị trạng thái real-time của từng key
+
+Bước 2: Thêm Key mới
+- Chọn Provider từ danh sách
+- Chọn Model (hoặc để "auto")
+- Nhập tên key (tùy chọn)
+- Dán API key vào ô "API Key"
+- Click "➕ Thêm Key"
+
+Bước 3: Hệ thống tự động validate
+- Kiểm tra key trong background
+- Thông báo nếu key hợp lệ
+- Cảnh báo nếu key có vấn đề
+
+
+🚀 C. CÁCH SỬ DỤNG DỊCH THUẬT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bước 1: Chọn văn bản
+- Bôi đen đoạn văn bản trong bất kỳ ứng dụng nào
+- Hoạt động với: Word, Chrome, Email, Chat apps, PDFs...
+
+Bước 2: Sử dụng phím tắt
+- Dịch POPUP: Ctrl+Q (mặc định)
+- Dịch THAY THẾ: Ctrl+D (mặc định)
+
+Bước 3: Hệ thống AI xử lý
+- Tự động chọn provider tối ưu
+- AI detect ngôn ngữ nguồn
+- Retry thông minh nếu gặp lỗi
+- Hiển thị kết quả < 2 giây
+
+
+⭐ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nhóm mặc định (Công việc chính):
+- Dịch popup: Ctrl+Q 
+- Dịch thay thế: Ctrl+D
+- Ngôn ngữ: Any Language → Tiếng Việt → English
+
+Nhóm tùy chỉnh (Học tập/Dự án):
+- Dịch popup: Ctrl+1
+- Dịch thay thế: Ctrl+2  
+- Ngôn ngữ: Tùy chỉnh theo nhu cầu
+
+💡 MẸO HOTKEYS:
+• Tránh các phím F1-F12, hoặc phím hệ thống
+• Không dùng phím đã có ứng dụng khác sử dụng
+
+
+🔧 E. TROUBLESHOOTING & OPTIMIZATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 XỬ LÝ SỰ CỐ THÔNG DỤNG:
+
+❌ API Keys không hoạt động:
+- Kiểm tra tab "Quản lý API KEY" → Status column
+- Thêm backup keys từ providers khác  
+- Restart app nếu cần thiết
+
+⌨️ Hotkeys bị conflict:
+- Chạy với quyền Administrator
+- Đổi hotkey combination khác
+- Kiểm tra apps khác có dùng hotkey tương tự
+
+🌐 Translation fails:
+- Hệ thống tự retry với provider khác
+- Check kết nối internet
+- Verify API quotas chưa hết
+
+⚡ Performance tối ưu:
+- Sử dụng 2-3 providers
+- Giữ text length < 4000 ký tự
+
+💡 PRO TIPS:
+• Gemini: Tốt nhất cho hầu hết ngôn ngữ, tự nhiên
+• ChatGPT: Tốt cho dịch kỹ thuật, công nghệ
+• Setup priority: Gemini → ChatGPT → Claude""",
         "no_active_key": "⚠️ Không có key nào được đặt active",
         "no_api_keys": "Chưa có API key nào",
         "key_active_status": "✅ Key active:",
@@ -294,6 +490,10 @@ TRANSLATIONS = {
         # Window title
         "app_title": "ITM Translate v1.2.3",
         
+        # Tray menu
+        "tray_show_window": "Show Window",
+        "tray_exit": "Exit",
+        
         # Tab names
         "tab_settings": "Settings",
         "tab_api_keys": "API KEY Management",
@@ -316,7 +516,7 @@ TRANSLATIONS = {
         "group2_second_language": "Second language:",
         "group2_third_language": "Third language:",
         "auto_save_option": "Show auto-save option",
-        "save_close_settings": "Save & Close Settings",
+        "save_close_settings": "Save",
         "cancel": "Cancel",
         "close": "Close",
         "ok": "OK",
@@ -413,7 +613,7 @@ TRANSLATIONS = {
         "shortcuts_group1": "Default Options",
         "auto_choose_hint": "Default option. First language will be translated to second language. Second language will be translated to third language",
         "settings_not_initialized": "Settings tab component not initialized",
-        "save_close_settings": "Save & Close Settings",
+        "save_close_settings": "Save",
         "cancel": "Cancel",
         
         # API Key tab translations
@@ -483,6 +683,198 @@ TRANSLATIONS = {
         "invalid_provider": "Invalid provider!",
         "cannot_update": "Cannot update:",
         "cannot_open_edit_form": "Cannot open edit form:",
+        
+        # Updater messages
+        "update_check_title": "ITM Translate - Check for Updates",
+        "update_available_title": "✅ Up to Date!",
+        "already_latest_version": "You are using the latest version",
+        "update_check_error": "Update check error:",
+        "update_note": "Note: Always use the latest version to ensure the best experience.\n",
+        
+        # About Dialog
+        "about_copied": "✅ Copied",
+        "about_copied_message": "Version information has been copied to clipboard!",
+        "about_content": """🚀 INTELLIGENT TRANSLATION MANAGER
+Professional AI-powered translation tool for Windows
+
+📋 MAIN FEATURES:
+├─ Smart text selection and translation
+├─ Instant translation with hotkeys
+├─ Real-time text replacement
+├─ AI-powered automatic language detection (Supports mixed languages)
+├─ Dual language groups with custom hotkeys
+└─ Supports 10+ languages (English, Vietnamese, Korean, Chinese, Japanese, French, German, Russian, Spanish, Thai...)
+
+⭐ ADVANCED FEATURES:
+├─ AI integration for accurate translation results
+├─ Automatic source language detection
+├─ Context-aware translation (Preserves meaning and tone)
+├─ Flexible hotkey customization (Ctrl/Alt/Shift combinations)
+├─ Settings memory and automatic backup
+└─ Secure API key management
+
+🔧 SYSTEM INTEGRATION:
+├─ Auto-start with Windows
+├─ Background system tray operation
+├─ Optimized memory usage performance
+├─ Global hotkey support (Works in any application)
+└─ Multiple instance protection
+
+🔄 UPDATE SYSTEM:
+├─ Automatic/manual updates based on latest version
+├─ Silent background updates with administrator privileges
+├─ GitHub-based update mechanism
+└─ Smooth version migration
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 VERSION INFORMATION:
+├─ Version: {version_info}
+├─ Build: {build_info}
+├─ Release Date: {release_date}
+└─ Architecture: Windows x64
+
+👥 DEVELOPMENT TEAM:
+├─ Programmer: KhanhIT – ITM Team
+├─ AI Integration: Using Gemini API
+├─ UI/UX Design: Modern Bootstrap interface
+└─ Quality Assurance: Enterprise-grade testing
+
+🏢 COMPANY:
+ITM Semiconductor Vietnam Company Limited
+🌐 GitHub: github.com/quockhanh112hubt/ITM_Translate
+📧 Support: Contact ITM Vietnam IT Team, 2025
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 APPLICATION GOAL
+Boost your productivity with intelligent translation tools at your fingertips
+
+© 2025 ITM Semiconductor Vietnam Company Limited. All rights reserved.""",
+        
+        # Help Dialog
+        "help_copied": "✅ Copied",
+        "help_copied_message": "Multi-AI guide has been copied to clipboard!",
+        "help_content": """🔧 A. API KEYS SETUP - MULTI PROVIDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 IMPORTANT NOTE: You need at least 1 API key from any provider to use ITM Translate.
+
+🤖 1. GOOGLE GEMINI (RECOMMENDED - FREE):
+Step 1: Visit Google AI Studio
+- Open: https://aistudio.google.com/
+- Sign in with Google account
+
+Step 2: Create API Key
+- Click "Get API key" → "Create API key in new project"
+- Copy key (starts with "AIza...")
+- Add to "API KEY Management" tab in app
+• Cost: Free key with 15 requests/minute limit
+
+🧠 2. OPENAI CHATGPT (PAID):
+- Go to: https://platform.openai.com/api-keys
+- Create new API key
+- Models: gpt-4o, gpt-4, gpt-3.5-turbo
+• Cost: ~$0.01-0.06 per 1000 tokens
+
+🎭 3. ANTHROPIC CLAUDE (PAID):
+- Go to: https://console.anthropic.com/
+- Create API key
+- Models: claude-3.5-sonnet, claude-3-opus
+• Has limited free tier
+
+🐙 4. GITHUB COPILOT:
+- Requires GitHub Copilot subscription
+- Use GitHub personal access token
+• Only for Copilot tokens, not GitHub API keys
+
+🌊 5. DEEPSEEK (AFFORDABLE):
+- Go to: https://platform.deepseek.com/
+- Models: deepseek-chat, deepseek-coder
+• Has limited free tier
+
+💡 RECOMMENDATIONS:
+• Start with Gemini (free)
+• Add 2-3 other providers for reliability
+• Use priority system to favor preferred provider
+
+
+📋 B. API KEYS MANAGEMENT IN APP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Open "API KEY Management" tab
+- Shows real-time status of each key
+
+Step 2: Add New Key
+- Select Provider from list
+- Choose Model (or leave "auto")
+- Enter key name (optional)
+- Paste API key in "API Key" field
+- Click "➕ Add Key"
+
+Step 3: System auto-validates
+- Checks key in background
+- Notifies if key is valid
+- Warns if key has issues
+
+
+🚀 C. HOW TO USE TRANSLATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Select text
+- Highlight text in any application
+- Works with: Word, Chrome, Email, Chat apps, PDFs...
+
+Step 2: Use hotkeys
+- POPUP translation: Ctrl+Q (default)
+- REPLACE translation: Ctrl+D (default)
+
+Step 3: AI system processes
+- Automatically selects optimal provider
+- AI detects source language
+- Smart retry on errors
+- Shows results < 2 seconds
+
+
+⭐ D. HOTKEYS & LANGUAGE CONFIGURATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Default group (Main work):
+- Popup translation: Ctrl+Q 
+- Replace translation: Ctrl+D
+- Languages: Any Language → Vietnamese → English
+
+Custom group (Study/Projects):
+- Popup translation: Ctrl+1
+- Replace translation: Ctrl+2  
+- Languages: Customizable as needed
+
+💡 HOTKEY TIPS:
+• Avoid F1-F12 keys or system keys
+• Don't use keys already used by other apps
+
+
+🔧 E. TROUBLESHOOTING & OPTIMIZATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 COMMON ISSUE FIXES:
+
+❌ API Keys not working:
+- Check "API KEY Management" tab → Status column
+- Add backup keys from other providers  
+- Restart app if needed
+
+⌨️ Hotkey conflicts:
+- Run with Administrator privileges
+- Change to different hotkey combination
+- Check if other apps use same hotkeys
+
+🌐 Translation fails:
+- System auto-retries with different provider
+- Check internet connection
+- Verify API quotas not exceeded
+
+⚡ Performance optimization:
+- Use 2-3 providers
+- Keep text length < 4000 characters
+
+💡 PRO TIPS:
+• Gemini: Best for most languages, natural
+• ChatGPT: Good for technical, tech translations
+• Setup priority: Gemini → ChatGPT → Claude""",
         "no_active_key": "⚠️ No key is set as active",
         "no_api_keys": "No API keys yet",
         "key_active_status": "✅ Key active:",
