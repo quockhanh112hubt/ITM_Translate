@@ -1,4 +1,5 @@
 import pystray
+from pystray import mouse
 from PIL import Image, ImageDraw
 import threading
 import os
@@ -175,19 +176,16 @@ def create_tray_icon(root, app):
     
     def on_left_click(icon, item):
         """Xử lý left-click - Toggle floating button"""
-        print("🖱️ Tray: Left click detected - Toggling floating button")
+        print("🖱️ Tray: Single-click detected - Toggling floating button")
         try:
             toggle_floating_button()
         except Exception as e:
             print(f"❌ Tray: Error in on_left_click: {e}")
     
-    def on_double_click(icon, item):
-        """Xử lý double-click - Hiện cửa sổ chính"""
-        print("🖱️ Tray: Double-click detected - Showing main window")
-        try:
-            on_show()
-        except Exception as e:
-            print(f"❌ Tray: Error in on_double_click: {e}")
+    def on_right_click(icon, item):
+        """Xử lý right-click - Show menu"""
+        print("🖱️ Tray: Right-click detected - Menu will show")
+        # Menu sẽ tự động hiện, không cần xử lý gì thêm
     
     
     # Tạo tray icon với trạng thái hiện tại
@@ -223,6 +221,23 @@ def create_tray_icon(root, app):
         )
     )
     
+    # Thêm click handler trực tiếp cho pystray
+    def on_click(icon, button, time):
+        """Handler cho click events của pystray"""
+        if button == mouse.Button.left:
+            print("🖱️ Tray: pystray left-click detected")
+            try:
+                toggle_floating_button()
+            except Exception as e:
+                print(f"❌ Tray: Error in pystray click handler: {e}")
+    
+    # Gán click handler
+    try:
+        icon.on_click = on_click
+        print("✅ Tray: pystray click handler assigned")
+    except Exception as e:
+        print(f"⚠️ Tray: Could not assign pystray click handler: {e}")
+    
     def setup_click_handlers():
         """Setup click handlers cho tray icon"""
         print("🔧 Tray: Setting up click handlers...")
@@ -237,15 +252,12 @@ def create_tray_icon(root, app):
                     
                     def enhanced_on_notify(hwnd, msg, wparam, lparam):
                         try:
-                            # WM_LBUTTONDBLCLK = 0x203 (double-click chuột trái)
-                            if msg == 0x203:
-                                print("🖱️ Tray: Double-click message received via Windows API")
-                                on_double_click(icon, None)
-                                return 0
-                            elif msg == 0x201:  # WM_LBUTTONDOWN
+                            # Chỉ xử lý single-click, bỏ double-click
+                            if msg == 0x201:  # WM_LBUTTONDOWN
                                 print("🖱️ Tray: Single-click message received via Windows API")
                                 on_left_click(icon, None)
                                 return 0
+                            # Bỏ xử lý double-click để tránh conflict
                         except Exception as e:
                             print(f"❌ Tray: Error in enhanced_on_notify: {e}")
                         
