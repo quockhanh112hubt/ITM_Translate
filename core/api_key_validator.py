@@ -7,6 +7,7 @@ import requests
 import time
 from typing import Tuple, Optional
 from enum import Enum
+from core.i18n import _
 
 class ValidationResult(Enum):
     SUCCESS = "success"
@@ -25,55 +26,55 @@ class APIKeyValidator:
         """Kiểm tra định dạng cơ bản của API key"""
         
         if not api_key or not api_key.strip():
-            return False, "API key không được để trống"
+            return False, _('api_key_empty')
         
         api_key = api_key.strip()
         
         # Format validation cho từng provider
         if provider == 'gemini':
             if not api_key.startswith('AIza'):
-                return False, "Gemini API key phải bắt đầu bằng 'AIza'"
+                return False, _('gemini_key_format')
             if len(api_key) < 30:
-                return False, "Gemini API key quá ngắn (phải >= 30 ký tự)"
+                return False, _('gemini_key_short')
             if not re.match(r'^[A-Za-z0-9_-]+$', api_key):
-                return False, "Gemini API key chứa ký tự không hợp lệ"
+                return False, _('gemini_key_invalid_chars')
                 
         elif provider == 'chatgpt':
             if not api_key.startswith('sk-'):
-                return False, "OpenAI API key phải bắt đầu bằng 'sk-'"
+                return False, _('openai_key_format')
             if len(api_key) < 40:
-                return False, "OpenAI API key quá ngắn (phải >= 40 ký tự)"
+                return False, _('openai_key_short')
             if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
-                return False, "OpenAI API key chứa ký tự không hợp lệ"
+                return False, _('openai_key_invalid_chars')
                 
         elif provider == 'deepseek':
             if not api_key.startswith('sk-'):
-                return False, "DeepSeek API key phải bắt đầu bằng 'sk-'"
+                return False, _('deepseek_key_format')
             if len(api_key) < 40:
-                return False, "DeepSeek API key quá ngắn (phải >= 40 ký tự)"
+                return False, _('deepseek_key_short')
             if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
-                return False, "DeepSeek API key chứa ký tự không hợp lệ"
+                return False, _('deepseek_key_invalid_chars')
                 
         elif provider == 'claude':
             if not api_key.startswith('sk-ant-'):
-                return False, "Claude API key phải bắt đầu bằng 'sk-ant-'"
+                return False, _('claude_key_format')
             if len(api_key) < 50:
-                return False, "Claude API key quá ngắn (phải >= 50 ký tự)"
+                return False, _('claude_key_short')
             if not re.match(r'^sk-ant-[A-Za-z0-9_-]+$', api_key):
-                return False, "Claude API key chứa ký tự không hợp lệ"
+                return False, _('claude_key_invalid_chars')
                 
         elif provider == 'copilot':
             # GitHub Copilot chỉ hỗ trợ OpenAI API keys (GitHub tokens không dùng được cho API calls)
             if not api_key.startswith('sk-'):
-                return False, "GitHub Copilot chỉ hỗ trợ OpenAI API key (bắt đầu bằng 'sk-'). GitHub tokens không dùng được cho API calls."
+                return False, _('copilot_key_format')
             if len(api_key) < 40:
-                return False, "OpenAI API key quá ngắn (phải >= 40 ký tự)"
+                return False, _('openai_key_short')
             if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
-                return False, "OpenAI API key chứa ký tự không hợp lệ"
+                return False, _('openai_key_invalid_chars')
         else:
-            return False, f"Provider '{provider}' không được hỗ trợ"
+            return False, _('provider_not_supported_validator').format(provider=provider)
         
-        return True, "Định dạng API key hợp lệ"
+        return True, _('api_key_format_valid')
     
     @staticmethod
     def test_gemini_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -101,24 +102,24 @@ class APIKeyValidator:
             )
             
             if response and response.text:
-                return ValidationResult.SUCCESS, f"✅ Gemini API key hoạt động tốt (model: {model_name})"
+                return ValidationResult.SUCCESS, _('gemini_working').format(model=model_name)
             else:
-                return ValidationResult.PROVIDER_ERROR, "❌ Gemini API trả về response rỗng"
+                return ValidationResult.PROVIDER_ERROR, _('gemini_empty_response')
                 
         except ImportError:
-            return ValidationResult.PROVIDER_ERROR, "❌ Thiếu thư viện google-generativeai"
+            return ValidationResult.PROVIDER_ERROR, _('gemini_missing_library')
         except Exception as e:
             error_str = str(e).lower()
             if "api key not valid" in error_str or "invalid api key" in error_str:
-                return ValidationResult.INVALID_KEY, "❌ Gemini API key không hợp lệ"
+                return ValidationResult.INVALID_KEY, _('gemini_invalid_key')
             elif "quota" in error_str or "429" in error_str:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ Gemini API: Vượt quá quota/rate limit"
+                return ValidationResult.QUOTA_EXCEEDED, _('gemini_quota_exceeded')
             elif "timeout" in error_str:
-                return ValidationResult.TIMEOUT, "❌ Gemini API: Timeout - thử lại sau"
+                return ValidationResult.TIMEOUT, _('gemini_timeout')
             elif "network" in error_str or "connection" in error_str:
-                return ValidationResult.NETWORK_ERROR, "❌ Lỗi kết nối mạng"
+                return ValidationResult.NETWORK_ERROR, _('network_error')
             else:
-                return ValidationResult.PROVIDER_ERROR, f"❌ Gemini API error: {str(e)}"
+                return ValidationResult.PROVIDER_ERROR, _('gemini_error').format(error=str(e))
     
     @staticmethod
     def test_openai_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -150,24 +151,24 @@ class APIKeyValidator:
             )
             
             if response.status_code == 200:
-                return ValidationResult.SUCCESS, f"✅ OpenAI API key hoạt động tốt (model: {model_name})"
+                return ValidationResult.SUCCESS, _('openai_working').format(model=model_name)
             elif response.status_code == 401:
-                return ValidationResult.INVALID_KEY, "❌ OpenAI API key không hợp lệ"
+                return ValidationResult.INVALID_KEY, _('openai_invalid_key')
             elif response.status_code == 429:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ OpenAI API: Vượt quá rate limit"
+                return ValidationResult.QUOTA_EXCEEDED, _('openai_rate_limit')
             elif response.status_code == 402:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ OpenAI API: Hết credit/quota"
+                return ValidationResult.QUOTA_EXCEEDED, _('openai_no_credit')
             else:
                 error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
                 error_msg = error_data.get('error', {}).get('message', 'Unknown error')
-                return ValidationResult.PROVIDER_ERROR, f"❌ OpenAI API error ({response.status_code}): {error_msg}"
+                return ValidationResult.PROVIDER_ERROR, _('openai_error').format(status=response.status_code, error=error_msg)
                 
         except requests.exceptions.Timeout:
-            return ValidationResult.TIMEOUT, "❌ OpenAI API: Timeout - thử lại sau"
+            return ValidationResult.TIMEOUT, _('openai_timeout')
         except requests.exceptions.ConnectionError:
-            return ValidationResult.NETWORK_ERROR, "❌ Lỗi kết nối mạng"
+            return ValidationResult.NETWORK_ERROR, _('network_error')
         except Exception as e:
-            return ValidationResult.PROVIDER_ERROR, f"❌ OpenAI API error: {str(e)}"
+            return ValidationResult.PROVIDER_ERROR, _('openai_error').format(status="", error=str(e))
     
     @staticmethod
     def test_deepseek_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -199,24 +200,24 @@ class APIKeyValidator:
             )
             
             if response.status_code == 200:
-                return ValidationResult.SUCCESS, f"✅ DeepSeek API key hoạt động tốt (model: {model_name})"
+                return ValidationResult.SUCCESS, _('deepseek_working').format(model=model_name)
             elif response.status_code == 401:
-                return ValidationResult.INVALID_KEY, "❌ DeepSeek API key không hợp lệ"
+                return ValidationResult.INVALID_KEY, _('deepseek_invalid_key')
             elif response.status_code == 402:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ DeepSeek API: Insufficient Balance (Hết tiền)"
+                return ValidationResult.QUOTA_EXCEEDED, _('deepseek_no_balance')
             elif response.status_code == 429:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ DeepSeek API: Vượt quá rate limit"
+                return ValidationResult.QUOTA_EXCEEDED, _('deepseek_rate_limit')
             else:
                 error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
                 error_msg = error_data.get('error', {}).get('message', 'Unknown error')
-                return ValidationResult.PROVIDER_ERROR, f"❌ DeepSeek API error ({response.status_code}): {error_msg}"
+                return ValidationResult.PROVIDER_ERROR, _('deepseek_error').format(status=response.status_code, error=error_msg)
                 
         except requests.exceptions.Timeout:
-            return ValidationResult.TIMEOUT, "❌ DeepSeek API: Timeout - thử lại sau"
+            return ValidationResult.TIMEOUT, _('deepseek_timeout')
         except requests.exceptions.ConnectionError:
-            return ValidationResult.NETWORK_ERROR, "❌ Lỗi kết nối mạng"
+            return ValidationResult.NETWORK_ERROR, _('network_error')
         except Exception as e:
-            return ValidationResult.PROVIDER_ERROR, f"❌ DeepSeek API error: {str(e)}"
+            return ValidationResult.PROVIDER_ERROR, _('deepseek_error').format(status="", error=str(e))
     
     @staticmethod
     def test_claude_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -248,22 +249,22 @@ class APIKeyValidator:
             )
             
             if response.status_code == 200:
-                return ValidationResult.SUCCESS, f"✅ Claude API key hoạt động tốt (model: {model_name})"
+                return ValidationResult.SUCCESS, _('claude_working').format(model=model_name)
             elif response.status_code == 401:
-                return ValidationResult.INVALID_KEY, "❌ Claude API key không hợp lệ"
+                return ValidationResult.INVALID_KEY, _('claude_invalid_key')
             elif response.status_code == 429:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ Claude API: Vượt quá rate limit"
+                return ValidationResult.QUOTA_EXCEEDED, _('claude_rate_limit')
             else:
                 error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
                 error_msg = error_data.get('error', {}).get('message', 'Unknown error')
-                return ValidationResult.PROVIDER_ERROR, f"❌ Claude API error ({response.status_code}): {error_msg}"
+                return ValidationResult.PROVIDER_ERROR, _('claude_error').format(status=response.status_code, error=error_msg)
                 
         except requests.exceptions.Timeout:
-            return ValidationResult.TIMEOUT, "❌ Claude API: Timeout - thử lại sau"
+            return ValidationResult.TIMEOUT, _('claude_timeout')
         except requests.exceptions.ConnectionError:
-            return ValidationResult.NETWORK_ERROR, "❌ Lỗi kết nối mạng"
+            return ValidationResult.NETWORK_ERROR, _('network_error')
         except Exception as e:
-            return ValidationResult.PROVIDER_ERROR, f"❌ Claude API error: {str(e)}"
+            return ValidationResult.PROVIDER_ERROR, _('claude_error').format(status="", error=str(e))
     
     @staticmethod
     def test_copilot_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -296,24 +297,24 @@ class APIKeyValidator:
             )
             
             if response and response.choices and len(response.choices) > 0:
-                return ValidationResult.SUCCESS, f"✅ GitHub Copilot API key hoạt động tốt (model: {model_name})"
+                return ValidationResult.SUCCESS, _('copilot_working').format(model=model_name)
             else:
-                return ValidationResult.PROVIDER_ERROR, "❌ GitHub Copilot API trả về response rỗng"
+                return ValidationResult.PROVIDER_ERROR, _('copilot_empty_response')
                 
         except ImportError:
-            return ValidationResult.PROVIDER_ERROR, "❌ Thiếu thư viện openai (pip install openai)"
+            return ValidationResult.PROVIDER_ERROR, _('copilot_missing_library')
         except Exception as e:
             error_msg = str(e).lower()
             if "invalid api key" in error_msg or "unauthorized" in error_msg:
-                return ValidationResult.INVALID_KEY, "❌ GitHub Copilot API key không hợp lệ"
+                return ValidationResult.INVALID_KEY, _('copilot_invalid_key')
             elif "quota" in error_msg or "rate limit" in error_msg:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ GitHub Copilot: Vượt quá quota hoặc rate limit"
+                return ValidationResult.QUOTA_EXCEEDED, _('copilot_quota_exceeded')
             elif "insufficient" in error_msg:
-                return ValidationResult.QUOTA_EXCEEDED, "❌ GitHub Copilot: Hết credit hoặc quota"
+                return ValidationResult.QUOTA_EXCEEDED, _('copilot_no_credit')
             elif "timeout" in error_msg:
-                return ValidationResult.TIMEOUT, "❌ GitHub Copilot API: Timeout - thử lại sau"
+                return ValidationResult.TIMEOUT, _('copilot_timeout')
             else:
-                return ValidationResult.PROVIDER_ERROR, f"❌ GitHub Copilot API error: {str(e)}"
+                return ValidationResult.PROVIDER_ERROR, _('copilot_error').format(error=str(e))
     
     @classmethod
     def validate_api_key(cls, provider: str, api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -340,12 +341,12 @@ class APIKeyValidator:
         
         test_func = test_functions.get(provider)
         if not test_func:
-            return ValidationResult.PROVIDER_ERROR, f"Provider '{provider}' không được hỗ trợ"
+            return ValidationResult.PROVIDER_ERROR, _('provider_not_supported_validator').format(provider=provider)
         
         try:
             return test_func(api_key, model)
         except Exception as e:
-            return ValidationResult.PROVIDER_ERROR, f"❌ Lỗi không mong đợi: {str(e)}"
+            return ValidationResult.PROVIDER_ERROR, _('unexpected_error').format(error=str(e))
 
 def get_validation_message(result: ValidationResult, detail_msg: str) -> dict:
     """Chuyển validation result thành message cho user"""
@@ -353,49 +354,49 @@ def get_validation_message(result: ValidationResult, detail_msg: str) -> dict:
     if result == ValidationResult.SUCCESS:
         return {
             "type": "success",
-            "title": "✅ API Key hợp lệ!",
+            "title": _('validation_success_title'),
             "message": detail_msg,
             "allow_save": True
         }
     elif result == ValidationResult.INVALID_FORMAT:
         return {
             "type": "error",
-            "title": "❌ Định dạng API Key không đúng",
-            "message": detail_msg + "\n\n💡 Kiểm tra lại API key từ provider",
+            "title": _('validation_format_error_title'),
+            "message": detail_msg + f"\n\n{_('validation_format_error_hint')}",
             "allow_save": False
         }
     elif result == ValidationResult.INVALID_KEY:
         return {
             "type": "error", 
-            "title": "❌ API Key không hợp lệ",
-            "message": detail_msg + "\n\n💡 Tạo API key mới từ provider",
+            "title": _('validation_invalid_key_title'),
+            "message": detail_msg + f"\n\n{_('validation_invalid_key_hint')}",
             "allow_save": False
         }
     elif result == ValidationResult.QUOTA_EXCEEDED:
         return {
             "type": "warning",
-            "title": "⚠️ Vượt quá giới hạn",
-            "message": detail_msg + "\n\n💡 API key hợp lệ nhưng hết quota/credit",
+            "title": _('validation_quota_title'),
+            "message": detail_msg + f"\n\n{_('validation_quota_hint')}",
             "allow_save": True  # Allow save, user có thể nạp tiền sau
         }
     elif result == ValidationResult.NETWORK_ERROR:
         return {
             "type": "warning",
-            "title": "🌐 Lỗi kết nối",
-            "message": detail_msg + "\n\n💡 Kiểm tra internet và thử lại",
+            "title": _('validation_network_title'),
+            "message": detail_msg + f"\n\n{_('validation_network_hint')}",
             "allow_save": True  # Allow save, có thể do mạng tạm thời
         }
     elif result == ValidationResult.TIMEOUT:
         return {
             "type": "warning",
-            "title": "⏱️ Timeout",
-            "message": detail_msg + "\n\n💡 Server chậm, thử lại sau",
+            "title": _('validation_timeout_title'),
+            "message": detail_msg + f"\n\n{_('validation_timeout_hint')}",
             "allow_save": True  # Allow save, có thể do server tạm thời chậm
         }
     else:  # PROVIDER_ERROR
         return {
             "type": "error",
-            "title": "❌ Lỗi Provider",
-            "message": detail_msg + "\n\n💡 Liên hệ support nếu lỗi tiếp tục",
+            "title": _('validation_provider_error_title'),
+            "message": detail_msg + f"\n\n{_('validation_provider_error_hint')}",
             "allow_save": False
         }

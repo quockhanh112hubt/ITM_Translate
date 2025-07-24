@@ -111,7 +111,7 @@ class ApiKeyTab:
         provider_combo.bind('<<ComboboxSelected>>', self.on_provider_changed)
         
         # Add tooltip for model info
-        self.create_model_tooltip()
+        # self.create_model_tooltip()
         
         # Initialize model list for default provider
         self.update_model_list()
@@ -353,12 +353,13 @@ class ApiKeyTab:
         
         # Disable add button during validation
         add_btn = None
+        # Find the add button by searching for the button with add_key command
         for widget in self.frame.winfo_children():
             if hasattr(widget, 'winfo_children'):
                 for child in widget.winfo_children():
                     if hasattr(child, 'winfo_children'):
                         for subchild in child.winfo_children():
-                            if isinstance(subchild, ttk.Button) and "Thêm Key" in str(subchild.cget('text')):
+                            if isinstance(subchild, ttk.Button) and (_('add_key') in str(subchild.cget('text')) or "➕" in str(subchild.cget('text'))):
                                 add_btn = subchild
                                 break
         
@@ -528,7 +529,7 @@ class ApiKeyTab:
             
             # Title
             title_label = ttk.Label(main_frame, 
-                                  text="🔧 Chỉnh sửa API Key", 
+                                  text=_('edit_api_key_title'), 
                                   font=('Segoe UI', 14, 'bold'))
             title_label.pack(anchor='w', pady=(0, 15))
             
@@ -542,14 +543,14 @@ class ApiKeyTab:
             provider_combo.pack(fill='x', pady=(0, 10))
             
             # Model
-            ttk.Label(main_frame, text='Model:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
+            ttk.Label(main_frame, text=_('model_label'), font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             model_var = tk.StringVar(value=key_info.model)
             model_combo = ttk.Combobox(main_frame, textvariable=model_var, 
                                      state='readonly', width=50)
             model_combo.pack(fill='x', pady=(0, 10))
             
             # Name
-            ttk.Label(main_frame, text='Tên:', font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
+            ttk.Label(main_frame, text=_('name_label'), font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             name_var = tk.StringVar(value=key_info.name or "")
             name_entry = ttk.Entry(main_frame, textvariable=name_var, width=50)
             name_entry.pack(fill='x', pady=(0, 10))
@@ -624,7 +625,7 @@ class ApiKeyTab:
                                 def handle_validation_result():
                                     """Handle validation result in main thread"""
                                     # Re-enable buttons
-                                    save_btn.configure(state='normal', text='💾 Lưu')
+                                    save_btn.configure(state='normal', text=_('save_button'))
                                     cancel_btn.configure(state='normal')
                                     
                                     if validation_info["type"] == "success":
@@ -661,7 +662,7 @@ class ApiKeyTab:
                             else:
                                 # No validation needed, just save
                                 def just_save():
-                                    save_btn.configure(state='normal', text='💾 Lưu')
+                                    save_btn.configure(state='normal', text=_('save_button'))
                                     cancel_btn.configure(state='normal')
                                     perform_save()
                                 
@@ -669,7 +670,7 @@ class ApiKeyTab:
                                 
                         except Exception as e:
                             def show_validation_error():
-                                save_btn.configure(state='normal', text='💾 Lưu')
+                                save_btn.configure(state='normal', text=_('save_button'))
                                 cancel_btn.configure(state='normal')
                                 messagebox.showerror(_('validation_error_title'), f"{_('cannot_check_api_key_validation')} {str(e)}")
                             
@@ -708,10 +709,10 @@ class ApiKeyTab:
                     messagebox.showerror(_('error'), f"{_('cannot_update')} {e}")
             
             # Buttons
-            save_btn = ttk.Button(button_frame, text='💾 Lưu', command=save_changes)
+            save_btn = ttk.Button(button_frame, text=_('save_button'), command=save_changes)
             save_btn.pack(side='left', padx=(0, 10))
             
-            cancel_btn = ttk.Button(button_frame, text='❌ Hủy', command=edit_win.destroy)
+            cancel_btn = ttk.Button(button_frame, text=_('cancel_button'), command=edit_win.destroy)
             cancel_btn.pack(side='left')
             
         except Exception as e:

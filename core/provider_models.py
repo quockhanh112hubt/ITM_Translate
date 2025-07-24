@@ -46,7 +46,7 @@ PROVIDER_MODELS = {
 
 # Model descriptions để hiển thị tooltip
 MODEL_DESCRIPTIONS = {
-    'auto': 'Tự động chọn model mặc định cho provider',
+    'auto': 'Select model for provider',
     
     # Gemini models
     'gemini-2.5-pro': 'Gemini 2.5 Pro - Phiên bản mới nhất, hiệu suất cao',
