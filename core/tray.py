@@ -44,21 +44,104 @@ def resource_path(relative_path):
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
-def create_image():
-    # Sử dụng icon từ file Resource/icon.ico, nếu không có thì tạo icon mặc định
-    icon_path = resource_path(os.path.join('Resource', 'icon.ico'))
+def create_image(floating_button_enabled=False):
+    # Chọn icon dựa trên trạng thái floating button
+    icon_name = 'icon_ON.ico' if floating_button_enabled else 'icon_OFF.ico'
+    icon_path = resource_path(os.path.join('Resource', icon_name))
+    
     # Debug: in ra đường dẫn icon thực tế
-    # print("Icon path:", icon_path)
+    # print(f"Icon path: {icon_path} (floating_button_enabled: {floating_button_enabled})")
+    
     if os.path.exists(icon_path):
         return Image.open(icon_path)
-    # Tạo icon mặc định (32x32, hình tròn xanh dương)
+    
+    # Tạo icon mặc định dựa trên trạng thái
     img = Image.new('RGBA', (32, 32), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
-    draw.ellipse((4, 4, 28, 28), fill=(30, 144, 255, 255))  # Màu xanh dương
-    draw.text((10, 8), "T", fill=(255,255,255,255))  # Chữ T trắng
+    
+    if floating_button_enabled:
+        # Icon ON: màu xanh dương sáng
+        draw.ellipse((4, 4, 28, 28), fill=(30, 144, 255, 255))
+        draw.text((10, 8), "T", fill=(255,255,255,255))
+    else:
+        # Icon OFF: màu xám
+        draw.ellipse((4, 4, 28, 28), fill=(128, 128, 128, 255))
+        draw.text((10, 8), "T", fill=(255,255,255,255))
+    
     return img
 
+def load_floating_button_enabled():
+    """Load trạng thái floating button từ startup.json"""
+    try:
+        import json
+        startup_file = "startup.json"
+        if os.path.exists(startup_file):
+            with open(startup_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("floating_button", False))  # Mặc định tắt
+    except Exception:
+        pass
+    return False  # Mặc định tắt
+
 def create_tray_icon(root, app):
+    # Biến để track trạng thái floating button
+    floating_button_enabled = load_floating_button_enabled()
+    
+    def save_floating_button_enabled(enabled):
+        """Lưu trạng thái floating button vào startup.json"""
+        try:
+            import json
+            startup_file = "startup.json"
+            data = {}
+            if os.path.exists(startup_file):
+                with open(startup_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            
+            data["floating_button"] = enabled
+            
+            with open(startup_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            print(f"💾 Saved floating button state: {enabled}")
+        except Exception as e:
+            print(f"❌ Error saving floating button state: {e}")
+
+    def update_tray_icon():
+        """Cập nhật icon của tray dựa trên trạng thái floating button"""
+        nonlocal icon
+        try:
+            new_image = create_image(floating_button_enabled)
+            icon.icon = new_image
+            print(f"🔄 Tray icon updated: floating_button_enabled = {floating_button_enabled}")
+        except Exception as e:
+            print(f"❌ Error updating tray icon: {e}")
+
+    def toggle_floating_button():
+        """Toggle trạng thái floating button"""
+        nonlocal floating_button_enabled
+        floating_button_enabled = not floating_button_enabled
+        
+        # Lưu trạng thái mới
+        save_floating_button_enabled(floating_button_enabled)
+        
+        # Cập nhật icon
+        update_tray_icon()
+        
+        # Gọi callback để cập nhật chức năng floating button
+        try:
+            # Import từ ITM_Translate.py để gọi function set_floating_button_enabled
+            import sys
+            main_module = sys.modules.get('__main__')
+            if main_module and hasattr(main_module, 'set_floating_button_enabled'):
+                main_module.set_floating_button_enabled(floating_button_enabled)
+            
+            # Cập nhật GUI nếu có
+            if hasattr(app, 'floating_button_enabled') and app.floating_button_enabled:
+                root.after(0, lambda: app.floating_button_enabled.set(floating_button_enabled))
+                
+            print(f"🖱️ Floating button toggled: {floating_button_enabled}")
+        except Exception as e:
+            print(f"❌ Error toggling floating button: {e}")
+
     def on_show():
         """Hiện cửa sổ chính"""
         try:
@@ -79,22 +162,26 @@ def create_tray_icon(root, app):
         os._exit(0)
     
     def on_left_click(icon, item):
-        """Xử lý left-click (single click)"""
-        print("Tray: Left click detected")  # Debug log
-        # Single click không làm gì, chỉ double-click mới mở cửa sổ
-        pass
+        """Xử lý left-click - Toggle floating button"""
+        print("Tray: Left click detected - Toggling floating button")
+        toggle_floating_button()
     
     def on_double_click(icon, item):
-        """Xử lý double-click vào tray icon"""
-        print("Tray: Double-click detected")  # Debug log
+        """Xử lý double-click - Hiện cửa sổ chính"""
+        print("Tray: Double-click detected - Showing main window")
         on_show()
     
-    # Tạo tray icon với menu (có version trong title)
+    
+    # Tạo tray icon với trạng thái hiện tại
     app_version = get_app_version()
-    icon = pystray.Icon(f'ITM Translate v{app_version}', create_image(), menu=pystray.Menu(
-        pystray.MenuItem(_('tray_show_window'), on_show, default=True),  # Đặt làm default action
-        pystray.MenuItem(_('tray_exit'), on_quit)
-    ))
+    icon = pystray.Icon(
+        f'ITM Translate v{app_version}', 
+        create_image(floating_button_enabled), 
+        menu=pystray.Menu(
+            pystray.MenuItem(_('tray_show_window'), on_show),
+            pystray.MenuItem(_('tray_exit'), on_quit)
+        )
+    )
     
     def setup_click_handlers():
         """Setup click handlers cho tray icon"""
@@ -134,13 +221,13 @@ def create_tray_icon(root, app):
             else:
                 print("Tray: Windows API not available, using fallback")
             
-            # Fallback: Sử dụng pystray's default action
+            # Default action cho double-click
             def default_action(icon):
                 """Default action khi double-click"""
-                print("Tray: Default action triggered")  # Debug log
+                print("Tray: Default action triggered - Showing main window")
                 on_show()
             
-            # Gán default action (luôn luôn có sẵn)
+            # Gán default action
             icon.default_action = default_action
             print("Tray: Default action set")  # Debug log
             
@@ -155,6 +242,7 @@ def create_tray_icon(root, app):
         print("Tray: Icon starting...")  # Debug log
         icon.run()
     
+    
     # Chạy tray icon trong thread riêng
     threading.Thread(target=run, daemon=True).start()
     
@@ -164,5 +252,12 @@ def create_tray_icon(root, app):
         root.withdraw()
     
     root.protocol('WM_DELETE_WINDOW', on_window_close)
+    
+    # Thêm method để update icon từ external modules
+    icon.update_floating_button_state = lambda enabled: (
+        setattr(icon, '_floating_button_enabled', enabled),
+        setattr(icon, 'icon', create_image(enabled)),
+        print(f"🔄 External tray icon update: floating_button_enabled = {enabled}")
+    )
     
     return icon

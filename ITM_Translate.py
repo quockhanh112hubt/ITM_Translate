@@ -611,10 +611,10 @@ def load_floating_button_enabled():
         try:
             with open(STARTUP_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return bool(data.get("floating_button", True))  # Mặc định bật
+                return bool(data.get("floating_button", False))  # Mặc định tắt
         except Exception:
             pass
-    return True  # Mặc định bật
+    return False  # Mặc định tắt
 
 def load_auto_close_popup():
     if os.path.exists(STARTUP_FILE):
@@ -682,12 +682,13 @@ def set_startup_windows(enable):
             print("Không thể xóa shortcut khởi động cùng Windows:", e)
 
 def set_floating_button_enabled(enabled):
-    """Callback để bật/tắt chức năng floating button từ GUI"""
-    global mouse_listener
+    """Callback để bật/tắt chức năng floating button từ GUI hoặc tray"""
+    global mouse_listener, tray
     if enabled:
         # Bật mouse listener nếu chưa có
         if mouse_listener is None or not mouse_listener.running:
             start_mouse_listener()
+        print(f"🖱️ Floating button enabled")
     else:
         # Tắt mouse listener nếu đang chạy
         if mouse_listener is not None and mouse_listener.running:
@@ -695,6 +696,14 @@ def set_floating_button_enabled(enabled):
             mouse_listener = None
         # Ẩn floating button nếu đang hiển thị
         hide_floating_button()
+        print(f"🖱️ Floating button disabled")
+    
+    # Cập nhật tray icon nếu có
+    if tray and hasattr(tray, 'update_floating_button_state'):
+        try:
+            tray.update_floating_button_state(enabled)
+        except Exception as e:
+            print(f"❌ Error updating tray icon: {e}")
 
 # Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
 default_hotkeys = {

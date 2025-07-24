@@ -59,7 +59,7 @@ class MainGUI:
         self.hotkey_updater = updater
     def set_startup_callback(self, callback):
         self.startup_callback = callback
-    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, floating_button=True, auto_close_popup=True):
+    def set_initial_settings(self, hotkeys_dict, api_key, startup_enabled=False, show_on_startup=True, floating_button=False, auto_close_popup=True):
         self.initial_hotkeys = hotkeys_dict
         self.initial_api_key = api_key
         self.initial_startup = startup_enabled
