@@ -2,5 +2,5 @@
   "startup": false,
   "show_on_startup": false,
   "floating_button": false,
-  "auto_close_popup": false
+  "auto_close_popup": true
 }

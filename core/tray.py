@@ -3,15 +3,19 @@ from PIL import Image, ImageDraw
 import threading
 import os
 import sys
+import queue
 from core.i18n import get_language_manager, _
 
-# Import Windows GUI libraries for advanced tray handling
+# Import Windows API cho tray handling
 try:
     import win32gui
     import win32con
+    import win32api
     WIN32_AVAILABLE = True
+    print("✅ Windows API available for tray handling")
 except ImportError:
     WIN32_AVAILABLE = False
+    print("⚠️ Windows API not available, using fallback")
 
 def get_app_version():
     """Đọc version từ file version.json"""
@@ -49,9 +53,6 @@ def create_image(floating_button_enabled=False):
     icon_name = 'icon_ON.ico' if floating_button_enabled else 'icon_OFF.ico'
     icon_path = resource_path(os.path.join('Resource', icon_name))
     
-    # Debug: in ra đường dẫn icon thực tế
-    # print(f"Icon path: {icon_path} (floating_button_enabled: {floating_button_enabled})")
-    
     if os.path.exists(icon_path):
         return Image.open(icon_path)
     
@@ -78,14 +79,36 @@ def load_floating_button_enabled():
         if os.path.exists(startup_file):
             with open(startup_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return bool(data.get("floating_button", False))  # Mặc định tắt
+                return bool(data.get("floating_button", False))
     except Exception:
         pass
-    return False  # Mặc định tắt
+    return False
 
 def create_tray_icon(root, app):
     # Biến để track trạng thái floating button
     floating_button_enabled = load_floating_button_enabled()
+    
+    # Queue để communicate giữa Windows API callback và main thread
+    tray_action_queue = queue.Queue()
+    
+    def process_tray_actions():
+        """Xử lý actions từ Windows API trong main thread"""
+        try:
+            while True:
+                action = tray_action_queue.get_nowait()
+                if action == 'toggle_floating':
+                    toggle_floating_button()
+                elif action == 'show_window':
+                    on_show()
+                elif action == 'exit':
+                    on_quit()
+        except queue.Empty:
+            pass
+        # Schedule lại sau 50ms
+        root.after(50, process_tray_actions)
+    
+    # Bắt đầu xử lý actions
+    root.after(100, process_tray_actions)
     
     def save_floating_button_enabled(enabled):
         """Lưu trạng thái floating button vào startup.json"""
@@ -112,8 +135,11 @@ def create_tray_icon(root, app):
             new_image = create_image(floating_button_enabled)
             icon.icon = new_image
             
-            # Cập nhật menu
-            icon.menu = pystray.Menu(
+            # Tạo menu mới với tất cả handlers (bao gồm cả hidden menu item cho left-click)
+            new_menu = pystray.Menu(
+                # Hidden default item cho left-click compatibility
+                pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
+                # Menu items hiển thị
                 pystray.MenuItem(
                     f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
                     menu_toggle_floating
@@ -122,6 +148,17 @@ def create_tray_icon(root, app):
                 pystray.MenuItem(_('tray_show_window'), menu_show_window),
                 pystray.MenuItem(_('tray_exit'), menu_exit)
             )
+            
+            # Cập nhật menu
+            icon.menu = new_menu
+            
+            # Đảm bảo left-click handler vẫn hoạt động sau khi cập nhật menu
+            try:
+                # Re-assign default action
+                icon.default_action = on_left_click
+                print("✅ Left-click handler re-assigned after menu update")
+            except Exception as e:
+                print(f"⚠️ Could not re-assign left-click handler: {e}")
             
             print(f"🔄 Tray icon and menu updated: floating_button_enabled = {floating_button_enabled}")
         except Exception as e:
@@ -158,7 +195,7 @@ def create_tray_icon(root, app):
         """Hiện cửa sổ chính"""
         try:
             root.after(0, lambda: (root.deiconify(), root.lift(), root.focus_force()))
-            print("Tray: Show window triggered")  # Debug log
+            print("Tray: Show window triggered")
         except Exception as e:
             print(f"Tray: Error showing window: {e}")
     
@@ -172,44 +209,39 @@ def create_tray_icon(root, app):
         except Exception:
             pass
         os._exit(0)
-    
-    def on_left_click(icon, item):
-        """Xử lý left-click - Toggle floating button"""
-        print("🖱️ Tray: Single-click detected - Toggling floating button")
-        try:
-            toggle_floating_button()
-        except Exception as e:
-            print(f"❌ Tray: Error in on_left_click: {e}")
-    
-    def on_right_click(icon, item):
-        """Xử lý right-click - Show menu"""
-        print("🖱️ Tray: Right-click detected - Menu will show")
-        # Menu sẽ tự động hiện, không cần xử lý gì thêm
-    
-    
+
     # Tạo tray icon với trạng thái hiện tại
     app_version = get_app_version()
     
+    # Left-click handler đơn giản cho pystray
+    def on_left_click(icon, item):
+        """Xử lý left-click - Toggle floating button"""
+        print("🖱️ Tray: Left-click detected - Toggling floating button")
+        tray_action_queue.put('toggle_floating')
+
     # Menu items với click handlers
     def menu_toggle_floating():
         """Menu item để toggle floating button"""
         print("📋 Tray Menu: Toggle floating button clicked")
-        toggle_floating_button()
+        tray_action_queue.put('toggle_floating')
     
     def menu_show_window():
         """Menu item để hiện cửa sổ"""
         print("📋 Tray Menu: Show window clicked")
-        on_show()
+        tray_action_queue.put('show_window')
     
     def menu_exit():
         """Menu item để thoát"""
         print("📋 Tray Menu: Exit clicked")
-        on_quit()
+        tray_action_queue.put('exit')
     
     icon = pystray.Icon(
         f'ITM Translate v{app_version}', 
         create_image(floating_button_enabled), 
         menu=pystray.Menu(
+            # Hidden default item cho left-click compatibility
+            pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
+            # Menu items hiển thị
             pystray.MenuItem(
                 f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
                 menu_toggle_floating
@@ -220,151 +252,77 @@ def create_tray_icon(root, app):
         )
     )
     
-    # Thêm click handler trực tiếp cho pystray
-    def on_click(icon, button, time):
-        """Handler cho click events của pystray"""
-        # Debug: in ra type và value của button
-        print(f"🔍 Tray: Click detected - button: {button}, type: {type(button)}")
-        
-        # Kiểm tra left click bằng cách so sánh với string hoặc value
-        try:
-            # Method 1: So sánh string representation
-            if "left" in str(button).lower():
-                print("🖱️ Tray: pystray left-click detected (string match)")
-                toggle_floating_button()
-                return
-            
-            # Method 2: So sánh với enum value nếu có
-            if hasattr(button, 'name') and button.name == 'left':
-                print("🖱️ Tray: pystray left-click detected (enum name)")
-                toggle_floating_button()
-                return
-                
-            # Method 3: So sánh value number (left = 1, right = 2 thường)
-            if hasattr(button, 'value') and button.value == 1:
-                print("🖱️ Tray: pystray left-click detected (enum value)")
-                toggle_floating_button()
-                return
-                
-            print(f"🖱️ Tray: Other click detected - {button}")
-            
-        except Exception as e:
-            print(f"❌ Tray: Error in pystray click handler: {e}")
-    
-    # Gán click handler
+    # Thử nhiều cách gán left-click handler
     try:
-        icon.on_click = on_click
-        print("✅ Tray: pystray click handler assigned")
+        # Method 1: default_action
+        icon.default_action = on_left_click
+        print("✅ Method 1: default_action assigned")
     except Exception as e:
-        print(f"⚠️ Tray: Could not assign pystray click handler: {e}")
+        print(f"❌ Method 1 failed: {e}")
     
-    def setup_click_handlers():
-        """Setup click handlers cho tray icon"""
-        print("🔧 Tray: Setting up click handlers...")
-        try:
-            if WIN32_AVAILABLE:
-                # Sử dụng Windows API để xử lý tray messages
-                print("🔧 Tray: Setting up Windows API handlers")
-                
-                # Monkey patch pystray's message handling
-                if hasattr(icon, '_listener') and hasattr(icon._listener, '_on_notify'):
-                    original_on_notify = icon._listener._on_notify
-                    
-                    def enhanced_on_notify(hwnd, msg, wparam, lparam):
-                        try:
-                            # Chỉ xử lý single-click, bỏ double-click
-                            if msg == 0x201:  # WM_LBUTTONDOWN
-                                print("🖱️ Tray: Single-click message received via Windows API")
-                                on_left_click(icon, None)
-                                return 0
-                            # Bỏ xử lý double-click để tránh conflict
-                        except Exception as e:
-                            print(f"❌ Tray: Error in enhanced_on_notify: {e}")
-                        
-                        # Gọi handler gốc
-                        try:
-                            return original_on_notify(hwnd, msg, wparam, lparam)
-                        except Exception as e:
-                            print(f"❌ Tray: Error in original_on_notify: {e}")
-                            return 0
-                    
-                    icon._listener._on_notify = enhanced_on_notify
-                    print("✅ Tray: Windows API handlers installed successfully")
-                else:
-                    print("⚠️ Tray: Could not find _listener._on_notify, using fallback")
-            else:
-                print("⚠️ Tray: Windows API not available, using fallback")
-            
-            # Default action cho single-click (fallback)
-            def default_action(icon, item=None):
-                """Default action khi click"""
-                print("🖱️ Tray: Default action triggered - Toggling floating button")
+    try:
+        # Method 2: Thêm menu item ẩn cho left-click
+        # Một số version pystray cần menu item đầu tiên làm default action
+        original_menu = icon.menu
+        icon.menu = pystray.Menu(
+            pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
+            *original_menu
+        )
+        print("✅ Method 2: Hidden default menu item added")
+    except Exception as e:
+        print(f"❌ Method 2 failed: {e}")
+    
+    try:
+        # Method 3: Monkey patch icon's _on_click nếu có
+        if hasattr(icon, '_on_click'):
+            original_on_click = icon._on_click
+            def patched_on_click(icon, button, time):
                 try:
-                    toggle_floating_button()
-                except Exception as e:
-                    print(f"❌ Tray: Error in default_action: {e}")
+                    # Check if it's left button
+                    if str(button).lower() == 'button.left' or (hasattr(button, 'name') and button.name == 'left'):
+                        print("🖱️ Tray: Patched left-click detected")
+                        tray_action_queue.put('toggle_floating')
+                        return
+                except Exception:
+                    pass
+                # Fallback to original
+                if original_on_click:
+                    original_on_click(icon, button, time)
             
-            # Gán default action
-            icon.default_action = default_action
-            print("✅ Tray: Default action set")
-            
-        except Exception as e:
-            print(f"❌ Tray: Error in setup_click_handlers: {e}")
-            # Fallback minimal
-            def minimal_fallback(icon, item=None):
-                print("🖱️ Tray: Minimal fallback action - Toggling floating button")
-                try:
-                    toggle_floating_button()
-                except Exception as e:
-                    print(f"❌ Tray: Error in minimal fallback: {e}")
-            icon.default_action = minimal_fallback
+            icon._on_click = patched_on_click
+            print("✅ Method 3: Monkey patched _on_click")
+        else:
+            print("⚠️ Method 3: _on_click not found")
+    except Exception as e:
+        print(f"❌ Method 3 failed: {e}")
     
-    def run():
-        """Chạy tray icon"""
-        setup_click_handlers()
-        print("Tray: Icon starting...")  # Debug log
-        icon.run()
+    # Gán left-click handler
+    icon.default_action = on_left_click
     
+    try:
+        # Method 4: Thử với double-click thay vì single-click
+        def on_double_click(icon, item):
+            """Xử lý double-click - Toggle floating button"""
+            print("🖱️ Tray: Double-click detected - Toggling floating button")
+            tray_action_queue.put('toggle_floating')
+        
+        # Một số hệ thống chỉ hỗ trợ double-click cho tray icons
+        if hasattr(icon, 'on_activate'):
+            icon.on_activate = on_double_click
+            print("✅ Method 4: Double-click handler assigned")
+        else:
+            print("⚠️ Method 4: on_activate not supported")
+    except Exception as e:
+        print(f"❌ Method 4 failed: {e}")
     
     # Chạy tray icon trong thread riêng
-    threading.Thread(target=run, daemon=True).start()
+    threading.Thread(target=icon.run, daemon=True).start()
     
     # Khi đóng cửa sổ, ẩn thay vì thoát
     def on_window_close():
-        print("Tray: Window closing, minimizing to tray")  # Debug log
+        print("Tray: Window closing, minimizing to tray")
         root.withdraw()
     
     root.protocol('WM_DELETE_WINDOW', on_window_close)
-    
-    # Thêm method để update icon từ external modules
-    icon.update_floating_button_state = lambda enabled: (
-        setattr(icon, '_floating_button_enabled', enabled),
-        update_icon_and_menu(enabled)
-    )
-    
-    def update_icon_and_menu(enabled):
-        """Update both icon and menu for external calls"""
-        try:
-            # Update internal state
-            nonlocal floating_button_enabled
-            floating_button_enabled = enabled
-            
-            # Update icon
-            icon.icon = create_image(enabled)
-            
-            # Update menu
-            icon.menu = pystray.Menu(
-                pystray.MenuItem(
-                    f"{'✅' if enabled else '❌'} {_('floating_button_toggle')}", 
-                    menu_toggle_floating
-                ),
-                pystray.Menu.SEPARATOR,
-                pystray.MenuItem(_('tray_show_window'), menu_show_window),
-                pystray.MenuItem(_('tray_exit'), menu_exit)
-            )
-            
-            print(f"🔄 External tray icon and menu update: floating_button_enabled = {enabled}")
-        except Exception as e:
-            print(f"❌ Error in external update: {e}")
     
     return icon
