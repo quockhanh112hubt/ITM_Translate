@@ -21,7 +21,7 @@ a = Analysis(
     binaries=[] + pydantic_binaries + pydantic_core_binaries,
     datas=[
         ('Resource/icon.ico', 'Resource'),
-        ('Resource/English.ng', 'Resource'),
+        ('Resource/English.png', 'Resource'),
         ('Resource/icon_OFF.ico', 'Resource'),
         ('Resource/icon_ON.ico', 'Resource'),
         ('Resource/Vietnam.png', 'Resource'),
