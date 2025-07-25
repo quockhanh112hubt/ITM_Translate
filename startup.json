@@ -1,6 +1,1 @@
-{
-  "startup": false,
-  "show_on_startup": false,
-  "floating_button": false,
-  "auto_close_popup": true
-}
+{"startup": false, "show_on_startup": false, "floating_button": true, "auto_close_popup": true}

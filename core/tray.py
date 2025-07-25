@@ -84,9 +84,23 @@ def load_floating_button_enabled():
         pass
     return False
 
+def load_auto_close_popup_enabled():
+    """Load trạng thái auto close popup từ startup.json"""
+    try:
+        import json
+        startup_file = "startup.json"
+        if os.path.exists(startup_file):
+            with open(startup_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return bool(data.get("auto_close_popup", True))  # Mặc định bật
+    except Exception:
+        pass
+    return True  # Mặc định bật
+
 def create_tray_icon(root, app):
-    # Biến để track trạng thái floating button
+    # Biến để track trạng thái floating button và auto close popup
     floating_button_enabled = load_floating_button_enabled()
+    auto_close_popup_enabled = load_auto_close_popup_enabled()
     
     # Queue để communicate giữa Windows API callback và main thread
     tray_action_queue = queue.Queue()
@@ -98,6 +112,8 @@ def create_tray_icon(root, app):
                 action = tray_action_queue.get_nowait()
                 if action == 'toggle_floating':
                     toggle_floating_button()
+                elif action == 'toggle_auto_close_popup':
+                    toggle_auto_close_popup()
                 elif action == 'show_window':
                     on_show()
                 elif action == 'exit':
@@ -128,6 +144,24 @@ def create_tray_icon(root, app):
         except Exception as e:
             print(f"❌ Error saving floating button state: {e}")
 
+    def save_auto_close_popup_enabled(enabled):
+        """Lưu trạng thái auto close popup vào startup.json"""
+        try:
+            import json
+            startup_file = "startup.json"
+            data = {}
+            if os.path.exists(startup_file):
+                with open(startup_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            
+            data["auto_close_popup"] = enabled
+            
+            with open(startup_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            print(f"💾 Saved auto close popup state: {enabled}")
+        except Exception as e:
+            print(f"❌ Error saving auto close popup state: {e}")
+
     def update_tray_icon():
         """Cập nhật icon của tray dựa trên trạng thái floating button"""
         nonlocal icon
@@ -143,6 +177,10 @@ def create_tray_icon(root, app):
                 pystray.MenuItem(
                     f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
                     menu_toggle_floating
+                ),
+                pystray.MenuItem(
+                    f"{'✅' if auto_close_popup_enabled else '❌'} {_('auto_close_popup')}", 
+                    menu_toggle_auto_close_popup
                 ),
                 pystray.Menu.SEPARATOR,
                 pystray.MenuItem(_('tray_show_window'), menu_show_window),
@@ -191,6 +229,33 @@ def create_tray_icon(root, app):
         except Exception as e:
             print(f"❌ Error toggling floating button: {e}")
 
+    def toggle_auto_close_popup():
+        """Toggle trạng thái auto close popup"""
+        nonlocal auto_close_popup_enabled
+        auto_close_popup_enabled = not auto_close_popup_enabled
+        
+        # Lưu trạng thái mới
+        save_auto_close_popup_enabled(auto_close_popup_enabled)
+        
+        # Cập nhật icon (menu sẽ được update)
+        update_tray_icon()
+        
+        # Gọi callback để cập nhật chức năng auto close popup
+        try:
+            # Cập nhật GUI nếu có
+            if hasattr(app, 'auto_close_popup_var') and app.auto_close_popup_var:
+                root.after(0, lambda: app.auto_close_popup_var.set(auto_close_popup_enabled))
+            
+            # Import function save_auto_close_popup từ ITM_Translate.py nếu có
+            import sys
+            main_module = sys.modules.get('__main__')
+            if main_module and hasattr(main_module, 'save_auto_close_popup'):
+                main_module.save_auto_close_popup(auto_close_popup_enabled)
+                
+            print(f"🖱️ Auto close popup toggled: {auto_close_popup_enabled}")
+        except Exception as e:
+            print(f"❌ Error toggling auto close popup: {e}")
+
     def on_show():
         """Hiện cửa sổ chính"""
         try:
@@ -225,6 +290,11 @@ def create_tray_icon(root, app):
         print("📋 Tray Menu: Toggle floating button clicked")
         tray_action_queue.put('toggle_floating')
     
+    def menu_toggle_auto_close_popup():
+        """Menu item để toggle auto close popup"""
+        print("📋 Tray Menu: Toggle auto close popup clicked")
+        tray_action_queue.put('toggle_auto_close_popup')
+    
     def menu_show_window():
         """Menu item để hiện cửa sổ"""
         print("📋 Tray Menu: Show window clicked")
@@ -245,6 +315,10 @@ def create_tray_icon(root, app):
             pystray.MenuItem(
                 f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
                 menu_toggle_floating
+            ),
+            pystray.MenuItem(
+                f"{'✅' if auto_close_popup_enabled else '❌'} {_('auto_close_popup')}", 
+                menu_toggle_auto_close_popup
             ),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(_('tray_show_window'), menu_show_window),
