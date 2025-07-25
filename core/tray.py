@@ -163,9 +163,13 @@ def create_tray_icon(root, app):
             print(f"❌ Error saving auto close popup state: {e}")
 
     def update_tray_icon():
-        """Cập nhật icon của tray dựa trên trạng thái floating button"""
-        nonlocal icon
+        """Cập nhật icon của tray dựa trên trạng thái floating button và auto close popup"""
+        nonlocal icon, floating_button_enabled, auto_close_popup_enabled
         try:
+            # Reload trạng thái mới nhất từ file (cho trường hợp GUI thay đổi)
+            floating_button_enabled = load_floating_button_enabled()
+            auto_close_popup_enabled = load_auto_close_popup_enabled()
+            
             new_image = create_image(floating_button_enabled)
             icon.icon = new_image
             
@@ -175,11 +179,11 @@ def create_tray_icon(root, app):
                 pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
                 # Menu items hiển thị
                 pystray.MenuItem(
-                    f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
+                    f"{'✅' if floating_button_enabled else '🟩'} {_('floating_button_toggle')}", 
                     menu_toggle_floating
                 ),
                 pystray.MenuItem(
-                    f"{'✅' if auto_close_popup_enabled else '❌'} {_('auto_close_popup')}", 
+                    f"{'✅' if auto_close_popup_enabled else '🟩'} {_('auto_close_popup')}", 
                     menu_toggle_auto_close_popup
                 ),
                 pystray.Menu.SEPARATOR,
@@ -198,7 +202,7 @@ def create_tray_icon(root, app):
             except Exception as e:
                 print(f"⚠️ Could not re-assign left-click handler: {e}")
             
-            print(f"🔄 Tray icon and menu updated: floating_button_enabled = {floating_button_enabled}")
+            print(f"🔄 Tray icon and menu updated: floating_button_enabled = {floating_button_enabled}, auto_close_popup_enabled = {auto_close_popup_enabled}")
         except Exception as e:
             print(f"❌ Error updating tray icon: {e}")
 
@@ -313,11 +317,11 @@ def create_tray_icon(root, app):
             pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
             # Menu items hiển thị
             pystray.MenuItem(
-                f"{'✅' if floating_button_enabled else '❌'} {_('floating_button_toggle')}", 
+                f"{'✅' if floating_button_enabled else '🟩'} {_('floating_button_toggle')}", 
                 menu_toggle_floating
             ),
             pystray.MenuItem(
-                f"{'✅' if auto_close_popup_enabled else '❌'} {_('auto_close_popup')}", 
+                f"{'✅' if auto_close_popup_enabled else '🟩'} {_('auto_close_popup')}", 
                 menu_toggle_auto_close_popup
             ),
             pystray.Menu.SEPARATOR,
@@ -399,4 +403,18 @@ def create_tray_icon(root, app):
     
     root.protocol('WM_DELETE_WINDOW', on_window_close)
     
-    return icon
+    # Tạo wrapper object để expose update_tray_icon method
+    class TrayWrapper:
+        def __init__(self, icon, update_func):
+            self.icon = icon
+            self.update_tray_icon = update_func
+            
+        def stop(self):
+            """Delegate stop method to icon"""
+            return self.icon.stop()
+            
+        def __getattr__(self, name):
+            """Delegate other attributes to icon"""
+            return getattr(self.icon, name)
+    
+    return TrayWrapper(icon, update_tray_icon)

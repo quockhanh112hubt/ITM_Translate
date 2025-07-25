@@ -255,6 +255,13 @@ class MainGUI:
     def set_floating_button_callback(self, callback):
         self.floating_button_callback = callback
     
+    def set_tray_update_callback(self, callback):
+        """Set callback để cập nhật tray icon khi settings thay đổi"""
+        self.tray_update_callback = callback
+        # Cũng set cho advanced tab component nếu đã được khởi tạo
+        if hasattr(self, 'advanced_tab_component'):
+            self.advanced_tab_component.set_tray_update_callback(callback)
+    
     def get_show_on_startup(self):
         return self.show_on_startup_var.get() if hasattr(self, 'show_on_startup_var') else True
     def get_floating_button_enabled(self):

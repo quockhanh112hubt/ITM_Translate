@@ -855,6 +855,26 @@ except Exception as e:
     print(f"❌ Error checking API keys: {e}")
 
 tray = create_tray_icon(root, app)
+
+# Tạo callback để cập nhật tray icon từ GUI
+def update_tray_icon_from_gui():
+    """Callback để cập nhật tray icon khi settings thay đổi từ GUI"""
+    try:
+        if tray and hasattr(tray, 'update_tray_icon'):
+            # Gọi function update_tray_icon của tray
+            tray.update_tray_icon()
+        else:
+            # Nếu không có method update_tray_icon, reload tray state
+            import importlib
+            import core.tray
+            importlib.reload(core.tray)
+            print("🔄 Tray icon updated from GUI settings change")
+    except Exception as e:
+        print(f"❌ Error updating tray icon from GUI: {e}")
+
+# Set callback cho app
+app.set_tray_update_callback(update_tray_icon_from_gui)
+
 check_queue()
 
 # Cleanup function

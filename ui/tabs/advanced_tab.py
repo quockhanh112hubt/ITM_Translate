@@ -163,6 +163,14 @@ class AdvancedTab:
         # Gọi callback để main.py xử lý floating button
         if hasattr(self.main_gui, 'floating_button_callback') and self.main_gui.floating_button_callback:
             self.main_gui.floating_button_callback(floating_button)
+        
+        # Gọi callback để cập nhật tray icon
+        if hasattr(self.main_gui, 'tray_update_callback') and self.main_gui.tray_update_callback:
+            try:
+                self.main_gui.tray_update_callback()
+                print(f"🔄 Tray icon updated from Advanced Tab: floating_button = {floating_button}")
+            except Exception as e:
+                print(f"❌ Error updating tray icon: {e}")
     
     def on_auto_close_popup_toggle(self):
         """Xử lý khi toggle auto close popup setting"""
@@ -181,6 +189,14 @@ class AdvancedTab:
                 }, f)
         except Exception as e:
             print(f"❌ Error saving auto close popup setting: {e}")
+        
+        # Gọi callback để cập nhật tray icon
+        if hasattr(self.main_gui, 'tray_update_callback') and self.main_gui.tray_update_callback:
+            try:
+                self.main_gui.tray_update_callback()
+                print(f"🔄 Tray icon updated from Advanced Tab: auto_close_popup = {auto_close_popup}")
+            except Exception as e:
+                print(f"❌ Error updating tray icon: {e}")
     
     def _show_help(self):
         """Delegate to main GUI's show_help method"""
@@ -209,3 +225,8 @@ class AdvancedTab:
         """Set callback cho floating button từ main GUI"""
         # Lưu callback vào main_gui instance để component có thể access
         self.main_gui.floating_button_callback = callback
+    
+    def set_tray_update_callback(self, callback):
+        """Set callback để cập nhật tray icon từ main GUI"""
+        # Lưu callback vào main_gui instance để component có thể access
+        self.main_gui.tray_update_callback = callback
