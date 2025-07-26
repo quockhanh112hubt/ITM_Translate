@@ -103,6 +103,11 @@ def show_floating_translate_button(mouse_x, mouse_y):
     """Hiển thị nút dịch floating cạnh vị trí chuột"""
     global floating_btn, floating_btn_timer
     
+    # KIỂM TRA EXCLUSION NGAY ĐẦU
+    if is_current_app_excluded():
+        print(f"🚫 [FLOATING] Cannot show floating button - current app is excluded")
+        return
+    
     # Đóng nút cũ nếu có
     if floating_btn is not None:
         try:
@@ -200,12 +205,16 @@ def on_mouse_click(x, y, button, pressed):
                 print(f"📸 [FLOATING] Screenshot mode detected, ignoring mouse drag")
                 return
             
+            # Kiểm tra nếu ứng dụng hiện tại bị loại trừ
+            if is_current_app_excluded():
+                return
+            
             # Bắt đầu có thể drag (select text)
             mouse_drag_start = (x, y)
             is_dragging = False
         else:
             # Kết thúc click/drag
-            if mouse_drag_start and is_dragging and not screenshot_mode_active and not screenshot_mode_keys:
+            if mouse_drag_start and is_dragging and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
                 # Đã drag (select text), check clipboard sau một chút
                 # Tăng delay để đảm bảo text đã được select hoàn toàn
                 root.after(300, lambda: check_for_new_selection(x, y))
@@ -217,7 +226,7 @@ def on_mouse_move(x, y):
     """Xử lý mouse move events"""
     global mouse_drag_start, is_dragging
     
-    if mouse_drag_start and not screenshot_mode_active and not screenshot_mode_keys:
+    if mouse_drag_start and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
         # Tính khoảng cách drag
         dx = abs(x - mouse_drag_start[0])
         dy = abs(y - mouse_drag_start[1])
@@ -279,6 +288,33 @@ def get_active_window_title():
         pass
     return ""
 
+def get_active_window_process_name():
+    """Lấy process name của cửa sổ đang active (Windows only)"""
+    try:
+        if sys.platform.startswith("win"):
+            import ctypes
+            import psutil
+            
+            # Get the handle of the foreground window
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            
+            # Get process ID
+            process_id = ctypes.c_ulong()
+            ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(process_id))
+            
+            # Get process name
+            try:
+                process = psutil.Process(process_id.value)
+                process_name = process.name().lower()
+                if process_name.endswith('.exe'):
+                    process_name = process_name[:-4]
+                return process_name
+            except psutil.NoSuchProcess:
+                return ""
+    except Exception:
+        pass
+    return ""
+
 def check_for_new_selection(mouse_x, mouse_y):
     """Kiểm tra xem có text mới được select không"""
     global last_clipboard_text
@@ -287,6 +323,10 @@ def check_for_new_selection(mouse_x, mouse_y):
         # Kiểm tra nếu đang trong chế độ chụp ảnh
         if screenshot_mode_active or screenshot_mode_keys:
             print(f"📸 [FLOATING] Screenshot mode active, skipping text selection check")
+            return
+        
+        # Kiểm tra nếu ứng dụng hiện tại bị loại trừ
+        if is_current_app_excluded():
             return
         
         # Tránh trigger khi click vào floating button đang hiển thị
@@ -384,6 +424,11 @@ def check_for_new_selection(mouse_x, mouse_y):
             word_count = len([w for w in cleaned_text.split() if any(c.isalpha() for c in w)])
             if word_count < 2 and len(cleaned_text) < 15:
                 print(f"🖱️ [FLOATING] Not enough meaningful content, skipping: '{cleaned_text}' (words: {word_count})")
+                return
+            
+            # KIỂM TRA CUỐI CÙNG: Ứng dụng hiện tại có bị loại trừ không
+            if is_current_app_excluded():
+                print(f"🚫 [FLOATING] Current app excluded, not showing floating button")
                 return
             
             # Text hợp lệ, cập nhật last_clipboard_text và hiển thị floating button
@@ -768,6 +813,38 @@ def load_startup_enabled():
             pass
     return False
 
+def load_excluded_applications():
+    """Load danh sách ứng dụng bị loại trừ từ startup.json"""
+    if os.path.exists(STARTUP_FILE):
+        try:
+            with open(STARTUP_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("excluded_applications", ["excel", "word", "powerpoint", "outlook"])
+        except Exception:
+            pass
+    return ["excel", "word", "powerpoint", "outlook"]  # Default excluded apps
+
+def is_current_app_excluded():
+    """Kiểm tra xem ứng dụng hiện tại có bị loại trừ không"""
+    try:
+        # Chỉ lấy process name để kiểm tra, không check window title
+        # vì window title có thể chứa đường dẫn file gây nhầm lẫn
+        process_name = get_active_window_process_name().lower()
+        active_window = get_active_window_title().lower()  # Chỉ để log
+        excluded_apps = load_excluded_applications()
+        
+        for app in excluded_apps:
+            app_lower = app.lower()
+            # Chỉ kiểm tra process name, không check window title
+            if app_lower in process_name:
+                print(f"🚫 [FLOATING] Current app excluded - Process: '{process_name}' (matched: {app})")
+                return True
+        
+        return False
+    except Exception as e:
+        print(f"❌ [FLOATING] Error checking excluded app: {e}")
+        return False
+
 def load_floating_button_enabled():
     if os.path.exists(STARTUP_FILE):
         try:
@@ -845,7 +922,9 @@ def set_startup_windows(enable):
 
 def set_floating_button_enabled(enabled):
     """Callback để bật/tắt chức năng floating button từ GUI hoặc tray"""
-    global mouse_listener, tray
+    global mouse_listener, tray, app
+    print(f"🔍 [DEBUG] set_floating_button_enabled called with: enabled = {enabled}")
+    
     if enabled:
         # Bật mouse listener nếu chưa có
         if mouse_listener is None or not mouse_listener.running:
@@ -866,6 +945,32 @@ def set_floating_button_enabled(enabled):
             tray.update_floating_button_state(enabled)
         except Exception as e:
             print(f"❌ Error updating tray icon: {e}")
+    
+    # Cập nhật UI trong Advanced tab để ẩn/hiện phần excluded applications
+    try:
+        print(f"🔍 [DEBUG] Checking app availability: app={app is not None}")
+        if app:
+            print(f"🔍 [DEBUG] Has advanced_tab_component: {hasattr(app, 'advanced_tab_component')}")
+            if hasattr(app, 'advanced_tab_component'):
+                print(f"🔍 [DEBUG] advanced_tab_component: {app.advanced_tab_component}")
+                
+                # CẬP NHẬT CHECKBOX STATE TRƯỚC KHI GỌI _update_excluded_frame_state
+                if hasattr(app.advanced_tab_component, 'floating_button_enabled'):
+                    app.advanced_tab_component.floating_button_enabled.set(enabled)
+                    print(f"🔄 Updated checkbox state to: {enabled}")
+                
+                print(f"🔍 [DEBUG] Has _update_excluded_frame_state: {hasattr(app.advanced_tab_component, '_update_excluded_frame_state')}")
+                if hasattr(app.advanced_tab_component, '_update_excluded_frame_state'):
+                    app.advanced_tab_component._update_excluded_frame_state()
+                    print(f"🔄 Advanced tab excluded frame state updated")
+                else:
+                    print(f"❌ Method _update_excluded_frame_state not found")
+            else:
+                print(f"❌ advanced_tab_component not found")
+        else:
+            print(f"❌ app is None")
+    except Exception as e:
+        print(f"❌ Error updating advanced tab excluded frame state: {e}")
 
 # Định nghĩa các phím tắt (mặc định, có thể cập nhật từ GUI)
 default_hotkeys = {

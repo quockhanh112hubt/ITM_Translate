@@ -138,7 +138,7 @@ class MainGUI:
                 print(f"Warning: Could not auto-refresh API keys: {e}")
         elif tab_index == 2:  # Advanced tab
             # Tab Nâng Cao: kích thước nhỏ gọn
-            self.root.geometry('1070x350')
+            self.root.geometry('1070x600')
         
         # Đảm bảo cửa sổ được cập nhật
         self.root.update_idletasks()

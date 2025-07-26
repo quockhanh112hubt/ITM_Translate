@@ -2,5 +2,16 @@
   "startup": false,
   "show_on_startup": false,
   "floating_button": true,
-  "auto_close_popup": true
+  "auto_close_popup": true,
+  "excluded_applications": [
+    "excel",
+    "word",
+    "powerpoint",
+    "outlook",
+    "onenote",
+    "access",
+    "publisher",
+    "visio",
+    "code"
+  ]
 }
