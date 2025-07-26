@@ -95,6 +95,9 @@ floating_btn_timer = None
 last_clipboard_text = ''
 mouse_drag_start = None
 is_dragging = False
+screenshot_mode_keys = set()  # Theo dõi các phím chụp ảnh đang được nhấn
+screenshot_mode_active = False  # Trạng thái chế độ chụp ảnh đang hoạt động
+screenshot_mode_timer = None  # Timer để tự động tắt chế độ chụp ảnh
 
 def show_floating_translate_button(mouse_x, mouse_y):
     """Hiển thị nút dịch floating cạnh vị trí chuột"""
@@ -192,14 +195,20 @@ def on_mouse_click(x, y, button, pressed):
     
     if button == mouse.Button.left:
         if pressed:
+            # Kiểm tra nếu đang trong chế độ chụp ảnh
+            if screenshot_mode_active or screenshot_mode_keys:
+                print(f"📸 [FLOATING] Screenshot mode detected, ignoring mouse drag")
+                return
+            
             # Bắt đầu có thể drag (select text)
             mouse_drag_start = (x, y)
             is_dragging = False
         else:
             # Kết thúc click/drag
-            if mouse_drag_start and is_dragging:
+            if mouse_drag_start and is_dragging and not screenshot_mode_active and not screenshot_mode_keys:
                 # Đã drag (select text), check clipboard sau một chút
-                root.after(200, lambda: check_for_new_selection(x, y))
+                # Tăng delay để đảm bảo text đã được select hoàn toàn
+                root.after(300, lambda: check_for_new_selection(x, y))
             
             mouse_drag_start = None
             is_dragging = False
@@ -208,37 +217,190 @@ def on_mouse_move(x, y):
     """Xử lý mouse move events"""
     global mouse_drag_start, is_dragging
     
-    if mouse_drag_start:
+    if mouse_drag_start and not screenshot_mode_active and not screenshot_mode_keys:
         # Tính khoảng cách drag
         dx = abs(x - mouse_drag_start[0])
         dy = abs(y - mouse_drag_start[1])
         
-        # Nếu drag đủ xa (> 10 pixels) thì coi là đang select text
-        if dx > 10 or dy > 10:
+        # Nâng cao threshold và yêu cầu drag đủ xa để có thể là text selection
+        # Drag theo chiều ngang (dx) thường là text selection
+        # Drag theo chiều dọc (dy) có thể là scroll hoặc drag window
+        horizontal_drag = dx > 15  # Tăng từ 10 lên 15 pixels
+        meaningful_drag = dx > 8 and dy < 50  # Ưu tiên drag ngang, hạn chế drag dọc quá nhiều
+        
+        if horizontal_drag or meaningful_drag:
             is_dragging = True
+
+def activate_screenshot_mode(duration_ms=15000):
+    """Kích hoạt chế độ chụp ảnh trong khoảng thời gian nhất định"""
+    global screenshot_mode_active, screenshot_mode_timer
+    
+    screenshot_mode_active = True
+    print(f"📸 [FLOATING] Screenshot mode activated for {duration_ms}ms")
+    
+    # Hủy timer cũ nếu có
+    if screenshot_mode_timer:
+        root.after_cancel(screenshot_mode_timer)
+    
+    # Đặt timer để tự động tắt
+    screenshot_mode_timer = root.after(duration_ms, deactivate_screenshot_mode)
+
+def deactivate_screenshot_mode():
+    """Tắt chế độ chụp ảnh"""
+    global screenshot_mode_active, screenshot_mode_timer
+    
+    screenshot_mode_active = False
+    if screenshot_mode_timer:
+        root.after_cancel(screenshot_mode_timer)
+        screenshot_mode_timer = None
+    print(f"📸 [FLOATING] Screenshot mode deactivated")
+
+def get_active_window_title():
+    """Lấy title của cửa sổ đang active (Windows only)"""
+    try:
+        if sys.platform.startswith("win"):
+            import ctypes
+            from ctypes import wintypes
+            
+            # Get the handle of the foreground window
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            
+            # Get the length of the window title
+            length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+            if length == 0:
+                return ""
+            
+            # Get the window title
+            buffer = ctypes.create_unicode_buffer(length + 1)
+            ctypes.windll.user32.GetWindowTextW(hwnd, buffer, length + 1)
+            
+            return buffer.value
+    except Exception:
+        pass
+    return ""
 
 def check_for_new_selection(mouse_x, mouse_y):
     """Kiểm tra xem có text mới được select không"""
     global last_clipboard_text
     
     try:
+        # Kiểm tra nếu đang trong chế độ chụp ảnh
+        if screenshot_mode_active or screenshot_mode_keys:
+            print(f"📸 [FLOATING] Screenshot mode active, skipping text selection check")
+            return
+        
+        # Tránh trigger khi click vào floating button đang hiển thị
+        if floating_btn and floating_btn.winfo_exists():
+            try:
+                btn_x = floating_btn.winfo_rootx()
+                btn_y = floating_btn.winfo_rooty()
+                btn_w = floating_btn.winfo_width()
+                btn_h = floating_btn.winfo_height()
+                
+                # Nếu chuột gần floating button, không check selection
+                if (btn_x - 50 <= mouse_x <= btn_x + btn_w + 50 and 
+                    btn_y - 50 <= mouse_y <= btn_y + btn_h + 50):
+                    print(f"🖱️ [FLOATING] Mouse near floating button, skipping")
+                    return
+            except:
+                pass
+        
+        # Backup clipboard hiện tại để so sánh
+        original_clipboard = get_clipboard()
+        
+        # Delay ngắn trước khi gửi Ctrl+C để tránh conflict với Excel auto-copy
+        time.sleep(0.05)
+        
         # Copy text đã select (simulate Ctrl+C)
         kb.press(Key.ctrl)
         kb.press('c')
         kb.release('c')
         kb.release(Key.ctrl)
         
-        # Đợi clipboard update
-        time.sleep(0.1)
+        # Đợi clipboard update (tăng delay cho Excel)
+        time.sleep(0.15)
         
         current_text = get_clipboard()
         
-        # Nếu có text mới và khác text trước đó
-        if current_text and current_text.strip() and current_text != last_clipboard_text:
+        # Kiểm tra điều kiện để hiển thị floating button:
+        # 1. Clipboard đã thay đổi (có text mới được copy)
+        # 2. Text không rỗng và có nội dung thực sự
+        # 3. Text khác với lần cuối cùng đã xử lý
+        # 4. Text không giống với clipboard ban đầu (tránh trường hợp không có selection)
+        clipboard_changed = current_text != original_clipboard
+        has_meaningful_text = current_text and current_text.strip() and len(current_text.strip()) > 1
+        is_new_text = current_text != last_clipboard_text
+        
+        # Kiểm tra ứng dụng hiện tại để tránh Excel auto-copy
+        active_window = get_active_window_title().lower()
+        is_excel_app = any(keyword in active_window for keyword in ['excel', 'microsoft excel', '.xlsx', '.xls'])
+        
+        # Thêm kiểm tra đặc biệt cho Excel auto-copy
+        # Excel thường copy single cell values hoặc short text khi click
+        is_excel_auto_copy = False
+        if clipboard_changed and current_text and is_excel_app:
+            cleaned_text = current_text.strip()
+            
+            # Excel auto-copy patterns:
+            # - Single word/number (no spaces)
+            # - Very short text (< 10 chars)
+            # - Pure numbers or simple formulas
+            # - Single line with common Excel content patterns
+            if (len(cleaned_text) < 10 and 
+                ('\n' not in cleaned_text) and
+                (cleaned_text.replace('.', '').replace(',', '').replace('-', '').isdigit() or  # Numbers
+                 len(cleaned_text.split()) <= 2 or  # Max 2 words
+                 cleaned_text.startswith('='))):  # Excel formulas
+                is_excel_auto_copy = True
+                print(f"🖱️ [FLOATING] Detected Excel auto-copy pattern, skipping: '{cleaned_text}'")
+        
+        # Nếu không phải Excel, cũng check pattern tương tự cho các ứng dụng khác
+        elif clipboard_changed and current_text and not is_excel_app:
+            cleaned_text = current_text.strip()
+            
+            # Auto-copy patterns from other apps (Google Sheets, LibreOffice, etc.)
+            if (len(cleaned_text) < 8 and 
+                ('\n' not in cleaned_text) and
+                (cleaned_text.replace('.', '').replace(',', '').replace('-', '').isdigit() or  # Numbers
+                 len(cleaned_text.split()) <= 1)):  # Single word
+                is_excel_auto_copy = True
+                print(f"🖱️ [FLOATING] Detected auto-copy pattern from {active_window}, skipping: '{cleaned_text}'")
+        
+        if clipboard_changed and has_meaningful_text and is_new_text and not is_excel_auto_copy:
+            # Kiểm tra thêm: text không được quá ngắn hoặc chỉ là ký tự đặc biệt
+            cleaned_text = current_text.strip()
+            
+            # Bỏ qua nếu chỉ là 1 ký tự hoặc toàn ký tự đặc biệt/số
+            if len(cleaned_text) < 2:
+                print(f"🖱️ [FLOATING] Text too short, skipping: '{cleaned_text}'")
+                return
+                
+            # Bỏ qua nếu toàn là ký tự không phải chữ (số, ký tự đặc biệt)
+            if not any(c.isalpha() for c in cleaned_text):
+                print(f"🖱️ [FLOATING] No alphabetic characters, skipping: '{cleaned_text}'")
+                return
+            
+            # Kiểm tra thêm cho meaningful content (ít nhất 3 từ hoặc 15 ký tự có ý nghĩa)
+            word_count = len([w for w in cleaned_text.split() if any(c.isalpha() for c in w)])
+            if word_count < 2 and len(cleaned_text) < 15:
+                print(f"🖱️ [FLOATING] Not enough meaningful content, skipping: '{cleaned_text}' (words: {word_count})")
+                return
+            
+            # Text hợp lệ, cập nhật last_clipboard_text và hiển thị floating button
             last_clipboard_text = current_text
-            # Hiển thị floating button
             show_floating_translate_button(mouse_x, mouse_y)
             print(f"🖱️ [FLOATING] New text selected: {current_text[:30]}...")
+        else:
+            # Debug: in lý do không hiển thị
+            if not clipboard_changed:
+                print(f"🖱️ [FLOATING] No clipboard change detected")
+            elif not has_meaningful_text:
+                print(f"🖱️ [FLOATING] No meaningful text: '{current_text}'")
+            elif not is_new_text:
+                print(f"🖱️ [FLOATING] Already processed this text")
+            elif is_excel_auto_copy:
+                # Already logged above
+                pass
             
     except Exception as e:
         print(f"❌ [FLOATING] Error checking selection: {e}")
@@ -736,16 +898,80 @@ class MultiHotKey:
         self._pressed.clear()
         self._active.clear()
     def press(self, key):
+        # Theo dõi các phím chụp ảnh phổ biến
+        self._check_screenshot_keys(key, True)
+        
         self._pressed.add(key)
         for combo, callback in self.hotkeys:
             if combo <= self._pressed and combo not in self._active:
                 self._active.add(combo)
                 callback()
     def release(self, key):
+        # Theo dõi các phím chụp ảnh phổ biến
+        self._check_screenshot_keys(key, False)
+        
         self._pressed.discard(key)
         for combo in list(self._active):
             if not combo <= self._pressed:
                 self._active.discard(combo)
+    def _check_screenshot_keys(self, key, is_pressed):
+        """Theo dõi các tổ hợp phím chụp ảnh phổ biến"""
+        global screenshot_mode_keys
+        
+        if is_pressed:
+            # Special handling for Ctrl+Alt+S sequence
+            if (keyboard.Key.ctrl in self._pressed and 
+                keyboard.Key.alt in self._pressed and 
+                key == keyboard.KeyCode.from_char('s')):
+                print(f"📸 [FLOATING] Ctrl+Alt+S screenshot sequence detected!")
+                activate_screenshot_mode(15000)
+                return
+                
+            # Special handling for Win+Shift+S sequence  
+            if (keyboard.Key.cmd in self._pressed and 
+                keyboard.Key.shift in self._pressed and 
+                key == keyboard.KeyCode.from_char('s')):
+                print(f"📸 [FLOATING] Win+Shift+S screenshot sequence detected!")
+                activate_screenshot_mode(15000)
+                return
+                
+            # Print Screen variations
+            if key == keyboard.Key.print_screen:
+                print(f"📸 [FLOATING] Print Screen detected!")
+                activate_screenshot_mode(15000)
+                return
+                
+            # ShareX shortcuts
+            if (keyboard.Key.ctrl in self._pressed and 
+                keyboard.Key.shift in self._pressed and 
+                hasattr(key, 'char') and key.char in ['1', '2', '3', '4']):
+                print(f"📸 [FLOATING] ShareX shortcut Ctrl+Shift+{key.char} detected!")
+                activate_screenshot_mode(15000)
+                return
+                
+        # Keep track of pressed keys for combo detection
+        # (Original combo logic as fallback)
+        screenshot_combos = [
+            frozenset([keyboard.Key.ctrl, keyboard.Key.alt, keyboard.KeyCode.from_char('s')]),
+            frozenset([keyboard.Key.cmd, keyboard.Key.shift, keyboard.KeyCode.from_char('s')]),
+            frozenset([keyboard.Key.print_screen]),
+            frozenset([keyboard.Key.alt, keyboard.Key.print_screen]),
+            frozenset([keyboard.Key.ctrl, keyboard.Key.print_screen]),
+        ]
+        
+        if is_pressed:
+            for combo in screenshot_combos:
+                if combo <= self._pressed and combo not in screenshot_mode_keys:
+                    screenshot_mode_keys.add(combo)
+                    print(f"📸 [FLOATING] Screenshot combo active: {combo}")
+        else:
+            to_remove = []
+            for combo in screenshot_mode_keys:
+                if not combo <= self._pressed:
+                    to_remove.append(combo)
+            for combo in to_remove:
+                screenshot_mode_keys.discard(combo)
+                print(f"📸 [FLOATING] Screenshot combo released: {combo}")
     def _run_and_reset(self, combo, callback):
         try:
             callback()
