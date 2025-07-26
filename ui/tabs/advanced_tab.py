@@ -248,7 +248,6 @@ class AdvancedTab:
         if hasattr(self.main_gui, 'tray_update_callback') and self.main_gui.tray_update_callback:
             try:
                 self.main_gui.tray_update_callback()
-                print(f"🔄 Tray icon updated from Advanced Tab: floating_button = {floating_button}")
             except Exception as e:
                 print(f"❌ Error updating tray icon: {e}")
         
@@ -284,7 +283,6 @@ class AdvancedTab:
         if hasattr(self.main_gui, 'tray_update_callback') and self.main_gui.tray_update_callback:
             try:
                 self.main_gui.tray_update_callback()
-                print(f"🔄 Tray icon updated from Advanced Tab: auto_close_popup = {auto_close_popup}")
             except Exception as e:
                 print(f"❌ Error updating tray icon: {e}")
     
@@ -325,15 +323,12 @@ class AdvancedTab:
         """Cập nhật trạng thái của excluded frame dựa trên floating button"""
         try:
             floating_enabled = self.floating_button_enabled.get()
-            print(f"🔍 [DEBUG] _update_excluded_frame_state called: floating_enabled = {floating_enabled}")
             
             if floating_enabled:
                 # Floating button BẬT -> Enable excluded frame (cần thiết lập loại trừ)
-                print(f"🔍 [DEBUG] Floating button ON -> Enabling excluded frame")
                 self._enable_widget_recursive(self.excluded_frame)
             else:
                 # Floating button TẮT -> Disable excluded frame (không cần thiết lập)
-                print(f"🔍 [DEBUG] Floating button OFF -> Disabling excluded frame")
                 self._disable_widget_recursive(self.excluded_frame)
         except Exception as e:
             print(f"❌ Error updating excluded frame state: {e}")

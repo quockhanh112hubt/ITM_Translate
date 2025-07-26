@@ -923,7 +923,6 @@ def set_startup_windows(enable):
 def set_floating_button_enabled(enabled):
     """Callback để bật/tắt chức năng floating button từ GUI hoặc tray"""
     global mouse_listener, tray, app
-    print(f"🔍 [DEBUG] set_floating_button_enabled called with: enabled = {enabled}")
     
     if enabled:
         # Bật mouse listener nếu chưa có
@@ -946,29 +945,15 @@ def set_floating_button_enabled(enabled):
         except Exception as e:
             print(f"❌ Error updating tray icon: {e}")
     
-    # Cập nhật UI trong Advanced tab để ẩn/hiện phần excluded applications
+    # Cập nhật UI trong Advanced tab để sync checkbox state và excluded frame
     try:
-        print(f"🔍 [DEBUG] Checking app availability: app={app is not None}")
-        if app:
-            print(f"🔍 [DEBUG] Has advanced_tab_component: {hasattr(app, 'advanced_tab_component')}")
-            if hasattr(app, 'advanced_tab_component'):
-                print(f"🔍 [DEBUG] advanced_tab_component: {app.advanced_tab_component}")
-                
-                # CẬP NHẬT CHECKBOX STATE TRƯỚC KHI GỌI _update_excluded_frame_state
-                if hasattr(app.advanced_tab_component, 'floating_button_enabled'):
-                    app.advanced_tab_component.floating_button_enabled.set(enabled)
-                    print(f"🔄 Updated checkbox state to: {enabled}")
-                
-                print(f"🔍 [DEBUG] Has _update_excluded_frame_state: {hasattr(app.advanced_tab_component, '_update_excluded_frame_state')}")
-                if hasattr(app.advanced_tab_component, '_update_excluded_frame_state'):
-                    app.advanced_tab_component._update_excluded_frame_state()
-                    print(f"🔄 Advanced tab excluded frame state updated")
-                else:
-                    print(f"❌ Method _update_excluded_frame_state not found")
-            else:
-                print(f"❌ advanced_tab_component not found")
-        else:
-            print(f"❌ app is None")
+        if app and hasattr(app, 'advanced_tab_component'):
+            # Cập nhật checkbox state trước khi gọi _update_excluded_frame_state
+            if hasattr(app.advanced_tab_component, 'floating_button_enabled'):
+                app.advanced_tab_component.floating_button_enabled.set(enabled)
+            
+            if hasattr(app.advanced_tab_component, '_update_excluded_frame_state'):
+                app.advanced_tab_component._update_excluded_frame_state()
     except Exception as e:
         print(f"❌ Error updating advanced tab excluded frame state: {e}")
 
