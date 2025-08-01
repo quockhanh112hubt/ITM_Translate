@@ -479,6 +479,11 @@ def load_language_settings_from_file():
 
 def _on_activate_translate():
     loading = show_loading_popup(root)
+    
+    # Timeout mechanism
+    translation_completed = threading.Event()
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    
     def do_translate():
         try:
             load_language_settings_from_file()
@@ -497,22 +502,72 @@ def _on_activate_translate():
                 else:
                     print("⚠️ [GROUP 1] No API key available!")
                 
-                # Get translation with actual language info
-                translated, actual_source, actual_target = translate_text(
-                    selected_text, 
-                    global_language_settings['Ngon_ngu_dau_tien'], 
-                    global_language_settings['Ngon_ngu_thu_2'], 
-                    global_language_settings['Ngon_ngu_thu_3'],
-                    return_language_info=True
-                )
+                try:
+                    # Get translation with actual language info and timeout
+                    start_time = time.time()
+                    translated, actual_source, actual_target = translate_text(
+                        selected_text, 
+                        global_language_settings['Ngon_ngu_dau_tien'], 
+                        global_language_settings['Ngon_ngu_thu_2'], 
+                        global_language_settings['Ngon_ngu_thu_3'],
+                        return_language_info=True
+                    )
+                    
+                    # Store successful result
+                    translation_result['translated'] = translated
+                    translation_result['actual_source'] = actual_source
+                    translation_result['actual_target'] = actual_target
+                    
+                    # Log translation time
+                    translation_time = time.time() - start_time
+                    print(f"⏱️ [GROUP 1] Translation completed in {translation_time:.2f}s")
+                    
+                except Exception as e:
+                    # Store error result
+                    translation_result['error'] = str(e)
+                    print(f"❌ [GROUP 1] Translation error: {e}")
                 
-                # Print result info
-                print(f"✨ [GROUP 1] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1] Translation result: {translated}")
+                # Signal completion regardless of success/failure
+                translation_completed.set()
+            else:
+                # No text selected
+                translation_completed.set()
+        except Exception as e:
+            print(f"❌ [GROUP 1] Unexpected error: {e}")
+            translation_result['error'] = f"Unexpected error: {e}"
+            translation_completed.set()
+        finally:
+            root.after(0, restore_system_cursor)
+    
+    # Start translation in background thread
+    threading.Thread(target=do_translate, daemon=True).start()
+    
+    # Wait for completion with timeout
+    def check_translation_status():
+        if translation_completed.is_set():
+            # Translation completed (success or error)
+            def show_result():
+                if loading and loading.winfo_exists():
+                    loading._running = False
+                    loading.destroy()
                 
-                def show_result():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
+                # Check if there was an error
+                if translation_result['error']:
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    return
+                
+                # Check if we have translation result
+                if translation_result['translated']:
+                    translated = translation_result['translated']
+                    actual_source = translation_result['actual_source']
+                    actual_target = translation_result['actual_target']
+                    
+                    # Print result info
+                    print(f"✨ [GROUP 1] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1] Translation result: {translated}")
+                    
                     # Import version từ popup module
                     from ui.popup import get_app_version
                     version = get_app_version()
@@ -526,19 +581,44 @@ def _on_activate_translate():
                               target_lang=display_target,
                               version=version,
                               auto_close_enabled=load_auto_close_popup())
-                root.after(0, show_result)
+                else:
+                    # No text selected or other issue
+                    pass
+            
+            root.after(0, show_result)
+        else:
+            # Check timeout (15 seconds)
+            if hasattr(check_translation_status, 'start_time'):
+                elapsed = time.time() - check_translation_status.start_time
+                if elapsed >= 15.0:  # 15 second timeout
+                    print(f"⏰ [GROUP 1] Translation timeout after {elapsed:.1f}s")
+                    def show_timeout():
+                        if loading and loading.winfo_exists():
+                            loading._running = False
+                            loading.destroy()
+                        from ui.popup import get_app_version
+                        version = get_app_version()
+                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    root.after(0, show_timeout)
+                    return
             else:
-                def close_loading():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                root.after(0, close_loading)
-        finally:
-            root.after(0, restore_system_cursor)
-    threading.Thread(target=do_translate, daemon=True).start()
+                # First call, record start time
+                check_translation_status.start_time = time.time()
+            
+            # Continue checking every 100ms
+            root.after(100, check_translation_status)
+    
+    # Start the timeout checker
+    root.after(100, check_translation_status)
 
 def _on_activate_replace():
     loading = show_loading_popup(root)
+    
+    # Timeout mechanism
+    translation_completed = threading.Event()
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    
     def do_replace():
         try:
             load_language_settings_from_file()
@@ -557,54 +637,133 @@ def _on_activate_replace():
                 else:
                     print("⚠️ [GROUP 1 REPLACE] No API key available!")
                 
-                # Use same logic as translate popup - detect language for proper direction
-                translated, actual_source, actual_target = translate_text(
-                    selected_text, 
-                    global_language_settings['Ngon_ngu_dau_tien'], 
-                    global_language_settings['Ngon_ngu_thu_2'], 
-                    global_language_settings['Ngon_ngu_thu_3'],
-                    return_language_info=True
-                )
+                try:
+                    # Use same logic as translate popup - detect language for proper direction
+                    start_time = time.time()
+                    translated, actual_source, actual_target = translate_text(
+                        selected_text, 
+                        global_language_settings['Ngon_ngu_dau_tien'], 
+                        global_language_settings['Ngon_ngu_thu_2'], 
+                        global_language_settings['Ngon_ngu_thu_3'],
+                        return_language_info=True
+                    )
+                    
+                    # Store successful result
+                    translation_result['translated'] = translated
+                    translation_result['actual_source'] = actual_source
+                    translation_result['actual_target'] = actual_target
+                    
+                    # Log translation time
+                    translation_time = time.time() - start_time
+                    print(f"⏱️ [GROUP 1 REPLACE] Translation completed in {translation_time:.2f}s")
+                    
+                except Exception as e:
+                    # Store error result
+                    translation_result['error'] = str(e)
+                    print(f"❌ [GROUP 1 REPLACE] Translation error: {e}")
                 
-                # Print result info
-                print(f"✨ [GROUP 1 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1 REPLACE] Translation result: {translated}")
-                def do_paste():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                    set_clipboard(translated)
-                    time.sleep(0.05)
-                    kb.press(Key.ctrl)
-                    kb.press('v')
-                    kb.release('v')
-                    kb.release(Key.ctrl)
-                    time.sleep(0.15)
-                    kb.press(Key.ctrl)
-                    kb.press('c')
-                    kb.release('c')
-                    kb.release(Key.ctrl)
-                    time.sleep(0.1)
-                    pasted = get_clipboard()
-                    if pasted.strip() != translated.strip():
-                        def show_fail():
-                            from ui.popup import get_app_version
-                            version = get_app_version()
-                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
-                                      master=root, version=version, auto_close_enabled=load_auto_close_popup())
-                        root.after(0, show_fail)
-                root.after(0, do_paste)
+                # Signal completion regardless of success/failure
+                translation_completed.set()
             else:
-                def close_loading():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                root.after(0, close_loading)
+                # No text selected
+                translation_completed.set()
+        except Exception as e:
+            print(f"❌ [GROUP 1 REPLACE] Unexpected error: {e}")
+            translation_result['error'] = f"Unexpected error: {e}"
+            translation_completed.set()
         finally:
             root.after(0, restore_system_cursor)
+    
+    # Start translation in background thread
     threading.Thread(target=do_replace, daemon=True).start()
+    
+    # Wait for completion with timeout
+    def check_translation_status():
+        if translation_completed.is_set():
+            # Translation completed (success or error)
+            def handle_result():
+                if loading and loading.winfo_exists():
+                    loading._running = False
+                    loading.destroy()
+                
+                # Check if there was an error
+                if translation_result['error']:
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    return
+                
+                # Check if we have translation result
+                if translation_result['translated']:
+                    translated = translation_result['translated']
+                    
+                    # Print result info
+                    print(f"✨ [GROUP 1 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 1 REPLACE] Translation result: {translated}")
+                    
+                    # Perform paste operation
+                    def do_paste():
+                        set_clipboard(translated)
+                        time.sleep(0.05)
+                        kb.press(Key.ctrl)
+                        kb.press('v')
+                        kb.release('v')
+                        kb.release(Key.ctrl)
+                        time.sleep(0.15)
+                        kb.press(Key.ctrl)
+                        kb.press('c')
+                        kb.release('c')
+                        kb.release(Key.ctrl)
+                        time.sleep(0.1)
+                        pasted = get_clipboard()
+                        if pasted.strip() != translated.strip():
+                            def show_fail():
+                                from ui.popup import get_app_version
+                                version = get_app_version()
+                                show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
+                                          master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                            root.after(0, show_fail)
+                    
+                    # Execute paste operation
+                    do_paste()
+                else:
+                    # No text selected or other issue
+                    pass
+            
+            root.after(0, handle_result)
+        else:
+            # Check timeout (15 seconds)
+            if hasattr(check_translation_status, 'start_time'):
+                elapsed = time.time() - check_translation_status.start_time
+                if elapsed >= 15.0:  # 15 second timeout
+                    print(f"⏰ [GROUP 1 REPLACE] Translation timeout after {elapsed:.1f}s")
+                    def show_timeout():
+                        if loading and loading.winfo_exists():
+                            loading._running = False
+                            loading.destroy()
+                        from ui.popup import get_app_version
+                        version = get_app_version()
+                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    root.after(0, show_timeout)
+                    return
+            else:
+                # First call, record start time
+                check_translation_status.start_time = time.time()
+            
+            # Continue checking every 100ms
+            root.after(100, check_translation_status)
+    
+    # Start the timeout checker
+    root.after(100, check_translation_status)
 
 def _on_activate_translate_group2():
     loading = show_loading_popup(root)
+    
+    # Timeout mechanism
+    translation_completed = threading.Event()
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    
     def do_translate():
         try:
             load_language_settings_from_file()
@@ -623,22 +782,72 @@ def _on_activate_translate_group2():
                 else:
                     print("⚠️ [GROUP 2] No API key available!")
                 
-                # Get translation with actual language info for Group 2
-                translated, actual_source, actual_target = translate_text(
-                    selected_text, 
-                    global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
-                    global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
-                    global_language_settings['Nhom2_Ngon_ngu_thu_3'],
-                    return_language_info=True
-                )
+                try:
+                    # Get translation with actual language info for Group 2
+                    start_time = time.time()
+                    translated, actual_source, actual_target = translate_text(
+                        selected_text, 
+                        global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
+                        global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
+                        global_language_settings['Nhom2_Ngon_ngu_thu_3'],
+                        return_language_info=True
+                    )
+                    
+                    # Store successful result
+                    translation_result['translated'] = translated
+                    translation_result['actual_source'] = actual_source
+                    translation_result['actual_target'] = actual_target
+                    
+                    # Log translation time
+                    translation_time = time.time() - start_time
+                    print(f"⏱️ [GROUP 2] Translation completed in {translation_time:.2f}s")
+                    
+                except Exception as e:
+                    # Store error result
+                    translation_result['error'] = str(e)
+                    print(f"❌ [GROUP 2] Translation error: {e}")
                 
-                # Print result info
-                print(f"✨ [GROUP 2] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2] Translation result: {translated}")
+                # Signal completion regardless of success/failure
+                translation_completed.set()
+            else:
+                # No text selected
+                translation_completed.set()
+        except Exception as e:
+            print(f"❌ [GROUP 2] Unexpected error: {e}")
+            translation_result['error'] = f"Unexpected error: {e}"
+            translation_completed.set()
+        finally:
+            root.after(0, restore_system_cursor)
+    
+    # Start translation in background thread
+    threading.Thread(target=do_translate, daemon=True).start()
+    
+    # Wait for completion with timeout
+    def check_translation_status():
+        if translation_completed.is_set():
+            # Translation completed (success or error)
+            def show_result():
+                if loading and loading.winfo_exists():
+                    loading._running = False
+                    loading.destroy()
                 
-                def show_result():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
+                # Check if there was an error
+                if translation_result['error']:
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    return
+                
+                # Check if we have translation result
+                if translation_result['translated']:
+                    translated = translation_result['translated']
+                    actual_source = translation_result['actual_source']
+                    actual_target = translation_result['actual_target']
+                    
+                    # Print result info
+                    print(f"✨ [GROUP 2] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2] Translation result: {translated}")
+                    
                     # Import version từ popup module
                     from ui.popup import get_app_version
                     version = get_app_version()
@@ -652,19 +861,44 @@ def _on_activate_translate_group2():
                               target_lang=display_target,
                               version=version,
                               auto_close_enabled=load_auto_close_popup())
-                root.after(0, show_result)
+                else:
+                    # No text selected or other issue
+                    pass
+            
+            root.after(0, show_result)
+        else:
+            # Check timeout (15 seconds)
+            if hasattr(check_translation_status, 'start_time'):
+                elapsed = time.time() - check_translation_status.start_time
+                if elapsed >= 15.0:  # 15 second timeout
+                    print(f"⏰ [GROUP 2] Translation timeout after {elapsed:.1f}s")
+                    def show_timeout():
+                        if loading and loading.winfo_exists():
+                            loading._running = False
+                            loading.destroy()
+                        from ui.popup import get_app_version
+                        version = get_app_version()
+                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    root.after(0, show_timeout)
+                    return
             else:
-                def close_loading():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                root.after(0, close_loading)
-        finally:
-            root.after(0, restore_system_cursor)
-    threading.Thread(target=do_translate, daemon=True).start()
+                # First call, record start time
+                check_translation_status.start_time = time.time()
+            
+            # Continue checking every 100ms
+            root.after(100, check_translation_status)
+    
+    # Start the timeout checker
+    root.after(100, check_translation_status)
 
 def _on_activate_replace_group2():
     loading = show_loading_popup(root)
+    
+    # Timeout mechanism
+    translation_completed = threading.Event()
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    
     def do_replace():
         try:
             load_language_settings_from_file()
@@ -683,51 +917,125 @@ def _on_activate_replace_group2():
                 else:
                     print("⚠️ [GROUP 2 REPLACE] No API key available!")
                 
-                # Use same logic as translate popup for Group 2 - detect language for proper direction
-                translated, actual_source, actual_target = translate_text(
-                    selected_text, 
-                    global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
-                    global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
-                    global_language_settings['Nhom2_Ngon_ngu_thu_3'],
-                    return_language_info=True
-                )
+                try:
+                    # Use same logic as translate popup for Group 2 - detect language for proper direction
+                    start_time = time.time()
+                    translated, actual_source, actual_target = translate_text(
+                        selected_text, 
+                        global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
+                        global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
+                        global_language_settings['Nhom2_Ngon_ngu_thu_3'],
+                        return_language_info=True
+                    )
+                    
+                    # Store successful result
+                    translation_result['translated'] = translated
+                    translation_result['actual_source'] = actual_source
+                    translation_result['actual_target'] = actual_target
+                    
+                    # Log translation time
+                    translation_time = time.time() - start_time
+                    print(f"⏱️ [GROUP 2 REPLACE] Translation completed in {translation_time:.2f}s")
+                    
+                except Exception as e:
+                    # Store error result
+                    translation_result['error'] = str(e)
+                    print(f"❌ [GROUP 2 REPLACE] Translation error: {e}")
                 
-                # Print result info
-                print(f"✨ [GROUP 2 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2 REPLACE] Translation result: {translated}")
-                def do_paste():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                    set_clipboard(translated)
-                    time.sleep(0.05)
-                    kb.press(Key.ctrl)
-                    kb.press('v')
-                    kb.release('v')
-                    kb.release(Key.ctrl)
-                    time.sleep(0.15)
-                    kb.press(Key.ctrl)
-                    kb.press('c')
-                    kb.release('c')
-                    kb.release(Key.ctrl)
-                    time.sleep(0.1)
-                    pasted = get_clipboard()
-                    if pasted.strip() != translated.strip():
-                        def show_fail():
-                            from ui.popup import get_app_version
-                            version = get_app_version()
-                            show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
-                                      master=root, version=version, auto_close_enabled=load_auto_close_popup())
-                        root.after(0, show_fail)
-                root.after(0, do_paste)
+                # Signal completion regardless of success/failure
+                translation_completed.set()
             else:
-                def close_loading():
-                    if loading and loading.winfo_exists():
-                        loading._running = False
-                        loading.destroy()
-                root.after(0, close_loading)
+                # No text selected
+                translation_completed.set()
+        except Exception as e:
+            print(f"❌ [GROUP 2 REPLACE] Unexpected error: {e}")
+            translation_result['error'] = f"Unexpected error: {e}"
+            translation_completed.set()
         finally:
             root.after(0, restore_system_cursor)
+    
+    # Start translation in background thread
     threading.Thread(target=do_replace, daemon=True).start()
+    
+    # Wait for completion with timeout
+    def check_translation_status():
+        if translation_completed.is_set():
+            # Translation completed (success or error)
+            def handle_result():
+                if loading and loading.winfo_exists():
+                    loading._running = False
+                    loading.destroy()
+                
+                # Check if there was an error
+                if translation_result['error']:
+                    from ui.popup import get_app_version
+                    version = get_app_version()
+                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    return
+                
+                # Check if we have translation result
+                if translation_result['translated']:
+                    translated = translation_result['translated']
+                    
+                    # Print result info
+                    print(f"✨ [GROUP 2 REPLACE] Translation result: {translated[:50]}..." if len(translated) > 50 else f"✨ [GROUP 2 REPLACE] Translation result: {translated}")
+                    
+                    # Perform paste operation
+                    def do_paste():
+                        set_clipboard(translated)
+                        time.sleep(0.05)
+                        kb.press(Key.ctrl)
+                        kb.press('v')
+                        kb.release('v')
+                        kb.release(Key.ctrl)
+                        time.sleep(0.15)
+                        kb.press(Key.ctrl)
+                        kb.press('c')
+                        kb.release('c')
+                        kb.release(Key.ctrl)
+                        time.sleep(0.1)
+                        pasted = get_clipboard()
+                        if pasted.strip() != translated.strip():
+                            def show_fail():
+                                from ui.popup import get_app_version
+                                version = get_app_version()
+                                show_popup('Không thể thay thế văn bản tự động. Vị trí dán không cho phép.', 
+                                          master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                            root.after(0, show_fail)
+                    
+                    # Execute paste operation
+                    do_paste()
+                else:
+                    # No text selected or other issue
+                    pass
+            
+            root.after(0, handle_result)
+        else:
+            # Check timeout (15 seconds)
+            if hasattr(check_translation_status, 'start_time'):
+                elapsed = time.time() - check_translation_status.start_time
+                if elapsed >= 15.0:  # 15 second timeout
+                    print(f"⏰ [GROUP 2 REPLACE] Translation timeout after {elapsed:.1f}s")
+                    def show_timeout():
+                        if loading and loading.winfo_exists():
+                            loading._running = False
+                            loading.destroy()
+                        from ui.popup import get_app_version
+                        version = get_app_version()
+                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
+                    root.after(0, show_timeout)
+                    return
+            else:
+                # First call, record start time
+                check_translation_status.start_time = time.time()
+            
+            # Continue checking every 100ms
+            root.after(100, check_translation_status)
+    
+    # Start the timeout checker
+    root.after(100, check_translation_status)
 
 def for_canonical(listener, f):
     return lambda *args: f(listener.canonical(args[0]))
