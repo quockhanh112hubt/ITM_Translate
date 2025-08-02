@@ -63,8 +63,8 @@ class SettingsTab:
         
         # Language options
         lang_options = [
-            '', 'English', 'Tiếng Việt', '한국어', '中文', '日本語', 'Français', 
-            'Deutsch', 'Русский', 'Español', 'ไทย'
+            '', 'English', 'Vietnamese', 'Korean', 'Chinese', 'Japanese', 'French', 
+            'German', 'Russian', 'Spanish', 'Thai', 'Indonesian'
         ]
         
         # Group 1: Default options

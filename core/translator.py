@@ -48,25 +48,25 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     print(f"🧠 [UNIFIED MODE] Using single smart AI call")
                     
                     # UNIFIED SMART PROMPT: Same for both popup and replace
-                    smart_prompt = f"""Translate the following text intelligently:
+                    smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
 
 Rules:
-- If the text is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
-- If the text is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
-- Translate every word/phrase
+- If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
+- If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
 - Preserve original tone and style
 - Ensure natural grammar and correct sentence structure
 - Keep technical terms if widely understood
 - Keep proper nouns and brand names
-- Keep numbers and dates unchanged
 - Return ONLY the translated text, no explanations
 
-Text to translate: {text}
+TEXT to translate:
+{text}
 
-Translation:"""
+"""
                     
                     response = model.generate_content(smart_prompt)
                     translated_text = response.text.strip()
+                    print (f"✨ [UNIFIED] Smart prompt: {smart_prompt}")
                     print(f"✨ [UNIFIED] Translation result: {translated_text[:50]}...")
                     
                     if return_language_info:
@@ -82,24 +82,24 @@ Translation:"""
                     
                     # UNIFIED SMART PROMPT: Same for both popup and replace
                     print(f"🧠 [UNIFIED PROVIDER] Using single smart AI call")
-                    smart_prompt = f"""Translate the following text intelligently:
+                    smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
 
 Rules:
-- If the text is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
-- If the text is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
-- Translate every word/phrase
+- If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
+- If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
 - Preserve original tone and style
 - Ensure natural grammar and correct sentence structure
 - Keep technical terms if widely understood
 - Keep proper nouns and brand names
-- Keep numbers and dates unchanged
 - Return ONLY the translated text, no explanations
 
-Text to translate: {text}
+TEXT to translate:
+{text}
 
-Translation:"""
+"""
                     
                     # Use provider's text generation for smart translation
+                    print(f'smart_prompt2: {smart_prompt}"')
                     if hasattr(provider, 'generate_text'):
                         print(f"🧠 [UNIFIED] Using provider.generate_text()")
                         translated_text = provider.generate_text(smart_prompt)
