@@ -51,13 +51,14 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
 
 Rules:
+- First, carefully identify what language the TEXT is currently written in
 - If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
 - If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
 - Preserve original tone and style
 - Ensure natural grammar and correct sentence structure
 - Keep technical terms if widely understood
 - Keep proper nouns and brand names
-- Return ONLY the translated text, no explanations
+- And remember: Return ONLY the translated text, no explanations
 
 TEXT to translate:
 {text}
@@ -85,13 +86,14 @@ TEXT to translate:
                     smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
 
 Rules:
+- First, carefully identify what language the TEXT is currently written in
 - If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
 - If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
 - Preserve original tone and style
 - Ensure natural grammar and correct sentence structure
 - Keep technical terms if widely understood
 - Keep proper nouns and brand names
-- Return ONLY the translated text, no explanations
+- And remember: Return ONLY the translated text, no explanations
 
 TEXT to translate:
 {text}
