@@ -350,49 +350,6 @@ def create_tray_icon(root, app):
     except Exception as e:
         print(f"❌ Method 2 failed: {e}")
     
-    try:
-        # Method 3: Monkey patch icon's _on_click nếu có
-        if hasattr(icon, '_on_click'):
-            original_on_click = icon._on_click
-            def patched_on_click(icon, button, time):
-                try:
-                    # Check if it's left button
-                    if str(button).lower() == 'button.left' or (hasattr(button, 'name') and button.name == 'left'):
-                        print("🖱️ Tray: Patched left-click detected")
-                        tray_action_queue.put('toggle_floating')
-                        return
-                except Exception:
-                    pass
-                # Fallback to original
-                if original_on_click:
-                    original_on_click(icon, button, time)
-            
-            icon._on_click = patched_on_click
-            print("✅ Method 3: Monkey patched _on_click")
-        else:
-            print("⚠️ Method 3: _on_click not found")
-    except Exception as e:
-        print(f"❌ Method 3 failed: {e}")
-    
-    # Gán left-click handler
-    icon.default_action = on_left_click
-    
-    try:
-        # Method 4: Thử với double-click thay vì single-click
-        def on_double_click(icon, item):
-            """Xử lý double-click - Toggle floating button"""
-            print("🖱️ Tray: Double-click detected - Toggling floating button")
-            tray_action_queue.put('toggle_floating')
-        
-        # Một số hệ thống chỉ hỗ trợ double-click cho tray icons
-        if hasattr(icon, 'on_activate'):
-            icon.on_activate = on_double_click
-            print("✅ Method 4: Double-click handler assigned")
-        else:
-            print("⚠️ Method 4: on_activate not supported")
-    except Exception as e:
-        print(f"❌ Method 4 failed: {e}")
-    
     # Chạy tray icon trong thread riêng
     threading.Thread(target=icon.run, daemon=True).start()
     

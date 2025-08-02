@@ -108,6 +108,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
     Translate text with automatic provider failover and timeout protection
     
     Args:
+        return_language_info: If True, detect language first (for popup). If False, use smart replacement logic.
         timeout_seconds: Maximum time to wait for translation per attempt (default 5 seconds)
     """
     def _attempt_translation(key_info):
@@ -125,36 +126,37 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     genai.configure(api_key=key_info.key)
                     model = genai.GenerativeModel("gemini-2.0-flash-exp")
                     
-                    # Step 1: Detect language if needed
-                    detected_source_lang = None
                     if return_language_info:
+                        # TRANSLATE POPUP MODE: Detect language first, then translate
+                        # Step 1: Detect language if needed
+                        detected_source_lang = None
                         if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
                             detected_source_lang = detect_language(text)
                             print(f"Detected source language: {detected_source_lang}")
                         else:
                             detected_source_lang = Ngon_ngu_dau_tien
-                    
-                    # Step 2: Determine translation direction
-                    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
-                        if detected_source_lang and detected_source_lang.lower() == "mixed":
-                            target_lang = Ngon_ngu_thu_2
-                        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                            target_lang = Ngon_ngu_thu_3
+                        
+                        # Step 2: Determine translation direction
+                        if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                            if detected_source_lang and detected_source_lang.lower() == "mixed":
+                                target_lang = Ngon_ngu_thu_2
+                            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
                         else:
-                            target_lang = Ngon_ngu_thu_2
-                    else:
-                        if detected_source_lang and detected_source_lang.lower() == "mixed":
-                            target_lang = Ngon_ngu_thu_2
-                        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                            target_lang = Ngon_ngu_thu_3
-                        else:
-                            target_lang = Ngon_ngu_thu_2
+                            if detected_source_lang and detected_source_lang.lower() == "mixed":
+                                target_lang = Ngon_ngu_thu_2
+                            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
 
-                    print(f"Translation direction: {detected_source_lang} → {target_lang}")
-                    
-                    # Create prompt for Gemini
-                    if detected_source_lang and detected_source_lang.lower() == "mixed":
-                        prompt = f"""This text contains multiple languages mixed together. Translate ALL content to {target_lang}.
+                        print(f"Translation direction: {detected_source_lang} → {target_lang}")
+                        
+                        # Create prompt for translation popup (detailed language detection)
+                        if detected_source_lang and detected_source_lang.lower() == "mixed":
+                            prompt = f"""This text contains multiple languages mixed together. Translate ALL content to {target_lang}.
 
 Rules for mixed language translation:
 - Translate every word/phrase to {target_lang}, regardless of original language
@@ -166,8 +168,8 @@ Rules for mixed language translation:
 Mixed language text to translate: {text}
 
 Complete translation to {target_lang}:"""
-                    else:
-                        prompt = f"""Translate this text to {target_lang}.
+                        else:
+                            prompt = f"""Translate this text to {target_lang}.
 
 Rules:
 - Translate every word/phrase to {target_lang}
@@ -181,53 +183,108 @@ Rules:
 Text to translate: {text}
 
 Translation:"""
-                    
-                    response = model.generate_content(prompt)
-                    translated_text = response.text.strip()
-                    
-                    if return_language_info:
+                        
+                        response = model.generate_content(prompt)
+                        translated_text = response.text.strip()
                         translation_result['result'] = (translated_text, detected_source_lang, target_lang)
+                        
                     else:
+                        # REPLACE MODE: Smart single-call translation
+                        print(f"🔄 [REPLACE MODE] Using smart prompt for replace operation")
+                        prompt = f"""Translate the following text intelligently:
+
+Rules:
+- If the text is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
+- If the text is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
+- Translate every word/phrase
+- Preserve original tone and style
+- Ensure natural grammar and correct sentence structure
+- Keep technical terms if widely understood
+- Keep proper nouns and brand names
+- Keep numbers and dates unchanged
+- Return ONLY the translated text, no explanations
+
+Text to translate: {text}
+
+Translation:"""
+                        
+                        response = model.generate_content(prompt)
+                        print(f'🧠 [REPLACE MODE] Smart prompt sent to AI')
+                        translated_text = response.text.strip()
                         translation_result['result'] = translated_text
                 else:
                     # Use AI providers system
                     provider = create_ai_provider(key_info)
                     
-                    # Step 1: Detect language if needed
-                    detected_source_lang = None
                     if return_language_info:
+                        # TRANSLATE POPUP MODE: Detect language first, then translate
+                        # Step 1: Detect language if needed
+                        detected_source_lang = None
                         if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
                             detected_source_lang = provider.detect_language(text)
                             print(f"Detected source language: {detected_source_lang}")
                         else:
                             detected_source_lang = Ngon_ngu_dau_tien
-                    
-                    # Step 2: Determine translation direction
-                    if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
-                        if detected_source_lang and detected_source_lang.lower() == "mixed":
-                            target_lang = Ngon_ngu_thu_2
-                        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                            target_lang = Ngon_ngu_thu_3
+                        
+                        # Step 2: Determine translation direction
+                        if Ngon_ngu_dau_tien.strip().lower() in ["any language", "bất kỳ", ""]:
+                            if detected_source_lang and detected_source_lang.lower() == "mixed":
+                                target_lang = Ngon_ngu_thu_2
+                            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
                         else:
-                            target_lang = Ngon_ngu_thu_2
-                    else:
-                        if detected_source_lang and detected_source_lang.lower() == "mixed":
-                            target_lang = Ngon_ngu_thu_2
-                        elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
-                            target_lang = Ngon_ngu_thu_3
-                        else:
-                            target_lang = Ngon_ngu_thu_2
+                            if detected_source_lang and detected_source_lang.lower() == "mixed":
+                                target_lang = Ngon_ngu_thu_2
+                            elif is_same_language(detected_source_lang, Ngon_ngu_thu_2):
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
 
-                    print(f"Translation direction: {detected_source_lang} → {target_lang}")
-                    
-                    # Step 3: Translate using provider
-                    source_lang = detected_source_lang or Ngon_ngu_dau_tien
-                    translated_text = provider.translate_text(text, source_lang, target_lang)
-                    
-                    # Return results based on mode
-                    if return_language_info:
+                        print(f"Translation direction: {detected_source_lang} → {target_lang}")
+                        
+                        # Step 3: Translate using provider with language detection
+                        source_lang = detected_source_lang or Ngon_ngu_dau_tien
+                        translated_text = provider.translate_text(text, source_lang, target_lang)
                         translation_result['result'] = (translated_text, detected_source_lang, target_lang)
+                        
                     else:
+                        # REPLACE MODE: Smart single-call translation
+                        # Let AI decide translation direction automatically
+                        print(f"🔄 [REPLACE MODE] Using AI provider smart translation")
+                        smart_prompt = f"""Translate the following text intelligently:
+
+Rules:
+- If the text is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
+- If the text is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
+- Translate every word/phrase
+- Preserve original tone and style
+- Ensure natural grammar and correct sentence structure
+- Keep technical terms if widely understood
+- Keep proper nouns and brand names
+- Keep numbers and dates unchanged
+- Return ONLY the translated text, no explanations
+
+Text to translate: {text}
+
+Translation:"""
+                        
+                        # Use provider's direct text generation for smart translation
+                        # This avoids the need for separate language detection
+                        print(f'🧠 [REPLACE MODE] Smart prompt sent to AI: {smart_prompt}...')
+                        if hasattr(provider, 'generate_text'):
+                            print(f"🧠 [REPLACE MODE] Using provider.generate_text()")
+                            translated_text = provider.generate_text(smart_prompt)
+                        else:
+                            # Fallback: use Gemini directly with smart prompt
+                            print(f"🧠 [REPLACE MODE] Provider lacks generate_text, using Gemini fallback with smart prompt")
+                            import google.generativeai as genai
+                            genai.configure(api_key=key_info.key)
+                            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+                            response = model.generate_content(smart_prompt)
+                            translated_text = response.text.strip()
+                        
                         translation_result['result'] = translated_text
                         
                 translation_result['completed'] = True

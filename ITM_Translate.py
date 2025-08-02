@@ -638,20 +638,22 @@ def _on_activate_replace():
                     print("⚠️ [GROUP 1 REPLACE] No API key available!")
                 
                 try:
-                    # Use same logic as translate popup - detect language for proper direction
+                    # Optimized for replace: No language detection needed, direct translation
+                    print(f"🔄 [REPLACE] Calling translate_text with return_language_info=False")
                     start_time = time.time()
-                    translated, actual_source, actual_target = translate_text(
+                    translated = translate_text(
                         selected_text, 
                         global_language_settings['Ngon_ngu_dau_tien'], 
                         global_language_settings['Ngon_ngu_thu_2'], 
                         global_language_settings['Ngon_ngu_thu_3'],
-                        return_language_info=True
+                        return_language_info=False  # Skip language detection for faster performance
                     )
+                    print(f"✅ [REPLACE] Got translation result: {translated[:50]}...")
                     
-                    # Store successful result
+                    # Store successful result (only translated text needed for replace)
                     translation_result['translated'] = translated
-                    translation_result['actual_source'] = actual_source
-                    translation_result['actual_target'] = actual_target
+                    translation_result['actual_source'] = None  # Not needed for replace
+                    translation_result['actual_target'] = None  # Not needed for replace
                     
                     # Log translation time
                     translation_time = time.time() - start_time
@@ -918,20 +920,22 @@ def _on_activate_replace_group2():
                     print("⚠️ [GROUP 2 REPLACE] No API key available!")
                 
                 try:
-                    # Use same logic as translate popup for Group 2 - detect language for proper direction
+                    # Optimized for replace: No language detection needed, direct translation  
+                    print(f"🔄 [GROUP 2 REPLACE] Calling translate_text with return_language_info=False")
                     start_time = time.time()
-                    translated, actual_source, actual_target = translate_text(
+                    translated = translate_text(
                         selected_text, 
                         global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
                         global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
                         global_language_settings['Nhom2_Ngon_ngu_thu_3'],
-                        return_language_info=True
+                        return_language_info=False  # Skip language detection for faster performance
                     )
+                    print(f"✅ [GROUP 2 REPLACE] Got translation result: {translated[:50]}...")
                     
-                    # Store successful result
+                    # Store successful result (only translated text needed for replace)
                     translation_result['translated'] = translated
-                    translation_result['actual_source'] = actual_source
-                    translation_result['actual_target'] = actual_target
+                    translation_result['actual_source'] = None  # Not needed for replace
+                    translation_result['actual_target'] = None  # Not needed for replace
                     
                     # Log translation time
                     translation_time = time.time() - start_time
@@ -1145,7 +1149,7 @@ def is_current_app_excluded():
             app_lower = app.lower()
             # Chỉ kiểm tra process name, không check window title
             if app_lower in process_name:
-                print(f"🚫 [FLOATING] Current app excluded - Process: '{process_name}' (matched: {app})")
+                # print(f"🚫 [FLOATING] Current app excluded - Process: '{process_name}' (matched: {app})")
                 return True
         
         return False
