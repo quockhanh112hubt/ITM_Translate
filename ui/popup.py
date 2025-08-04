@@ -6,6 +6,67 @@ import os
 import json
 from core.api_key_manager import api_key_manager
 
+def get_smart_popup_position(master, popup_width, popup_height, mouse_x=None, mouse_y=None):
+    """
+    Calculate smart popup position to keep it visible on screen
+    
+    Args:
+        master: Parent window
+        popup_width: Width of popup
+        popup_height: Height of popup
+        mouse_x, mouse_y: Mouse position (if None, will get current position)
+    
+    Returns:
+        tuple: (x, y) position for popup
+    """
+    try:
+        # Get screen dimensions
+        screen_width = master.winfo_screenwidth()
+        screen_height = master.winfo_screenheight()
+        
+        # Get mouse position if not provided
+        if mouse_x is None:
+            mouse_x = master.winfo_pointerx()
+        if mouse_y is None:
+            mouse_y = master.winfo_pointery()
+        
+        # Default offset from mouse cursor
+        offset_x = 20
+        offset_y = 20
+        
+        # Calculate initial position
+        x = mouse_x + offset_x
+        y = mouse_y + offset_y
+        
+        # Adjust if popup would go off-screen (right edge)
+        if x + popup_width > screen_width:
+            x = mouse_x - popup_width - offset_x  # Position to the left of cursor
+            
+        # Adjust if popup would go off-screen (bottom edge)
+        if y + popup_height > screen_height:
+            y = mouse_y - popup_height - offset_y  # Position above cursor
+            
+        # Ensure popup doesn't go off-screen (left edge)
+        if x < 0:
+            x = 10  # Small margin from left edge
+            
+        # Ensure popup doesn't go off-screen (top edge)
+        if y < 0:
+            y = 10  # Small margin from top edge
+            
+        # Final boundary check
+        x = max(10, min(x, screen_width - popup_width - 10))
+        y = max(10, min(y, screen_height - popup_height - 10))
+        
+        print(f"🎯 [POPUP] Smart positioning: mouse({mouse_x},{mouse_y}) → popup({x},{y}) size({popup_width}x{popup_height}) screen({screen_width}x{screen_height})")
+        
+        return x, y
+        
+    except Exception as e:
+        print(f"❌ [POPUP] Error calculating smart position: {e}")
+        # Fallback to simple positioning
+        return mouse_x or 100, mouse_y or 100
+
 def get_app_version():
     """Lấy version hiện tại từ file version.json"""
     try:
@@ -31,9 +92,10 @@ def show_loading_popup(root):
     loading_win = tk.Toplevel(root)
     loading_win.overrideredirect(True)
     loading_win.attributes('-topmost', True)
-    x = loading_win.winfo_pointerx()
-    y = loading_win.winfo_pointery()
+    
+    # Smart positioning for loading popup
     size = 40
+    x, y = get_smart_popup_position(root, size, size)
     loading_win.geometry(f"{size}x{size}+{x}+{y}")
 
     canvas = tk.Canvas(loading_win, width=size, height=size, bg='white', highlightthickness=0)
@@ -166,8 +228,9 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     text_widget.bind('<Button-1>', enable_select)
     text_widget.bind('<KeyRelease>', disable_edit)
     text_widget.bind('<FocusOut>', disable_edit)
-    x = win.winfo_pointerx()
-    y = win.winfo_pointery()
+    
+    # Smart popup positioning
+    x, y = get_smart_popup_position(master, width, height)
     win.geometry(f"{width}x{height}+{x}+{y}")
     
     # Chỉ đóng tự động khi auto_close_enabled=True

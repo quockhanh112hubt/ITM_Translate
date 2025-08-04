@@ -2,6 +2,8 @@ import os
 import threading
 import time
 import signal
+import hashlib
+import json
 from dotenv import load_dotenv
 from .api_key_manager import api_key_manager
 
@@ -17,6 +19,76 @@ except ImportError as e:
     # Fallback to Gemini only
     import google.generativeai as genai
 
+# Translation Cache System
+translation_cache = {}
+cache_file = "translation_cache.json"
+max_cache_size = 1000  # Maximum number of cached translations
+
+def load_translation_cache():
+    """Load translation cache from file"""
+    global translation_cache
+    try:
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                translation_cache = json.load(f)
+                print(f"📁 [CACHE] Loaded {len(translation_cache)} cached translations")
+    except Exception as e:
+        print(f"❌ [CACHE] Error loading cache: {e}")
+        translation_cache = {}
+
+def save_translation_cache():
+    """Save translation cache to file"""
+    try:
+        # Limit cache size to prevent bloat
+        if len(translation_cache) > max_cache_size:
+            # Keep only the most recent entries (simple FIFO)
+            cache_items = list(translation_cache.items())
+            translation_cache.clear()
+            translation_cache.update(cache_items[-max_cache_size:])
+        
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(translation_cache, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"❌ [CACHE] Error saving cache: {e}")
+
+def get_cache_key(text, lang2, lang3, return_language_info):
+    """Generate cache key for translation"""
+    # Include text, target languages and mode in cache key
+    cache_data = f"{text}|{lang2}|{lang3}|{return_language_info}"
+    return hashlib.md5(cache_data.encode('utf-8')).hexdigest()
+
+def get_cached_translation(text, lang2, lang3, return_language_info):
+    """Get cached translation if available"""
+    cache_key = get_cache_key(text, lang2, lang3, return_language_info)
+    if cache_key in translation_cache:
+        cached_result = translation_cache[cache_key]
+        print(f"💾 [CACHE] Found cached translation for: {text[:30]}...")
+        return cached_result
+    return None
+
+def cache_translation(text, lang2, lang3, return_language_info, result):
+    """Cache translation result"""
+    cache_key = get_cache_key(text, lang2, lang3, return_language_info)
+    translation_cache[cache_key] = result
+    print(f"💾 [CACHE] Cached translation for: {text[:30]}...")
+    
+    # Save to file asynchronously to avoid blocking
+    threading.Thread(target=save_translation_cache, daemon=True).start()
+
+def clear_translation_cache():
+    """Clear translation cache (useful when language settings change)"""
+    global translation_cache
+    translation_cache.clear()
+    try:
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
+        print(f"🗑️ [CACHE] Translation cache cleared")
+    except Exception as e:
+        print(f"❌ [CACHE] Error clearing cache: {e}")
+
+# Load cache on startup
+load_translation_cache()
+
 # Legacy functions - no longer used with unified smart translation
 # def detect_language(text): - REMOVED
 # def is_same_language(detected_lang, target_lang): - REMOVED
@@ -29,6 +101,12 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
         return_language_info: If True, detect language first (for popup). If False, use smart replacement logic.
         timeout_seconds: Maximum time to wait for translation per attempt (default 5 seconds)
     """
+    
+    # Check cache first
+    cached_result = get_cached_translation(text, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info)
+    if cached_result is not None:
+        return cached_result
+    
     def _attempt_translation(key_info):
         """Single translation attempt with given provider"""
         if not key_info:
@@ -184,9 +262,13 @@ TEXT to translate:
         
         try:
             result = _attempt_translation(current_key)
-            # Success - reset failure count and return result
+            # Success - reset failure count, cache result and return
             api_key_manager.reset_key_failures(current_key)
             print(f"✅ Translation successful with {provider_info['provider']} (index: {api_key_manager.active_index})")
+            
+            # Cache the successful translation
+            cache_translation(text, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info, result)
+            
             return result
             
         except Exception as e:

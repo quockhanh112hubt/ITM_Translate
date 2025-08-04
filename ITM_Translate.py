@@ -123,9 +123,6 @@ def show_floating_translate_button(mouse_x, mouse_y):
     floating_btn.attributes('-topmost', True)  # Luôn ở trên cùng
     floating_btn.attributes('-alpha', 0.95)  # Hơi trong suốt
     
-    # Đặt vị trí cạnh chuột (offset để không che text)
-    floating_btn.geometry(f'+{mouse_x + 15}+{mouse_y + 10}')
-    
     # Styling cho nút
     floating_btn.configure(bg='#1976d2')
     
@@ -142,6 +139,16 @@ def show_floating_translate_button(mouse_x, mouse_y):
                    border=0,
                    command=lambda: on_floating_translate_click())
     btn.pack()
+    
+    # Update to get button size after packing
+    floating_btn.update_idletasks()
+    btn_width = btn.winfo_reqwidth()
+    btn_height = btn.winfo_reqheight()
+    
+    # Smart positioning for floating button
+    from ui.popup import get_smart_popup_position
+    x, y = get_smart_popup_position(root, btn_width, btn_height, mouse_x, mouse_y)
+    floating_btn.geometry(f'+{x}+{y}')
     
     # Hover effects
     def on_enter(e):

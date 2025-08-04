@@ -338,6 +338,15 @@ class SettingsTab:
             with open('hotkeys.json', 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
             
+            # Clear translation cache if language settings changed
+            try:
+                from core.translator import clear_translation_cache
+                if self.language_settings_changed(language_data):
+                    clear_translation_cache()
+                    print("🗑️ [SETTINGS] Translation cache cleared due to language settings change")
+            except Exception as e:
+                print(f"❌ [SETTINGS] Error clearing translation cache: {e}")
+            
             # Check if restart is needed
             if self.is_restart_needed(hotkey_data):
                 if messagebox.askokcancel("Thông báo", "Phím tắt đã được thay đổi, hãy khởi động lại chương trình để áp dụng"):
@@ -352,6 +361,25 @@ class SettingsTab:
             
         except Exception as e:
             messagebox.showerror(_('error'), f"{_('cannot_save_config')} {str(e)}")
+    
+    def language_settings_changed(self, new_language_data):
+        """Check if language settings have changed from initial values"""
+        try:
+            language_keys = [
+                'Ngon_ngu_dau_tien', 'Ngon_ngu_thu_2', 'Ngon_ngu_thu_3',
+                'Nhom2_Ngon_ngu_dau_tien', 'Nhom2_Ngon_ngu_thu_2', 'Nhom2_Ngon_ngu_thu_3'
+            ]
+            
+            for key in language_keys:
+                initial_value = self.initial_langs.get(key, '')
+                new_value = new_language_data.get(key, '')
+                if initial_value != new_value:
+                    return True
+            
+            return False
+        except Exception:
+            # If error, assume changed to be safe
+            return True
     
     def collect_hotkey_data_basic(self):
         """Collect hotkey data không validate - chỉ thu thập"""
