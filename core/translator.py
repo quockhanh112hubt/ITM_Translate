@@ -48,21 +48,23 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     print(f"🧠 [UNIFIED MODE] Using single smart AI call")
                     
                     # UNIFIED SMART PROMPT: Same for both popup and replace
-                    smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
+                    smart_prompt = f"""You are a professional translation model.
 
-Rules:
-- First, carefully identify what language the TEXT is currently written in
-- If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
-- If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
-- Preserve original tone and style
-- Ensure natural grammar and correct sentence structure
-- Keep technical terms if widely understood
-- Keep proper nouns and brand names
-- And remember: Return ONLY the translated text, no explanations
+Your task:
+1. Detect the language of the input TEXT.
+2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+
+Translation rules:
+- Preserve the tone, style, and sentence structure.
+- Ensure fluent and natural grammar.
+- Retain technical terms if commonly used.
+- Do not translate proper nouns or brand names.
+
+Output: Return ONLY the translated version of TEXT — no explanations, no comments.
 
 TEXT to translate:
 {text}
-
 """
                     
                     response = model.generate_content(smart_prompt)
@@ -83,21 +85,23 @@ TEXT to translate:
                     
                     # UNIFIED SMART PROMPT: Same for both popup and replace
                     print(f"🧠 [UNIFIED PROVIDER] Using single smart AI call")
-                    smart_prompt = f"""You are a translation model. Translate the following TEXT intelligently:
+                    smart_prompt = f"""You are a professional translation model.
 
-Rules:
-- First, carefully identify what language the TEXT is currently written in
-- If the TEXT is NOT in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}
-- If the TEXT is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}
-- Preserve original tone and style
-- Ensure natural grammar and correct sentence structure
-- Keep technical terms if widely understood
-- Keep proper nouns and brand names
-- And remember: Return ONLY the translated text, no explanations
+Your task:
+1. Detect the language of the input TEXT.
+2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+
+Translation rules:
+- Preserve the tone, style, and sentence structure.
+- Ensure fluent and natural grammar.
+- Retain technical terms if commonly used.
+- Do not translate proper nouns or brand names.
+
+Output: Return ONLY the translated version of TEXT — no explanations, no comments.
 
 TEXT to translate:
 {text}
-
 """
                     
                     # Use provider's text generation for smart translation

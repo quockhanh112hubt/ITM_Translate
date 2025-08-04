@@ -598,7 +598,7 @@ def _on_activate_translate():
                             loading.destroy()
                         from ui.popup import get_app_version
                         version = get_app_version()
-                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        timeout_msg = "⏰ Hết thời gian chờ dịch. Vui lòng kiểm tra kết nối mạng và thử lại."
                         show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     root.after(0, show_timeout)
                     return
@@ -745,7 +745,7 @@ def _on_activate_replace():
                             loading.destroy()
                         from ui.popup import get_app_version
                         version = get_app_version()
-                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        timeout_msg = "⏰ Hết thời gian chờ dịch. Vui lòng kiểm tra kết nối mạng và thử lại."
                         show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     root.after(0, show_timeout)
                     return
@@ -880,7 +880,7 @@ def _on_activate_translate_group2():
                             loading.destroy()
                         from ui.popup import get_app_version
                         version = get_app_version()
-                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        timeout_msg = "⏰ Hết thời gian chờ dịch. Vui lòng kiểm tra kết nối mạng và thử lại."
                         show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     root.after(0, show_timeout)
                     return
@@ -1027,7 +1027,7 @@ def _on_activate_replace_group2():
                             loading.destroy()
                         from ui.popup import get_app_version
                         version = get_app_version()
-                        timeout_msg = "⏰ Hết thời gian chờ dịch (15s). Vui lòng kiểm tra kết nối mạng và thử lại."
+                        timeout_msg = "⏰ Hết thời gian chờ dịch. Vui lòng kiểm tra kết nối mạng và thử lại."
                         show_popup(timeout_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     root.after(0, show_timeout)
                     return
