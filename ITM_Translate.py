@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+ITM Translate - Universal Translation Tool
+Main application entry point
+"""
 import sys
 import threading
 import time

@@ -1,17 +1,45 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import os
 import sys
 import json
 import subprocess
 from datetime import datetime
 
+# Force UTF-8 encoding for subprocess
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 def run_command(cmd, check=True):
     """Chạy command và return kết quả"""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=check)
+        # Thử với UTF-8 encoding trước
+        result = subprocess.run(
+            cmd, 
+            shell=True, 
+            capture_output=True, 
+            text=True, 
+            encoding='utf-8',
+            errors='ignore',  # Ignore characters that can't be decoded
+            check=check
+        )
         return result.returncode == 0, result.stdout, result.stderr
+    except UnicodeDecodeError:
+        # Fallback: không dùng text mode, xử lý bytes
+        try:
+            result = subprocess.run(cmd, shell=True, capture_output=True, check=check)
+            stdout = result.stdout.decode('utf-8', errors='ignore')
+            stderr = result.stderr.decode('utf-8', errors='ignore')
+            return result.returncode == 0, stdout, stderr
+        except Exception as e:
+            return False, "", str(e)
     except subprocess.CalledProcessError as e:
-        return False, e.stdout, e.stderr
+        # Handle encoding for exception output
+        try:
+            stdout = e.stdout if isinstance(e.stdout, str) else e.stdout.decode('utf-8', errors='ignore')
+            stderr = e.stderr if isinstance(e.stderr, str) else e.stderr.decode('utf-8', errors='ignore')
+            return False, stdout, stderr
+        except:
+            return False, "", str(e)
 
 def main():
     print("=" * 50)
@@ -90,7 +118,30 @@ def main():
         print("Sử dụng command line để build...")
     
     print(f"Running: {build_cmd_str}")
-    success, output, error = run_command(build_cmd_str)
+    
+    # Set environment for better Unicode support
+    build_env = os.environ.copy()
+    build_env['PYTHONIOENCODING'] = 'utf-8'
+    build_env['PYTHONUTF8'] = '1'
+    
+    # Run PyInstaller with custom environment
+    try:
+        result = subprocess.run(
+            build_cmd_str,
+            shell=True,
+            env=build_env,
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='ignore'
+        )
+        success = result.returncode == 0
+        output = result.stdout
+        error = result.stderr
+    except Exception as e:
+        success = False
+        output = ""
+        error = str(e)
     
     if not success:
         print(f"ERROR: Build thất bại!")
