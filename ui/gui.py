@@ -99,9 +99,11 @@ class MainGUI:
         self.settings_tab = ttk.Frame(self.tab_control)
         self.api_key_tab = ttk.Frame(self.tab_control)
         self.advanced_tab = ttk.Frame(self.tab_control)
+        self.history_tab = ttk.Frame(self.tab_control)
         self.tab_control.add(self.settings_tab, text=_('tab_settings'))
         self.tab_control.add(self.api_key_tab, text=_('tab_api_keys'))
         self.tab_control.add(self.advanced_tab, text=_('tab_advanced'))
+        self.tab_control.add(self.history_tab, text='📚 History')
         
         # Language flags positioned in top-right corner (overlaid on window, near minimize button)
         self.language_flags = LanguageFlagButtons(self.root, on_language_change=self.on_language_change)
@@ -114,6 +116,7 @@ class MainGUI:
         self.create_settings_tab()
         self.create_api_key_tab()
         self.create_advanced_tab()
+        self.create_history_tab()
 
     def on_tab_changed(self, event):
         """Xử lý sự kiện chuyển tab và tự động điều chỉnh kích thước cửa sổ"""
@@ -139,6 +142,15 @@ class MainGUI:
         elif tab_index == 2:  # Advanced tab
             # Tab Nâng Cao: kích thước nhỏ gọn
             self.root.geometry('1070x600')
+        elif tab_index == 3:  # History tab
+            # Tab History: cần không gian lớn để hiển thị danh sách history
+            self.root.geometry('1200x700')
+            # Refresh history when switching to this tab
+            try:
+                if hasattr(self, 'history_tab_component'):
+                    self.history_tab_component.refresh_history()
+            except Exception as e:
+                print(f"Warning: Could not refresh history: {e}")
         
         # Đảm bảo cửa sổ được cập nhật
         self.root.update_idletasks()
@@ -213,6 +225,13 @@ class MainGUI:
         self.show_on_startup_var = self.advanced_tab_component.show_on_startup_var
         self.floating_button_enabled = self.advanced_tab_component.floating_button_enabled
         self.auto_close_popup_var = self.advanced_tab_component.auto_close_popup_var
+
+    def create_history_tab(self):
+        """Tạo History tab sử dụng HistoryTab component"""
+        from ui.tabs.history_tab import HistoryTab
+        
+        # Tạo HistoryTab component
+        self.history_tab_component = HistoryTab(self.history_tab)
 
     def on_startup_toggle(self):
         enabled = self.startup_var.get()

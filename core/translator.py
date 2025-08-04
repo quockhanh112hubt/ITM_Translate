@@ -6,6 +6,7 @@ import hashlib
 import json
 from dotenv import load_dotenv
 from .api_key_manager import api_key_manager
+from .translation_history import translation_history
 
 load_dotenv()
 
@@ -251,6 +252,9 @@ TEXT to translate:
             return result, None, None
         return result
 
+    # Track overall translation start time for history
+    overall_start_time = time.time()
+
     # Try translation with current active key first
     for attempt in range(max_attempts):
         current_key = api_key_manager.get_active_key()
@@ -268,6 +272,32 @@ TEXT to translate:
             
             # Cache the successful translation
             cache_translation(text, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info, result)
+            
+            # Add to translation history
+            try:
+                translation_time = time.time() - overall_start_time
+                
+                # Extract translated text based on mode
+                if return_language_info and isinstance(result, tuple):
+                    translated_text = result[0]  # First element is the translation
+                    detected_lang = result[1]
+                    target_lang = result[2]
+                else:
+                    translated_text = result
+                    detected_lang = "Auto-detected"
+                    target_lang = "Auto-selected"
+                
+                translation_history.add_translation(
+                    original_text=text,
+                    translated_text=translated_text,
+                    source_lang=detected_lang,
+                    target_lang=target_lang,
+                    provider=provider_info['provider'],
+                    translation_time=translation_time
+                )
+                print(f"📝 [HISTORY] Translation recorded (time: {translation_time:.2f}s)")
+            except Exception as hist_e:
+                print(f"⚠️ [HISTORY] Failed to record translation: {hist_e}")
             
             return result
             
