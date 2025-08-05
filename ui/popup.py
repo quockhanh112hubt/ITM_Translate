@@ -6,6 +6,26 @@ import os
 import json
 from core.api_key_manager import api_key_manager
 
+def get_app_version():
+    """Đọc version từ file version.json"""
+    try:
+        # Thử đọc từ thư mục gốc trước
+        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
+        if os.path.exists(version_file):
+            with open(version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+        
+        # Thử đọc từ core/version.json
+        core_version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "core", "version.json")
+        if os.path.exists(core_version_file):
+            with open(core_version_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('version', '1.0.0')
+    except Exception:
+        pass
+    return '1.0.0'
+
 def get_smart_popup_position(master, popup_width, popup_height, mouse_x=None, mouse_y=None):
     """
     Calculate smart popup position to keep it visible on screen
@@ -67,7 +87,149 @@ def get_smart_popup_position(master, popup_width, popup_height, mouse_x=None, mo
         # Fallback to simple positioning
         return mouse_x or 100, mouse_y or 100
 
-def get_app_version():
+def apply_text_formatting(text_widget, text):
+    """
+    Apply beautiful text formatting with colors and styles
+    
+    Temporarily disabled to avoid regex issues. Just insert plain text.
+    """
+    import re
+    
+    # Configure text formatting tags
+    text_widget.tag_configure("bold", font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("italic", font=('Segoe UI', 12, 'italic'))
+    text_widget.tag_configure("bracket_bold", font=('Segoe UI', 12, 'bold'), foreground='#2c3e50')
+    text_widget.tag_configure("tag_blue", foreground='#3498db', font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("link_blue", foreground='#2980b9', underline=True, font=('Segoe UI', 12))
+    text_widget.tag_configure("email_blue", foreground='#2980b9', underline=True)
+    text_widget.tag_configure("time_green", foreground='#27ae60', font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("number_orange", foreground='#e67e22', font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("keyword_purple", foreground='#8e44ad', font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("highlight_yellow", background='#fff3cd', foreground='#856404')
+    
+    # Insert text only once
+    text_widget.insert('1.0', text)
+    
+    # Apply formatting patterns
+    patterns = [
+        # [text in brackets] -> Bold dark blue
+        (r'\[[^\]]+\]', 'bracket_bold'),
+        
+        # @tags -> Blue bold
+        (r'@[A-Za-z0-9_]+', 'tag_blue'),
+        
+        # URLs (http/https/ftp) - simplified
+        (r'https://[^ \t\n\r<>"]+', 'link_blue'),
+        (r'http://[^ \t\n\r<>"]+', 'link_blue'),
+        (r'ftp://[^ \t\n\r<>"]+', 'link_blue'),
+        
+        # Email addresses - simplified
+        (r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', 'email_blue'),
+        
+        # Time stamps [HH:MM] or (HH:MM) - simplified
+        (r'\[[0-9]{1,2}:[0-9]{2}\]', 'time_green'),
+        (r'\([0-9]{1,2}:[0-9]{2}\)', 'time_green'),
+        (r'[0-9]{1,2}:[0-9]{2} *AM', 'time_green'),
+        (r'[0-9]{1,2}:[0-9]{2} *PM', 'time_green'),
+        
+        # Numbers - simplified
+        (r'[0-9]+\.[0-9]+', 'number_orange'),
+        (r'[0-9]+', 'number_orange'),
+        
+        # **bold** markdown style - simplified
+        (r'\*\*[^*]+\*\*', 'bold'),
+        
+        # Keywords - simplified
+        (r'ERROR', 'keyword_purple'),
+        (r'FAILED', 'keyword_purple'),
+        (r'SUCCESS', 'keyword_purple'),
+        (r'WARNING', 'keyword_purple'),
+        (r'INFO', 'keyword_purple'),
+        (r'DEBUG', 'keyword_purple'),
+        (r'CRITICAL', 'keyword_purple'),
+        
+        # Highlighted text with ==text== - simplified
+        (r'==[^=]+=+', 'highlight_yellow'),
+    ]
+    
+    # Apply each pattern
+    for pattern, tag in patterns:
+        start = '1.0'
+        while True:
+            match_start = text_widget.search(pattern, start, tk.END, regexp=True)
+            if not match_start:
+                break
+            
+            # Calculate match end
+            match_text = text_widget.get(match_start, f"{match_start} lineend")
+            match = re.search(pattern, match_text)
+            if match:
+                match_length = len(match.group(0))
+                match_end = f"{match_start}+{match_length}c"
+                
+                # Apply tag to the match
+                text_widget.tag_add(tag, match_start, match_end)
+                
+                # For **bold** pattern, remove the ** and just keep the text bold
+                if pattern == r'\*\*([^*]+)\*\*' and match.group(1):
+                    # Replace **text** with just text, but keep it bold
+                    text_widget.delete(match_start, match_end)
+                    text_widget.insert(match_start, match.group(1))
+                    new_end = f"{match_start}+{len(match.group(1))}c"
+                    text_widget.tag_add(tag, match_start, new_end)
+                    start = new_end
+                elif pattern == r'==([^=]+)==' and match.group(1):
+                    # Replace ==text== with just text, but keep it highlighted
+                    text_widget.delete(match_start, match_end)
+                    text_widget.insert(match_start, match.group(1))
+                    new_end = f"{match_start}+{len(match.group(1))}c"
+                    text_widget.tag_add(tag, match_start, new_end)
+                    start = new_end
+                else:
+                    start = match_end
+            else:
+                break
+    
+    # Make links clickable (optional enhancement)
+    def make_links_clickable():
+        """Make URL and email links clickable"""
+        import webbrowser
+        
+        def open_link(event):
+            # Get the text at click position
+            index = text_widget.index("@%s,%s" % (event.x, event.y))
+            tags = text_widget.tag_names(index)
+            
+            if 'link_blue' in tags or 'email_blue' in tags:
+                # Find the range of the link
+                for tag in ['link_blue', 'email_blue']:
+                    if tag in tags:
+                        ranges = text_widget.tag_ranges(tag)
+                        for i in range(0, len(ranges), 2):
+                            start, end = ranges[i], ranges[i+1]
+                            if text_widget.compare(start, '<=', index) and text_widget.compare(index, '<', end):
+                                url = text_widget.get(start, end)
+                                if url.startswith('@'):
+                                    return  # Don't open @tags
+                                if not url.startswith(('http://', 'https://', 'ftp://')):
+                                    if '@' in url:
+                                        url = f'mailto:{url}'
+                                    else:
+                                        url = f'http://{url}'
+                                try:
+                                    webbrowser.open(url)
+                                    print(f"🔗 [POPUP] Opened link: {url}")
+                                except Exception as e:
+                                    print(f"❌ [POPUP] Failed to open link: {e}")
+                                return
+        
+        text_widget.bind('<Button-1>', open_link, add='+')
+        text_widget.bind('<Control-Button-1>', open_link, add='+')
+    
+    # Enable clickable links
+    make_links_clickable()
+    
+    print(f"🎨 [POPUP] Applied text formatting with {len(patterns)} pattern rules")
     """Lấy version hiện tại từ file version.json"""
     try:
         # Thử đọc từ core/version.json trước
@@ -203,14 +365,19 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         frame,
         wrap='word',
         bg='#f8f9fa',
-        fg='#222',
+        fg='#2c3e50',  # Darker text for better contrast
         font=('Segoe UI', 12),
         width=max_chars_per_line,
         height=height_lines+1,
         borderwidth=0,
-        highlightthickness=0
+        highlightthickness=0,
+        selectbackground='#3498db',  # Nice blue selection
+        selectforeground='white'
     )
-    text_widget.insert('1.0', text)
+    
+    # Apply beautiful text formatting instead of plain insert
+    apply_text_formatting(text_widget, text)
+    
     text_widget.pack(fill='both', expand=True, padx=0, pady=0)
     text_widget.config(state='normal')
     win.update_idletasks()
