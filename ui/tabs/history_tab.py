@@ -262,7 +262,9 @@ class HistoryTab:
             self.history_text.tag_configure("bold", font=('Consolas', 11, 'bold'), foreground='#1976d2')
             self.history_text.tag_configure("time_bold", font=('Consolas', 11, 'bold'), foreground="#008000")
             self.history_text.tag_configure("header", font=('Consolas', 11, 'bold'), foreground='#1976d2')
-            
+            self.history_text.tag_configure("original_label", font=('Consolas', 11, 'bold'), foreground='#d32f2f')  # Red and bold for Original
+            self.history_text.tag_configure("translated_label", font=('Consolas', 11, 'bold'), foreground='#008000')  # Green and bold for Translated
+
             # Get filtered history
             history_data = self.get_filtered_history()
             
@@ -313,8 +315,14 @@ class HistoryTab:
                 self.history_text.insert(tk.END, time_text, "time_bold")
                 
                 self.history_text.insert(tk.END, f"\n   💡 {lang_pair}\n")
-                self.history_text.insert(tk.END, f"   🌐 Original:  {entry['original_text'][:250]}{'...' if len(entry['original_text']) > 250 else ''}\n")
-                self.history_text.insert(tk.END, f"   🌐 Translated: {entry['translated_text'][:250]}{'...' if len(entry['translated_text']) > 250 else ''}\n")
+                
+                # Insert "Original:" with red bold formatting
+                self.history_text.insert(tk.END, "   📝Original:  ", "original_label")
+                self.history_text.insert(tk.END, f"{entry['original_text'][:250]}{'...' if len(entry['original_text']) > 250 else ''}\n")
+                
+                # Insert "Translated:" with red bold formatting
+                self.history_text.insert(tk.END, "   ✅Translated: ", "translated_label")
+                self.history_text.insert(tk.END, f"{entry['translated_text'][:250]}{'...' if len(entry['translated_text']) > 250 else ''}\n")
                 self.history_text.insert(tk.END, "-" * 60 + "\n\n")
             
             # Add footer with total count and average time
