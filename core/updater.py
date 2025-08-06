@@ -11,6 +11,10 @@ import zipfile
 import shutil
 from datetime import datetime
 from core.i18n import get_language_manager, _
+import ssl
+import urllib3
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 class Updater:
     def __init__(self, current_version="1.0.0"):
@@ -21,8 +25,390 @@ class Updater:
         self.download_url = None
         self.new_version = None
         self.temp_dir = None
+        # Create SSL-aware session
+        self.session = self._create_ssl_session()
         # Debug logging for v1.0.8
-        print(f"🔄 Updater v1.0.8 initialized - Enhanced update mechanism")
+        print(f"🔄 Updater v1.0.8 initialized - Enhanced update mechanism with SSL handling")
+    
+    def _create_ssl_session(self):
+        """Tạo requests session với SSL handling cho môi trường corporate"""
+        session = requests.Session()
+        
+        # Configure retry strategy
+        retry_strategy = Retry(
+            total=3,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS"],  # Updated parameter name
+            backoff_factor=1
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        
+        # Check config for SSL verification override FIRST
+        disable_ssl = self.config.get("update_server", {}).get("disable_ssl_verification", False)
+        if disable_ssl:
+            session.verify = False
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            print("⚠️ SSL verification disabled by config (temporary for corporate environment)")
+            return session
+        
+        # Try to handle corporate SSL certificates if SSL not disabled
+        try:
+            # Method 1: Try with system certificates first
+            session.verify = True
+            print("🔒 Using system default SSL verification")
+            
+            # Method 2: Check for custom certificate bundle
+            custom_cert_paths = [
+                # Common corporate certificate locations
+                "C:\\Program Files\\Custom Certificates\\ca-bundle.crt",
+                os.path.join(os.environ.get('REQUESTS_CA_BUNDLE', ''), 'ca-bundle.crt') if os.environ.get('REQUESTS_CA_BUNDLE') else None,
+                os.path.join(os.path.dirname(__file__), '..', 'certificates', 'ca-bundle.crt'),
+            ]
+            
+            for cert_path in custom_cert_paths:
+                if cert_path and os.path.exists(cert_path):
+                    session.verify = cert_path
+                    print(f"🔒 Using custom certificate bundle: {cert_path}")
+                    break
+            
+            # Method 3: Create custom CA bundle with Fortinet certificates
+            fortinet_bundle = self._create_fortinet_ca_bundle()
+            if fortinet_bundle and os.path.exists(fortinet_bundle):
+                session.verify = fortinet_bundle
+                print(f"🔒 Using Fortinet CA bundle: {fortinet_bundle}")
+            
+        except Exception as e:
+            print(f"⚠️ SSL setup warning: {e}")
+            # Fallback to system default SSL verification
+            session.verify = True
+            print("🔒 Falling back to system SSL verification")
+        
+        return session
+    
+    def _create_fortinet_ca_bundle(self):
+        """Tạo CA bundle bao gồm system certs + Fortinet certs"""
+        try:
+            # Try to get system CA bundle
+            system_ca_bundle = None
+            
+            # Method 1: Try certifi (if available)
+            try:
+                import certifi
+                system_ca_bundle = certifi.where()
+                print(f"🔒 Using certifi CA bundle: {system_ca_bundle}")
+            except ImportError:
+                print("ℹ️ Certifi not available, using fallback methods")
+            
+            # Method 2: Try requests' built-in CA bundle
+            if not system_ca_bundle:
+                try:
+                    import requests.certs
+                    system_ca_bundle = requests.certs.where()
+                    print(f"🔒 Using requests CA bundle: {system_ca_bundle}")
+                except (ImportError, AttributeError):
+                    print("ℹ️ Requests CA bundle not available")
+            
+            # Method 3: System default paths
+            if not system_ca_bundle:
+                common_ca_paths = [
+                    "C:\\Program Files\\Common Files\\SSL\\certs\\ca-bundle.crt",
+                    "C:\\Windows\\System32\\curl-ca-bundle.crt",
+                    "/etc/ssl/certs/ca-certificates.crt",  # Linux
+                    "/etc/pki/tls/certs/ca-bundle.crt",   # Red Hat
+                ]
+                for path in common_ca_paths:
+                    if os.path.exists(path):
+                        system_ca_bundle = path
+                        print(f"🔒 Using system CA bundle: {system_ca_bundle}")
+                        break
+            
+            # Create temp CA bundle file
+            temp_ca_bundle = os.path.join(tempfile.gettempdir(), "itm_ca_bundle.pem")
+            
+            # Copy system CA bundle if available
+            if system_ca_bundle and os.path.exists(system_ca_bundle):
+                shutil.copy2(system_ca_bundle, temp_ca_bundle)
+                print(f"📋 Copied system CA bundle to temp file")
+            else:
+                # Create empty bundle file
+                with open(temp_ca_bundle, 'w', encoding='utf-8') as f:
+                    f.write("# ITM Translate Custom CA Bundle\n")
+                print(f"📋 Created empty CA bundle (no system bundle found)")
+            
+            # Look for Fortinet certificates in common locations
+            fortinet_cert_paths = []
+            
+            # Check Downloads folder
+            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+            if os.path.exists(downloads_folder):
+                for root, dirs, files in os.walk(downloads_folder):
+                    for file in files:
+                        if file.startswith("Fortinet_CA_SSL") and file.endswith(".cer"):
+                            fortinet_cert_paths.append(os.path.join(root, file))
+            
+            # Check common certificate folders
+            cert_folders = [
+                "C:\\certificates",
+                "C:\\Program Files\\certificates",
+                os.path.join(os.path.dirname(__file__), "..", "certificates"),
+            ]
+            
+            for folder in cert_folders:
+                if os.path.exists(folder):
+                    for file in os.listdir(folder):
+                        if file.startswith("Fortinet_CA_SSL") and file.endswith(".cer"):
+                            fortinet_cert_paths.append(os.path.join(folder, file))
+            
+            # Add Fortinet certificates to bundle
+            if fortinet_cert_paths:
+                with open(temp_ca_bundle, 'a', encoding='utf-8') as bundle_file:
+                    bundle_file.write("\n# Fortinet Corporate Certificates\n")
+                    for cert_path in fortinet_cert_paths:
+                        try:
+                            with open(cert_path, 'r', encoding='utf-8') as cert_file:
+                                cert_content = cert_file.read()
+                                bundle_file.write(f"\n# {os.path.basename(cert_path)}\n")
+                                bundle_file.write(cert_content)
+                                bundle_file.write("\n")
+                                print(f"📜 Added Fortinet cert: {os.path.basename(cert_path)}")
+                        except Exception as e:
+                            print(f"⚠️ Could not read cert {cert_path}: {e}")
+                
+                return temp_ca_bundle
+            else:
+                # No Fortinet certs found, but still return the bundle if we have system certs
+                if system_ca_bundle and os.path.exists(system_ca_bundle):
+                    return temp_ca_bundle
+            
+        except Exception as e:
+            print(f"⚠️ Could not create Fortinet CA bundle: {e}")
+        
+        return None
+    
+    def setup_fortinet_certificates(self):
+        """Setup Fortinet certificates for corporate environments"""
+        try:
+            # Create certificates directory if not exists
+            cert_dir = os.path.join(os.path.dirname(__file__), "..", "certificates")
+            os.makedirs(cert_dir, exist_ok=True)
+            
+            # Look for Fortinet certificates in Downloads
+            downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+            fortinet_certs_found = []
+            
+            if os.path.exists(downloads_folder):
+                for root, dirs, files in os.walk(downloads_folder):
+                    for file in files:
+                        if file.startswith("Fortinet_CA_SSL") and file.endswith(".cer"):
+                            source_path = os.path.join(root, file)
+                            dest_path = os.path.join(cert_dir, file)
+                            
+                            try:
+                                shutil.copy2(source_path, dest_path)
+                                fortinet_certs_found.append(file)
+                                print(f"📜 Copied Fortinet cert: {file}")
+                            except Exception as e:
+                                print(f"⚠️ Could not copy {file}: {e}")
+            
+            if fortinet_certs_found:
+                print(f"✅ Setup {len(fortinet_certs_found)} Fortinet certificates")
+                return True
+            else:
+                print("ℹ️ No Fortinet certificates found in Downloads folder")
+                return False
+                
+        except Exception as e:
+            print(f"⚠️ Error setting up Fortinet certificates: {e}")
+            return False
+    
+    def cleanup_temp_files(self):
+        """Clean up temporary files including CA bundles"""
+        try:
+            # Clean up temp CA bundle
+            temp_ca_bundle = os.path.join(tempfile.gettempdir(), "itm_ca_bundle.pem")
+            if os.path.exists(temp_ca_bundle):
+                os.remove(temp_ca_bundle)
+                print("🗑️ Cleaned up temporary CA bundle")
+            
+            # Clean up temp directory
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+                print("🗑️ Cleaned up temp download directory")
+                
+        except Exception as e:
+            print(f"⚠️ Error cleaning up temp files: {e}")
+    
+    def cleanup_ca_bundle_on_exit(self):
+        """Cleanup CA bundle when app exits - call this explicitly"""
+        try:
+            temp_ca_bundle = os.path.join(tempfile.gettempdir(), "itm_ca_bundle.pem")
+            if os.path.exists(temp_ca_bundle):
+                os.remove(temp_ca_bundle)
+                print("🗑️ Cleaned up CA bundle on app exit")
+        except Exception as e:
+            print(f"⚠️ Error cleaning up CA bundle: {e}")
+    
+    def show_certificate_help_dialog(self, parent=None):
+        """Show help dialog for SSL certificate issues"""
+        try:
+            help_window = tk.Toplevel(parent)
+            help_window.title("🔒 Hướng dẫn khắc phục lỗi SSL Certificate")
+            help_window.geometry("650x600")
+            help_window.resizable(False, False)
+            
+            if parent:
+                help_window.transient(parent)
+                help_window.grab_set()
+            
+            # Center window
+            help_window.update_idletasks()
+            x = (help_window.winfo_screenwidth() // 2) - (325)
+            y = (help_window.winfo_screenheight() // 2) - (300)
+            help_window.geometry(f"650x600+{x}+{y}")
+            
+            # Main frame
+            main_frame = ttk.Frame(help_window, padding=20)
+            main_frame.pack(fill='both', expand=True)
+            
+            # Title
+            title_label = ttk.Label(main_frame, 
+                                  text="🔒 Lỗi SSL Certificate - Môi trường Corporate", 
+                                  font=('Segoe UI', 14, 'bold'))
+            title_label.pack(anchor='w', pady=(0, 15))
+            
+            # Help text
+            help_text = """🚨 Lỗi này xảy ra khi máy tính có Fortinet firewall/proxy với custom SSL certificates.
+
+📋 TÌNH TRẠNG HIỆN TẠI:
+✅ Đã tìm thấy Fortinet certificates trong Downloads
+❌ Certificates thiếu Authority Key Identifier (vấn đề phổ biến)
+
+🔧 GIẢI PHÁP KHUYẾN NGHỊ (theo thứ tự ưu tiên):
+
+🥇 CÁCH 1: Yêu cầu IT cung cấp COMPLETE certificate chain:
+   • Root CA certificate
+   • Intermediate CA certificates  
+   • All certificates với proper Authority Key Identifier
+   • Format: PEM (.pem) thay vì DER (.cer)
+
+🥈 CÁCH 2: Request IT whitelist GitHub domains:
+   • github.com
+   • api.github.com
+   • *.githubusercontent.com
+   • objects.githubusercontent.com
+
+🥉 CÁCH 3: TEMPORARY SSL bypass (chỉ để update):
+   • Click nút "🔧 Enable Temporary SSL Bypass" bên dưới
+   • Chỉ sử dụng trong mạng corporate an toàn
+   • Tự động tắt sau khi update xong
+
+🏆 CÁCH 4: Manual update:
+   • Mở browser → github.com/quockhanh112hubt/ITM_Translate/releases
+   • Download file .exe mới nhất
+   • Thay thế file cũ
+
+💡 LƯU Ý: SSL bypass chỉ nên dùng tạm thời trong môi trường corporate được IT quản lý."""
+            
+            # Text widget with scrollbar
+            text_frame = ttk.Frame(main_frame)
+            text_frame.pack(fill='both', expand=True, pady=(0, 15))
+            
+            text_widget = tk.Text(text_frame, wrap='word', font=('Segoe UI', 10),
+                                bg='#f8f9fa', fg='#2c3e50', height=18)
+            scrollbar = ttk.Scrollbar(text_frame, orient='vertical', command=text_widget.yview)
+            text_widget.configure(yscrollcommand=scrollbar.set)
+            
+            text_widget.insert('1.0', help_text)
+            text_widget.config(state='disabled')
+            
+            text_widget.pack(side='left', fill='both', expand=True)
+            scrollbar.pack(side='right', fill='y')
+            
+            # Buttons
+            button_frame = ttk.Frame(main_frame)
+            button_frame.pack(fill='x')
+            
+            def setup_certs():
+                """Auto setup certificates if found"""
+                if self.setup_fortinet_certificates():
+                    messagebox.showinfo("✅ Thành công", 
+                                      "Đã tìm thấy và setup Fortinet certificates!\nHãy thử lại update.")
+                else:
+                    messagebox.showwarning("⚠️ Không tìm thấy", 
+                                         "Không tìm thấy chứng chỉ Fortinet trong Downloads.\nHãy copy các file .cer vào Downloads và thử lại.")
+            
+            def enable_ssl_bypass():
+                """Enable temporary SSL bypass for update"""
+                result = messagebox.askquestion("⚠️ Xác nhận SSL Bypass", 
+                    "Bạn có muốn TEMPORARILY disable SSL verification để update?\n\n" +
+                    "🔴 CHỈ sử dụng trong mạng corporate an toàn!\n" +
+                    "🔴 Sẽ tự động tắt sau khi update xong!\n\n" +
+                    "Tiếp tục?", icon='warning')
+                
+                if result == 'yes':
+                    try:
+                        # Temporarily enable SSL bypass in config
+                        config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.json")
+                        if os.path.exists(config_file):
+                            with open(config_file, 'r', encoding='utf-8') as f:
+                                config = json.load(f)
+                            
+                            config.setdefault("update_server", {})["disable_ssl_verification"] = True
+                            
+                            with open(config_file, 'w', encoding='utf-8') as f:
+                                json.dump(config, f, ensure_ascii=False, indent=4)
+                            
+                            messagebox.showinfo("✅ SSL Bypass Enabled", 
+                                              "SSL verification đã tạm thời tắt!\n\n" +
+                                              "Hãy thử update ngay bây giờ.\n" +
+                                              "SSL verification sẽ được bật lại tự động sau khi update.")
+                            help_window.destroy()
+                        else:
+                            messagebox.showerror("❌ Lỗi", "Không tìm thấy file config.json")
+                    except Exception as e:
+                        messagebox.showerror("❌ Lỗi", f"Không thể enable SSL bypass: {e}")
+            
+            def open_manual_download():
+                """Open GitHub releases page for manual download"""
+                import webbrowser
+                webbrowser.open("https://github.com/quockhanh112hubt/ITM_Translate/releases")
+                messagebox.showinfo("🌐 Manual Download", 
+                                  "Đã mở trang GitHub releases trong browser.\n" +
+                                  "Download file .exe mới nhất và thay thế file cũ.")
+            
+            # Button row 1
+            button_frame1 = ttk.Frame(button_frame)
+            button_frame1.pack(fill='x', pady=(0, 5))
+            
+            ttk.Button(button_frame1, text="🔧 Auto Setup Certificates", 
+                      command=setup_certs).pack(side='left', padx=(0, 10))
+            
+            ttk.Button(button_frame1, text="⚠️ Enable Temporary SSL Bypass", 
+                      command=enable_ssl_bypass).pack(side='left', padx=(0, 10))
+            
+            # Button row 2  
+            button_frame2 = ttk.Frame(button_frame)
+            button_frame2.pack(fill='x')
+            
+            ttk.Button(button_frame2, text="🌐 Manual Download", 
+                      command=open_manual_download).pack(side='left', padx=(0, 10))
+            
+            ttk.Button(button_frame2, text="❌ Đóng", 
+                      command=help_window.destroy).pack(side='left')
+            
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể hiển thị hướng dẫn: {e}")
+    
+    def __del__(self):
+        """Cleanup when updater is destroyed"""
+        try:
+            # Only cleanup temp download directory, NOT the CA bundle during active use
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+        except:
+            pass
     
     def _load_config(self):
         """Đọc config từ file config.json"""
@@ -48,9 +434,9 @@ class Updater:
         return '1.0.0'
     
     def check_for_updates(self):
-        """Kiểm tra version mới từ server"""
+        """Kiểm tra version mới từ server với SSL handling"""
         try:
-            print(f"Checking for updates at: {self.update_server_url}")  # Debug log
+            print(f"🔍 Checking for updates at: {self.update_server_url}")  # Debug log
             
             # Chuẩn bị headers cho GitHub API
             headers = {
@@ -62,12 +448,12 @@ class Updater:
             github_token = self.config.get("update_server", {}).get("github_token")
             if github_token:
                 headers['Authorization'] = f'token {github_token}'
-                print("Using GitHub token for private repository")
+                print("🔑 Using GitHub token for private repository")
             
-            # Thử với GitHub API
-            response = requests.get(self.update_server_url, headers=headers, timeout=10)
+            # Use SSL-aware session instead of requests.get
+            response = self.session.get(self.update_server_url, headers=headers, timeout=15)
             
-            print(f"Response status: {response.status_code}")  # Debug log
+            print(f"📡 Response status: {response.status_code}")  # Debug log
             
             if response.status_code == 200:
                 release_data = response.json()
@@ -93,6 +479,23 @@ class Updater:
                 return False, None, f"GitHub token không hợp lệ hoặc hết hạn.\nVui lòng tạo token mới với quyền 'repo' access."
             else:
                 return False, None, f"Không thể kết nối server cập nhật (HTTP {response.status_code})"
+        
+        except requests.exceptions.SSLError as e:
+            # Specific handling for SSL errors
+            error_msg = str(e)
+            if "CERTIFICATE_VERIFY_FAILED" in error_msg:
+                return False, None, (
+                    f"🔒 Lỗi chứng chỉ SSL - Môi trường corporate firewall detected!\n\n"
+                    f"Giải pháp:\n"
+                    f"1. Tải các chứng chỉ Fortinet từ IT department\n"
+                    f"2. Đặt các file .cer vào thư mục Downloads\n"
+                    f"3. Thử lại update\n\n"
+                    f"Hoặc liên hệ IT để config proxy/firewall cho phép GitHub access.\n\n"
+                    f"Chi tiết lỗi: {error_msg}"
+                )
+            else:
+                return False, None, f"🔒 Lỗi SSL: {error_msg}"
+        
         except requests.RequestException as e:
             # Fallback: kiểm tra bằng cách khác hoặc thông báo offline
             error_msg = str(e)
@@ -123,16 +526,21 @@ class Updater:
             return 0
     
     def download_update(self, progress_callback=None):
-        """Download file cập nhật"""
+        """Download file cập nhật với SSL handling"""
         try:
             self.temp_dir = tempfile.mkdtemp(prefix="itm_update_")
             file_name = os.path.basename(self.download_url)
             temp_file_path = os.path.join(self.temp_dir, file_name)
             
-            response = requests.get(self.download_url, stream=True, timeout=30)
+            print(f"📥 Downloading update: {self.download_url}")
+            
+            # Use SSL-aware session for download
+            response = self.session.get(self.download_url, stream=True, timeout=30)
             total_size = int(response.headers.get('content-length', 0))
             downloaded = 0
             last_progress = 0
+            
+            print(f"📦 File size: {total_size / (1024*1024):.1f} MB")
             
             with open(temp_file_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
@@ -150,15 +558,26 @@ class Updater:
             if progress_callback:
                 progress_callback(100.0)
             
+            print(f"✅ Download completed: {temp_file_path}")
             return temp_file_path
+            
+        except requests.exceptions.SSLError as e:
+            # Cleanup temp directory
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+            raise Exception(f"🔒 SSL Error during download: Môi trường corporate firewall detected. Liên hệ IT để config proxy/certificate. Chi tiết: {str(e)}")
+            
         except Exception as e:
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
             raise e
     
     def apply_update(self, downloaded_file_path):
-        """Áp dụng cập nhật một cách an toàn"""
+        """Áp dụng cập nhật một cách an toàn với SSL restore logic"""
         try:
+            # Auto-restore SSL verification if it was temporarily disabled
+            self._restore_ssl_verification_if_temp_disabled()
+            
             current_exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
             current_dir = os.path.dirname(current_exe_path)
             backup_path = current_exe_path + ".backup"
@@ -186,6 +605,7 @@ class Updater:
                 print("Temp directory cleaned up")
             
             print("Apply update completed successfully")
+            print("🔒 SSL verification restored to secure defaults")
             return True
             
         except Exception as e:
@@ -198,6 +618,29 @@ class Updater:
                 except Exception:
                     pass
             raise e
+    
+    def _restore_ssl_verification_if_temp_disabled(self):
+        """Restore SSL verification if it was temporarily disabled for update"""
+        try:
+            config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.json")
+            if os.path.exists(config_file):
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                
+                # Check if SSL was temporarily disabled
+                if config.get("update_server", {}).get("disable_ssl_verification", False):
+                    print("🔒 Restoring SSL verification after successful update...")
+                    
+                    # Re-enable SSL verification
+                    config.setdefault("update_server", {})["disable_ssl_verification"] = False
+                    
+                    with open(config_file, 'w', encoding='utf-8') as f:
+                        json.dump(config, f, ensure_ascii=False, indent=4)
+                    
+                    print("✅ SSL verification restored to secure defaults")
+                    
+        except Exception as e:
+            print(f"⚠️ Could not restore SSL verification setting: {e}")
     
     def create_update_batch_file(self, current_exe_path, app_dir):
         """Tạo file update.bat để thực hiện cập nhật"""
@@ -596,15 +1039,33 @@ Bạn có muốn mở thư mục chương trình không?"""
                            parent=self.dialog)
 
 def check_for_updates_async(parent_window, show_no_update=True):
-    """Kiểm tra cập nhật async (được gọi từ GUI)"""
+    """Kiểm tra cập nhật async với SSL error handling"""
     def check_updates():
         updater = Updater()
         updater.current_version = updater.get_current_version()
         
-        has_update, version, message = updater.check_for_updates()
-        
-        # Show dialog in main thread
-        if has_update or show_no_update:
-            parent_window.after(0, lambda: UpdateDialog(parent_window, updater, has_update, version, message))
+        try:
+            has_update, version, message = updater.check_for_updates()
+            
+            # Show dialog in main thread
+            if has_update or show_no_update:
+                parent_window.after(0, lambda: UpdateDialog(parent_window, updater, has_update, version, message))
+                
+        except Exception as e:
+            error_msg = str(e)
+            
+            # Check if it's an SSL certificate error
+            if "CERTIFICATE_VERIFY_FAILED" in error_msg or "SSL" in error_msg:
+                def show_ssl_help():
+                    # Show certificate help dialog
+                    updater.show_certificate_help_dialog(parent_window)
+                
+                parent_window.after(0, show_ssl_help)
+            else:
+                # Show generic error
+                parent_window.after(0, lambda: messagebox.showerror(
+                    "Lỗi cập nhật", 
+                    f"Không thể kiểm tra cập nhật:\n{error_msg}"
+                ))
     
     threading.Thread(target=check_updates, daemon=True).start()
