@@ -241,7 +241,7 @@ class APIKeyManager:
             if same_provider_keys:
                 return same_provider_keys[0]
         
-        # Try other providers by priority
+        # Try other providers by priority (active keys first)
         for provider in self.provider_priority:
             provider_keys = [k for k in self.keys if k.provider == provider and k.is_active and k.failed_count < 3]
             if provider_keys:
@@ -254,6 +254,53 @@ class APIKeyManager:
         
         return None
     
+    def find_retry_candidate_key(self, exclude_current=True) -> Optional[APIKeyInfo]:
+        """
+        Tìm key bị disabled để retry (khi tất cả active keys đều thất bại)
+        Tìm theo thứ tự ưu tiên: failed_count ít nhất trước
+        """
+        if not self.keys:
+            return None
+            
+        current_key = self.get_active_key()
+        
+        # Get all disabled keys (failed_count >= 3 or is_active=False)
+        disabled_keys = []
+        for key in self.keys:
+            if exclude_current and current_key and key.key == current_key.key:
+                continue
+            # Include keys that are disabled or have high failure count
+            if not key.is_active or key.failed_count >= 3:
+                disabled_keys.append(key)
+        
+        if not disabled_keys:
+            return None
+        
+        # Sort by priority: fewer failures first, then by provider priority
+        def sort_key(k):
+            provider_priority_index = 0
+            try:
+                provider_priority_index = self.provider_priority.index(k.provider)
+            except ValueError:
+                provider_priority_index = 999  # Unknown provider gets lowest priority
+            
+            return (k.failed_count, provider_priority_index)
+        
+        disabled_keys.sort(key=sort_key)
+        
+        # Return the best candidate (lowest failure count + highest provider priority)
+        candidate = disabled_keys[0]
+        
+        # Find index and set as active
+        for i, key in enumerate(self.keys):
+            if key == candidate:
+                self.active_index = i
+                self.save_keys()
+                print(f"🔄 [RETRY] Selected disabled key for retry: {candidate.provider.value} (failures: {candidate.failed_count})")
+                return candidate
+        
+        return None
+    
     def mark_key_failed(self, key_info: APIKeyInfo, error_msg: str = ""):
         """Đánh dấu key bị lỗi"""
         for key in self.keys:
@@ -262,6 +309,20 @@ class APIKeyManager:
                 key.last_error = error_msg
                 if key.failed_count >= 3:
                     key.is_active = False
+                self.save_keys()
+                break
+    
+    def retry_disabled_key(self, key_info: APIKeyInfo):
+        """
+        Temporarily re-enable a disabled key for retry
+        Reset failure count to give it another chance
+        """
+        for key in self.keys:
+            if key.key == key_info.key and key.provider == key_info.provider:
+                print(f"🔄 [RETRY] Re-enabling disabled key: {key.provider.value} (was {key.failed_count} failures)")
+                key.failed_count = 0
+                key.last_error = ""
+                key.is_active = True
                 self.save_keys()
                 break
     

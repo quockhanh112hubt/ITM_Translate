@@ -313,8 +313,16 @@ TEXT to translate:
                 # Try to find next working key (different provider if possible)
                 next_key = api_key_manager.find_next_working_key(exclude_current=True)
                 if not next_key:
-                    print(f"❌ No more working keys available after timeout")
-                    result = f"⏰ Hết thời gian chờ dịch ({timeout_seconds}s/attempt). Tất cả provider đều timeout."
+                    print(f"❌ No more active keys available after timeout - trying disabled keys")
+                    # Try retry mechanism with disabled keys
+                    retry_result = _try_retry_disabled_keys(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, max_retries=3)
+                    if retry_result is not None:
+                        if return_language_info:
+                            return retry_result[0], retry_result[1], retry_result[2] 
+                        return retry_result
+                    
+                    print(f"❌ All retry attempts failed after timeout")
+                    result = f"⏰ Hết thời gian chờ dịch ({timeout_seconds}s/attempt). Tất cả provider đều timeout hoặc lỗi."
                     if return_language_info:
                         return result, None, None
                     return result
@@ -335,7 +343,15 @@ TEXT to translate:
                 # Try to find next working key (different provider if possible)
                 next_key = api_key_manager.find_next_working_key(exclude_current=True)
                 if not next_key:
-                    print(f"❌ No more working keys available")
+                    print(f"❌ No more active keys available - trying disabled keys")
+                    # Try retry mechanism with disabled keys
+                    retry_result = _try_retry_disabled_keys(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, max_retries=3)
+                    if retry_result is not None:
+                        if return_language_info:
+                            return retry_result[0], retry_result[1], retry_result[2] 
+                        return retry_result
+                    
+                    print(f"❌ All retry attempts failed")
                     break
                     
                 print(f"🔄 Switching from {provider_name} → {next_key.provider.value}")
@@ -348,7 +364,70 @@ TEXT to translate:
                 return result
 
     # All keys failed
-    result = "API key gặp lỗi. Vui lòng thử lại. Nếu vẫn gặp lỗi, hãy thử thay API key mới."
+    result = "❌ Tất cả API keys đều gặp lỗi. Vui lòng kiểm tra lại các API keys trong tab 'Quản lý API KEY'."
     if return_language_info:
         return result, None, None
     return result
+
+
+def _try_retry_disabled_keys(text: str, source_lang: str, target_lang: str, max_retries: int = 3):
+    """
+    Retry mechanism: Try up to max_retries disabled keys
+    Returns translation result if successful, None if all retries failed
+    """
+    from core.api_key_manager import api_key_manager
+    
+    print(f"🔄 [RETRY] Starting retry mechanism with disabled keys (max {max_retries} attempts)")
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        retry_count += 1
+        
+        # Find a disabled key to retry
+        retry_key = api_key_manager.find_retry_candidate_key(exclude_current=True)
+        if not retry_key:
+            print(f"❌ [RETRY] No more disabled keys to retry")
+            break
+        
+        print(f"🔄 [RETRY] Attempt {retry_count}/{max_retries}: Trying {retry_key.provider.value}")
+        
+        # Temporarily re-enable the key
+        api_key_manager.retry_disabled_key(retry_key)
+        
+        # Try translation with this key
+        try:
+            # Import here to avoid circular imports
+            from core.ai_providers import get_ai_provider
+            
+            provider = get_ai_provider(retry_key.provider.value)
+            if provider:
+                # Test with a single translation attempt
+                result = provider.translate(text, source_lang, target_lang, retry_key.key, retry_key.model, timeout=15)
+                
+                if not result.startswith("Lỗi") and not result.startswith("❌") and not result.startswith("⏰"):
+                    # Success! Key is working again
+                    print(f"✅ [RETRY] Success! Key {retry_key.provider.value} is working again")
+                    api_key_manager.reset_key_failures(retry_key)
+                    
+                    # Detect languages if needed
+                    detected_source = None
+                    detected_target = None
+                    if source_lang.lower() in ['auto', 'any language', 'mixed']:
+                        try:
+                            from core.ai_providers import detect_language
+                            detected_source = detect_language(text)
+                        except:
+                            detected_source = "Unknown"
+                    
+                    return (result, detected_source, detected_target)
+                else:
+                    # Still failing, mark as failed again
+                    print(f"❌ [RETRY] Key {retry_key.provider.value} still failing: {result[:100]}...")
+                    api_key_manager.mark_key_failed(retry_key, "RETRY_FAILED")
+                    
+        except Exception as e:
+            print(f"❌ [RETRY] Exception with {retry_key.provider.value}: {str(e)}")
+            api_key_manager.mark_key_failed(retry_key, f"RETRY_EXCEPTION: {str(e)}")
+    
+    print(f"❌ [RETRY] All {retry_count} retry attempts failed")
+    return None
