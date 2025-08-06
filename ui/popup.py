@@ -103,20 +103,20 @@ def apply_text_formatting(text_widget, text):
     text_widget.tag_configure("link_blue", foreground='#2980b9', underline=True, font=('Segoe UI', 12))
     text_widget.tag_configure("email_blue", foreground='#2980b9', underline=True)
     text_widget.tag_configure("time_green", foreground='#27ae60', font=('Segoe UI', 12, 'bold'))
-    text_widget.tag_configure("number_orange", foreground='#e67e22', font=('Segoe UI', 12, 'bold'))
+    text_widget.tag_configure("number_orange", foreground='#27ae60', font=('Segoe UI', 12, 'bold'))
     text_widget.tag_configure("keyword_purple", foreground='#8e44ad', font=('Segoe UI', 12, 'bold'))
     text_widget.tag_configure("highlight_yellow", background='#fff3cd', foreground='#856404')
     
     # Insert text only once
     text_widget.insert('1.0', text)
     
-    # Apply formatting patterns
+    # Apply formatting patterns using Python regex instead of tkinter search
     patterns = [
+        # @tags -> Blue bold (support Unicode characters for international names)
+        (r'@[\w\u00C0-\u017F\u1EA0-\u1EF9\uAC00-\uD7AF\u4E00-\u9FFF]+', 'tag_blue'),
+        
         # [text in brackets] -> Bold dark blue
         (r'\[[^\]]+\]', 'bracket_bold'),
-        
-        # @tags -> Blue bold
-        (r'@[A-Za-z0-9_]+', 'tag_blue'),
         
         # URLs (http/https/ftp) - simplified
         (r'https://[^ \t\n\r<>"]+', 'link_blue'),
@@ -132,10 +132,6 @@ def apply_text_formatting(text_widget, text):
         (r'[0-9]{1,2}:[0-9]{2} *AM', 'time_green'),
         (r'[0-9]{1,2}:[0-9]{2} *PM', 'time_green'),
         
-        # Numbers - simplified
-        (r'[0-9]+\.[0-9]+', 'number_orange'),
-        (r'[0-9]+', 'number_orange'),
-        
         # **bold** markdown style - simplified
         (r'\*\*[^*]+\*\*', 'bold'),
         
@@ -149,46 +145,23 @@ def apply_text_formatting(text_widget, text):
         (r'CRITICAL', 'keyword_purple'),
         
         # Highlighted text with ==text== - simplified
-        (r'==[^=]+=+', 'highlight_yellow'),
+        (r'==[^=]+==', 'highlight_yellow'),
+        
+        # Numbers - simplified (put at end to avoid overriding other patterns)
+        (r'\b[0-9]+\.[0-9]+\b', 'number_orange'),
+        (r'\b[0-9]+\b', 'number_orange'),
     ]
     
-    # Apply each pattern
+    # Apply each pattern using Python regex
     for pattern, tag in patterns:
-        start = '1.0'
-        while True:
-            match_start = text_widget.search(pattern, start, tk.END, regexp=True)
-            if not match_start:
-                break
-            
-            # Calculate match end
-            match_text = text_widget.get(match_start, f"{match_start} lineend")
-            match = re.search(pattern, match_text)
-            if match:
-                match_length = len(match.group(0))
-                match_end = f"{match_start}+{match_length}c"
-                
-                # Apply tag to the match
-                text_widget.tag_add(tag, match_start, match_end)
-                
-                # For **bold** pattern, remove the ** and just keep the text bold
-                if pattern == r'\*\*([^*]+)\*\*' and match.group(1):
-                    # Replace **text** with just text, but keep it bold
-                    text_widget.delete(match_start, match_end)
-                    text_widget.insert(match_start, match.group(1))
-                    new_end = f"{match_start}+{len(match.group(1))}c"
-                    text_widget.tag_add(tag, match_start, new_end)
-                    start = new_end
-                elif pattern == r'==([^=]+)==' and match.group(1):
-                    # Replace ==text== with just text, but keep it highlighted
-                    text_widget.delete(match_start, match_end)
-                    text_widget.insert(match_start, match.group(1))
-                    new_end = f"{match_start}+{len(match.group(1))}c"
-                    text_widget.tag_add(tag, match_start, new_end)
-                    start = new_end
-                else:
-                    start = match_end
-            else:
-                break
+        try:
+            for match in re.finditer(pattern, text):
+                start_pos = f"1.0+{match.start()}c"
+                end_pos = f"1.0+{match.end()}c"
+                text_widget.tag_add(tag, start_pos, end_pos)
+        except Exception as e:
+            print(f"❌ Error applying pattern {pattern}: {e}")
+            continue
     
     # Make links clickable (optional enhancement)
     def make_links_clickable():
@@ -200,6 +173,8 @@ def apply_text_formatting(text_widget, text):
             index = text_widget.index("@%s,%s" % (event.x, event.y))
             tags = text_widget.tag_names(index)
             
+            print(f"🔍 [CLICK] Clicked at {index}, tags: {tags}")
+            
             if 'link_blue' in tags or 'email_blue' in tags:
                 # Find the range of the link
                 for tag in ['link_blue', 'email_blue']:
@@ -209,22 +184,42 @@ def apply_text_formatting(text_widget, text):
                             start, end = ranges[i], ranges[i+1]
                             if text_widget.compare(start, '<=', index) and text_widget.compare(index, '<', end):
                                 url = text_widget.get(start, end)
+                                print(f"🔗 [CLICK] Found URL: '{url}'")
+                                
                                 if url.startswith('@'):
                                     return  # Don't open @tags
+                                    
+                                # Prepare URL for opening
                                 if not url.startswith(('http://', 'https://', 'ftp://')):
                                     if '@' in url:
                                         url = f'mailto:{url}'
                                     else:
-                                        url = f'http://{url}'
+                                        url = f'https://{url}'
+                                        
                                 try:
                                     webbrowser.open(url)
-                                    print(f"🔗 [POPUP] Opened link: {url}")
+                                    print(f"✅ [POPUP] Opened link: {url}")
                                 except Exception as e:
                                     print(f"❌ [POPUP] Failed to open link: {e}")
                                 return
         
-        text_widget.bind('<Button-1>', open_link, add='+')
-        text_widget.bind('<Control-Button-1>', open_link, add='+')
+        def on_motion(event):
+            """Change cursor when hovering over links"""
+            index = text_widget.index("@%s,%s" % (event.x, event.y))
+            tags = text_widget.tag_names(index)
+            
+            if 'link_blue' in tags or 'email_blue' in tags:
+                text_widget.config(cursor='hand2')
+            else:
+                text_widget.config(cursor='')
+        
+        # Bind click events
+        text_widget.bind('<Button-1>', open_link)
+        text_widget.bind('<Motion>', on_motion)
+        
+        # Also bind additional events for better UX
+        text_widget.bind('<Control-Button-1>', open_link)
+        text_widget.bind('<Double-Button-1>', open_link)
     
     # Enable clickable links
     make_links_clickable()
@@ -387,14 +382,76 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     width = req_width + 20
     height = req_height + 20
     text_widget.config(state='disabled')
-    # Cho phép select/copy, không đóng khi click vào text
-    def enable_select(event):
+    
+    # Combined click handler for both link opening and text selection
+    def on_click(event):
+        # Check if clicking on a link first
+        index = text_widget.index("@%s,%s" % (event.x, event.y))
+        tags = text_widget.tag_names(index)
+        
+        print(f"🔍 [CLICK] Clicked at {index}, tags: {tags}")
+        
+        if 'link_blue' in tags or 'email_blue' in tags:
+            # Handle link click - don't enable editing
+            import webbrowser
+            
+            for tag in ['link_blue', 'email_blue']:
+                if tag in tags:
+                    ranges = text_widget.tag_ranges(tag)
+                    for i in range(0, len(ranges), 2):
+                        start, end = ranges[i], ranges[i+1]
+                        if text_widget.compare(start, '<=', index) and text_widget.compare(index, '<', end):
+                            url = text_widget.get(start, end)
+                            print(f"🔗 [CLICK] Found URL: '{url}'")
+                            
+                            if url.startswith('@'):
+                                return  # Don't open @tags
+                                
+                            # Prepare URL for opening
+                            if not url.startswith(('http://', 'https://', 'ftp://')):
+                                if '@' in url:
+                                    url = f'mailto:{url}'
+                                else:
+                                    url = f'https://{url}'
+                                    
+                            try:
+                                webbrowser.open(url)
+                                print(f"✅ [POPUP] Opened link: {url}")
+                            except Exception as e:
+                                print(f"❌ [POPUP] Failed to open link: {e}")
+                            return  # Don't enable text editing after opening link
+        
+        # If not clicking on a link, temporarily enable selection but prevent editing
         text_widget.config(state='normal')
-    def disable_edit(event):
-        text_widget.config(state='disabled')
-    text_widget.bind('<Button-1>', enable_select)
-    text_widget.bind('<KeyRelease>', disable_edit)
-    text_widget.bind('<FocusOut>', disable_edit)
+        # Schedule to disable editing after a brief moment to allow selection
+        text_widget.after(10, lambda: text_widget.config(state='disabled'))
+    
+    def on_motion(event):
+        """Change cursor when hovering over links"""
+        index = text_widget.index("@%s,%s" % (event.x, event.y))
+        tags = text_widget.tag_names(index)
+        
+        if 'link_blue' in tags or 'email_blue' in tags:
+            text_widget.config(cursor='hand2')
+        else:
+            text_widget.config(cursor='')
+            
+    def on_key_press(event):
+        """Prevent all text editing via keyboard"""
+        # Allow selection keys but block editing keys
+        allowed_keys = {'Left', 'Right', 'Up', 'Down', 'Home', 'End', 'Prior', 'Next', 'Control_L', 'Control_R', 'Shift_L', 'Shift_R'}
+        if event.keysym not in allowed_keys and not (event.state & 0x4):  # Not Ctrl key combination
+            return 'break'  # Block the key press
+    
+    def on_selection_change(event):
+        """Keep text widget disabled after selection"""
+        text_widget.after(50, lambda: text_widget.config(state='disabled'))
+        
+    # Bind events
+    text_widget.bind('<Button-1>', on_click)
+    text_widget.bind('<Motion>', on_motion)
+    text_widget.bind('<KeyPress>', on_key_press)
+    text_widget.bind('<ButtonRelease-1>', on_selection_change)
     
     # Smart popup positioning
     x, y = get_smart_popup_position(master, width, height)

@@ -348,7 +348,7 @@ TEXT to translate:
                 return result
 
     # All keys failed
-    result = "Tất cả API key đều gặp lỗi. Vui lòng kiểm tra lại hoặc liên hệ Admin để nhận key mới."
+    result = "API key gặp lỗi. Vui lòng thử lại. Nếu vẫn gặp lỗi, hãy thử thay API key mới."
     if return_language_info:
         return result, None, None
     return result
