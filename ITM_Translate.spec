@@ -15,6 +15,22 @@ pywintypes_submodules = collect_submodules('pywintypes')
 pydantic_datas, pydantic_binaries, pydantic_hiddenimports = collect_all('pydantic')
 pydantic_core_datas, pydantic_core_binaries, pydantic_core_hiddenimports = collect_all('pydantic_core')
 
+# SSL certificates collection for HTTPS requests
+ssl_datas = []
+try:
+    import certifi
+    ssl_datas.append((certifi.where(), 'certifi'))
+    print(f"Including certifi CA bundle: {certifi.where()}")
+except ImportError:
+    print("Certifi not available, SSL may not work in EXE")
+
+try:
+    import requests.certs
+    ssl_datas.append((requests.certs.where(), 'requests/certs'))
+    print(f"Including requests CA bundle: {requests.certs.where()}")
+except (ImportError, AttributeError):
+    print("Requests certs not available")
+
 a = Analysis(
     ['ITM_Translate.py'],
     pathex=[],
@@ -27,7 +43,8 @@ a = Analysis(
         ('Resource/Vietnam.png', 'Resource'),
         ('version.json', '.'),
         ('core/version.json', 'core'),
-    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas,
+        ('config.json', '.'),
+    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas,
     hiddenimports=[
         # GUI frameworks
         'ttkbootstrap',
@@ -61,10 +78,17 @@ a = Analysis(
         'requests',
         'requests.adapters',
         'requests.packages',
+        'requests.certs',  # Critical for SSL in EXE builds
         'urllib3',
+        'urllib3.util',
+        'urllib3.util.retry',
+        'urllib3.exceptions',
         'certifi',
         'charset_normalizer',
         'idna',
+        'ssl',
+        'tempfile',
+        'shutil',
         # Image processing
         'PIL',
         'PIL.Image',

@@ -159,6 +159,25 @@ def main():
     
     print(f"Build thành công: {exe_path}")
     
+    # Copy SSL config file for corporate environments
+    if os.path.exists("config.json"):
+        import shutil
+        dist_config = os.path.join("dist", "config.json")
+        shutil.copy2("config.json", dist_config)
+        print(f"Đã copy config.json với SSL settings: {dist_config}")
+    
+    # Check SSL bypass status
+    try:
+        with open("config.json", 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        ssl_bypass = config.get("update_server", {}).get("disable_ssl_verification", False)
+        if ssl_bypass:
+            print("⚠️ SSL bypass được bật (an toàn cho môi trường corporate)")
+        else:
+            print("🔒 SSL verification bình thường")
+    except:
+        pass
+    
     # Git commit và tag
     print("\n" + "=" * 50)
     print("  Git commit và tạo tag...")

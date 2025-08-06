@@ -107,10 +107,16 @@ class Updater:
                     import requests.certs
                     system_ca_bundle = requests.certs.where()
                     print(f"🔒 Using requests CA bundle: {system_ca_bundle}")
+                    
+                    # Verify bundle exists (critical for EXE builds)
+                    if not os.path.exists(system_ca_bundle):
+                        print(f"⚠️ Requests bundle not found at: {system_ca_bundle}")
+                        system_ca_bundle = None
+                        
                 except (ImportError, AttributeError):
                     print("ℹ️ Requests CA bundle not available")
             
-            # Method 3: System default paths
+            # Method 3: System default paths (fallback for EXE builds)
             if not system_ca_bundle:
                 common_ca_paths = [
                     "C:\\Program Files\\Common Files\\SSL\\certs\\ca-bundle.crt",
@@ -124,13 +130,27 @@ class Updater:
                         print(f"🔒 Using system CA bundle: {system_ca_bundle}")
                         break
             
-            # Create temp CA bundle file
-            temp_ca_bundle = os.path.join(tempfile.gettempdir(), "itm_ca_bundle.pem")
+            # Create temp CA bundle file in proper temp directory for EXE builds
+            if getattr(sys, 'frozen', False):
+                # Running as EXE - use system temp directory
+                temp_dir = tempfile.gettempdir()
+            else:
+                # Running as script - use current directory temp
+                temp_dir = tempfile.gettempdir()
+                
+            temp_ca_bundle = os.path.join(temp_dir, "itm_ca_bundle.pem")
             
             # Copy system CA bundle if available
             if system_ca_bundle and os.path.exists(system_ca_bundle):
-                shutil.copy2(system_ca_bundle, temp_ca_bundle)
-                print(f"📋 Copied system CA bundle to temp file")
+                try:
+                    shutil.copy2(system_ca_bundle, temp_ca_bundle)
+                    print(f"📋 Copied system CA bundle to temp file")
+                except Exception as e:
+                    print(f"⚠️ Could not copy system CA bundle: {e}")
+                    # Create minimal bundle if copy fails
+                    with open(temp_ca_bundle, 'w', encoding='utf-8') as f:
+                        f.write("# ITM Translate Custom CA Bundle\n")
+                    print(f"📋 Created minimal CA bundle")
             else:
                 # Create empty bundle file
                 with open(temp_ca_bundle, 'w', encoding='utf-8') as f:
@@ -148,18 +168,26 @@ class Updater:
                         if file.startswith("Fortinet_CA_SSL") and file.endswith(".cer"):
                             fortinet_cert_paths.append(os.path.join(root, file))
             
-            # Check common certificate folders
+            # Check common certificate folders (including EXE directory)
             cert_folders = [
                 "C:\\certificates",
                 "C:\\Program Files\\certificates",
                 os.path.join(os.path.dirname(__file__), "..", "certificates"),
             ]
             
+            # For EXE builds, also check directory where EXE is located
+            if getattr(sys, 'frozen', False):
+                exe_dir = os.path.dirname(sys.executable)
+                cert_folders.append(os.path.join(exe_dir, "certificates"))
+                cert_folders.append(exe_dir)  # Also check EXE directory directly
+            
             for folder in cert_folders:
                 if os.path.exists(folder):
                     for file in os.listdir(folder):
                         if file.startswith("Fortinet_CA_SSL") and file.endswith(".cer"):
-                            fortinet_cert_paths.append(os.path.join(folder, file))
+                            cert_path = os.path.join(folder, file)
+                            if cert_path not in fortinet_cert_paths:  # Avoid duplicates
+                                fortinet_cert_paths.append(cert_path)
             
             # Add Fortinet certificates to bundle
             if fortinet_cert_paths:
@@ -184,6 +212,12 @@ class Updater:
             
         except Exception as e:
             print(f"⚠️ Could not create Fortinet CA bundle: {e}")
+            # Add debug info for EXE builds
+            if getattr(sys, 'frozen', False):
+                print(f"🔧 Running as EXE from: {sys.executable}")
+                print(f"🔧 Temp directory: {tempfile.gettempdir()}")
+            import traceback
+            traceback.print_exc()
         
         return None
     
