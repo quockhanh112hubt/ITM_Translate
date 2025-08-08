@@ -1,0 +1,7 @@
+This is a test file for floating button testing.
+
+Please select this text with your mouse to test the floating button functionality.
+
+Hãy chọn đoạn text này bằng chuột để test chức năng floating button.
+
+The smart floating button should appear when you drag to select text.

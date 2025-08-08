@@ -104,6 +104,9 @@ screenshot_mode_keys = set()  # Theo dõi các phím chụp ảnh đang được
 screenshot_mode_active = False  # Trạng thái chế độ chụp ảnh đang hoạt động
 screenshot_mode_timer = None  # Timer để tự động tắt chế độ chụp ảnh
 
+# NEW: Smart selection detection without clipboard interference
+last_selection_info = None  # Store selection context for later use
+
 def show_floating_translate_button(mouse_x, mouse_y):
     """Hiển thị nút dịch floating cạnh vị trí chuột"""
     global floating_btn, floating_btn_timer
@@ -142,7 +145,7 @@ def show_floating_translate_button(mouse_x, mouse_y):
                    pady=3, 
                    cursor='hand2',
                    border=0,
-                   command=lambda: on_floating_translate_click())
+                   command=lambda: on_floating_translate_click_v3())
     btn.pack()
     
     # Update to get button size after packing
@@ -199,12 +202,87 @@ def hide_floating_button():
             pass
         floating_btn = None
 
-def on_floating_translate_click():
-    """Xử lý khi click vào nút floating translate"""
-    hide_floating_button()  # Ẩn nút trước
-    # Trigger translate như Ctrl+Q
-    action_queue.put(('translate', 'group1'))
-    print("🖱️ [FLOATING] Translation triggered from floating button")
+def on_floating_translate_click_v3():
+    """V3: Handle floating translate click - ONLY now we interact with clipboard
+    
+    This is the ONLY place where we modify user's clipboard for translation.
+    """
+    global last_selection_info
+    
+    print("🖱️ [FLOATING V3] User clicked translate button - NOW performing clipboard operation")
+    hide_floating_button()  # Hide button first
+    
+    try:
+        # Step 1: Backup user's current clipboard before any modification
+        original_clipboard = get_clipboard()
+        print(f"🖱️ [FLOATING V3] Backing up user clipboard: '{original_clipboard[:30]}...'")
+        
+        # Step 2: Use Ctrl+C to get the selected text (since we know there is selection)
+        print("🖱️ [FLOATING V3] Performing Ctrl+C to capture selected text...")
+        
+        kb.press(Key.ctrl)
+        kb.press('c')
+        kb.release('c')
+        kb.release(Key.ctrl)
+        
+        # Wait for clipboard update
+        time.sleep(0.15)
+        
+        # Step 3: Get the selected text from clipboard
+        selected_text = get_clipboard()
+        
+        # Step 4: Validate the text content with smart filters
+        if selected_text and selected_text.strip() and selected_text != original_clipboard:
+            print(f"🖱️ [FLOATING V3] Got selected text: '{selected_text[:50]}...'")
+            
+            # Apply text content validation
+            validation_result = validate_text_content(selected_text)
+            
+            if not validation_result['is_valid']:
+                print(f"🚫 [FLOATING V3] Text validation failed: {validation_result['reason']}")
+                
+                # Restore original clipboard
+                if original_clipboard:
+                    set_clipboard(original_clipboard)
+                
+                # Show specific feedback based on validation failure
+                from ui.popup import get_app_version
+                version = get_app_version()
+                feedback_msg = f"Văn bản không phù hợp để dịch: {validation_result['reason']}"
+                show_popup(feedback_msg, master=root, version=version, auto_close_enabled=True)
+                return
+            
+            print(f"✅ [FLOATING V3] Text validation passed: {validation_result['reason']} (confidence: {validation_result['confidence']:.2f})")
+            
+            # Step 5: Process translation
+            global last_clipboard_text
+            last_clipboard_text = selected_text
+            
+            # Trigger translate
+            action_queue.put(('translate', 'group1'))
+            
+            print("🖱️ [FLOATING V3] Translation queued successfully")
+            
+        else:
+            print("🖱️ [FLOATING V3] No valid text selection found")
+            
+            # Restore original clipboard if no new text
+            if original_clipboard:
+                set_clipboard(original_clipboard)
+            
+            # Show feedback to user
+            from ui.popup import get_app_version
+            version = get_app_version()
+            show_popup("Không có văn bản nào được chọn để dịch.", 
+                      master=root, version=version, auto_close_enabled=True)
+        
+        # Step 6: Reset selection info
+        last_selection_info = None
+        
+    except Exception as e:
+        print(f"❌ [FLOATING V3] Error in floating translate click: {e}")
+        # Reset selection info on error
+        last_selection_info = None
 
 def on_mouse_click(x, y, button, pressed):
     """Xử lý mouse click events"""
@@ -219,38 +297,56 @@ def on_mouse_click(x, y, button, pressed):
             
             # Kiểm tra nếu ứng dụng hiện tại bị loại trừ
             if is_current_app_excluded():
+                print(f"🚫 [DEBUG] Current app excluded, ignoring mouse drag")
                 return
             
             # Bắt đầu có thể drag (select text)
             mouse_drag_start = (x, y)
             is_dragging = False
+            # print(f"🖱️ [DEBUG] Mouse drag started at ({x}, {y})")
         else:
             # Kết thúc click/drag
             if mouse_drag_start and is_dragging and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
-                # Đã drag (select text), check clipboard sau một chút
-                # Tăng delay để đảm bảo text đã được select hoàn toàn
-                root.after(300, lambda: check_for_new_selection(x, y))
+                # Đã drag (select text), check for selection WITHOUT Ctrl+C
+                # NEW APPROACH: Show button based on drag pattern, Ctrl+C only when user clicks
+                # print(f"🖱️ [DEBUG] Mouse drag ended at ({x}, {y}), checking for text selection...")
+                try:
+                    import threading
+                    # Pass current dragging state to avoid race condition
+                    current_dragging = is_dragging
+                    # Delay 200ms để đảm bảo text selection hoàn tất
+                    threading.Timer(0.2, lambda: check_for_text_selection_v3(x, y, current_dragging)).start()
+                except Exception as e:
+                    print(f"❌ [DEBUG] Error calling check_for_text_selection_v3: {e}")
+            else:
+                # print(f"🖱️ [DEBUG] Mouse click ended without dragging or conditions not met")
+                pass
             
             mouse_drag_start = None
+            is_dragging = False  # Reset dragging state
             is_dragging = False
 
 def on_mouse_move(x, y):
     """Xử lý mouse move events"""
     global mouse_drag_start, is_dragging
     
-    if mouse_drag_start and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
-        # Tính khoảng cách drag
-        dx = abs(x - mouse_drag_start[0])
-        dy = abs(y - mouse_drag_start[1])
-        
-        # Nâng cao threshold và yêu cầu drag đủ xa để có thể là text selection
-        # Drag theo chiều ngang (dx) thường là text selection
-        # Drag theo chiều dọc (dy) có thể là scroll hoặc drag window
-        horizontal_drag = dx > 15  # Tăng từ 10 lên 15 pixels
-        meaningful_drag = dx > 8 and dy < 50  # Ưu tiên drag ngang, hạn chế drag dọc quá nhiều
-        
-        if horizontal_drag or meaningful_drag:
-            is_dragging = True
+    try:
+        if mouse_drag_start and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
+            # Tính khoảng cách drag
+            dx = abs(x - mouse_drag_start[0])
+            dy = abs(y - mouse_drag_start[1])
+            
+            # Nâng cao threshold và yêu cầu drag đủ xa để có thể là text selection
+            # Drag theo chiều ngang (dx) thường là text selection
+            # Drag theo chiều dọc (dy) có thể là scroll hoặc drag window
+            horizontal_drag = dx > 15  # Tăng từ 10 lên 15 pixels
+            meaningful_drag = dx > 8 and dy < 50  # Ưu tiên drag ngang, hạn chế drag dọc quá nhiều
+            
+            if horizontal_drag or meaningful_drag:
+                is_dragging = True
+                # print(f"🖱️ [DEBUG] Dragging detected: dx={dx}, dy={dy}, is_dragging={is_dragging}")
+    except Exception as e:
+        print(f"❌ [MOUSE] Error in on_mouse_move: {e}")
 
 def activate_screenshot_mode(duration_ms=15000):
     """Kích hoạt chế độ chụp ảnh trong khoảng thời gian nhất định"""
@@ -327,8 +423,426 @@ def get_active_window_process_name():
         pass
     return ""
 
-def check_for_new_selection(mouse_x, mouse_y):
-    """Kiểm tra xem có text mới được select không"""
+def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
+    """NEW V3: Smart text selection detection without clipboard interference
+    
+    Logic:
+    1. Check if current app is excluded → Skip if yes
+    2. Check if in screenshot mode → Skip if yes  
+    3. Apply smart filters (drag pattern, window context, etc.)
+    4. Only show floating button if real text selection detected
+    5. NO clipboard interference until user clicks "Translate"
+    
+    Args:
+        mouse_x, mouse_y: Mouse position
+        was_dragging: Dragging state at the time of call (to avoid race conditions)
+    """
+    global last_selection_info, is_dragging
+    
+    # print(f"🔍 [FLOATING V3] check_for_text_selection_v3 called at ({mouse_x}, {mouse_y})")
+    
+    try:
+        # Step 1: Check if current app is excluded
+        if is_current_app_excluded():
+            print(f"� [FLOATING V3] Current app is excluded, skipping")
+            return
+        
+        # Step 2: Check if in screenshot mode
+        if screenshot_mode_active or screenshot_mode_keys:
+            print(f"📸 [FLOATING V3] Screenshot mode active, skipping")
+            return
+        
+        # Step 3: Only trigger if we detect actual dragging motion (text selection behavior)
+        dragging_state = was_dragging if was_dragging is not None else is_dragging
+        if not dragging_state:
+            # print(f"🖱️ [FLOATING V3] No dragging detected, skipping (dragging_state={dragging_state})")
+            return
+        
+        # print(f"✅ [FLOATING V3] Dragging confirmed (dragging_state={dragging_state}), proceeding...")
+        
+        # Step 4: Avoid triggering near existing floating button
+        if floating_btn and floating_btn.winfo_exists():
+            try:
+                btn_x = floating_btn.winfo_rootx()
+                btn_y = floating_btn.winfo_rooty()
+                btn_w = floating_btn.winfo_width()
+                btn_h = floating_btn.winfo_height()
+                
+                if (btn_x - 50 <= mouse_x <= btn_x + btn_w + 50 and 
+                    btn_y - 50 <= mouse_y <= btn_y + btn_h + 50):
+                    print(f"🖱️ [FLOATING V3] Mouse near existing button, skipping")
+                    return
+            except:
+                pass
+        
+        # Step 5: Smart context analysis - NO clipboard interference yet
+        context_analysis = analyze_selection_context()
+        
+        if not context_analysis['likely_text_selection']:
+            print(f"🖱️ [FLOATING V3] Context analysis: {context_analysis['reason']}")
+            return
+        
+        # Step 6: Apply smart filters based on window context and app behavior
+        filter_result = apply_smart_filters()
+        
+        if not filter_result['passed']:
+            print(f"🖱️ [FLOATING V3] Smart filter blocked: {filter_result['reason']}")
+            return
+        
+        # Step 7: If we reach here, likely a real text selection - show button
+        # Store context for later use when user clicks translate
+        last_selection_info = {
+            'mouse_pos': (mouse_x, mouse_y),
+            'timestamp': time.time(),
+            'active_window': get_active_window_title(),
+            'process_name': get_active_window_process_name(),
+            'context_analysis': context_analysis,
+            'ready_for_translation': True
+        }
+        
+        print(f"✅ [FLOATING V3] Text selection detected - showing translate button")
+        show_floating_translate_button(mouse_x, mouse_y)
+        
+    except Exception as e:
+        print(f"❌ [FLOATING V3] Error in selection detection: {e}")
+
+def analyze_selection_context():
+    """Analyze context to determine if this is likely a text selection
+    
+    Returns:
+        dict: {
+            'likely_text_selection': bool,
+            'reason': str,
+            'confidence': float
+        }
+    """
+    try:
+        # Get current window and app info
+        window_title = get_active_window_title().lower()
+        process_name = get_active_window_process_name().lower()
+        
+        # Check if it's a text-oriented application
+        text_apps = [
+            'notepad', 'wordpad', 'code', 'sublime', 'atom', 'vim', 'emacs',
+            'chrome', 'firefox', 'edge', 'opera', 'browser',
+            'word', 'onenote', 'notion', 'obsidian',
+            'slack', 'discord', 'telegram', 'whatsapp',
+            'cmd', 'powershell', 'terminal', 'git'
+        ]
+        
+        # Check if it's likely a file manager or image viewer
+        non_text_apps = [
+            'explorer', 'finder', 'nautilus',
+            'photoshop', 'gimp', 'paint', 'mspaint',
+            'vlc', 'media', 'player', 'spotify',
+            'calculator', 'calc'
+        ]
+        
+        confidence = 0.5  # Default confidence
+        
+        # Boost confidence for text applications
+        for app in text_apps:
+            if app in process_name or app in window_title:
+                confidence += 0.3
+                break
+        
+        # Reduce confidence for non-text applications  
+        for app in non_text_apps:
+            if app in process_name:
+                confidence -= 0.4
+                break
+        
+        # Additional context checks
+        if any(ext in window_title for ext in ['.jpg', '.png', '.gif', '.mp4', '.avi', '.pdf']):
+            confidence -= 0.2
+            reason = "File extension suggests non-text content"
+        elif any(keyword in window_title for keyword in ['folder', 'directory', 'file manager']):
+            confidence -= 0.3
+            reason = "Window suggests file manager context"
+        else:
+            reason = f"Context analysis for {process_name}"
+        
+        likely_selection = confidence > 0.4
+        
+        return {
+            'likely_text_selection': likely_selection,
+            'reason': reason,
+            'confidence': confidence,
+            'process_name': process_name,
+            'window_title': window_title
+        }
+        
+    except Exception as e:
+        print(f"❌ [FLOATING V3] Error in context analysis: {e}")
+        return {
+            'likely_text_selection': True,  # Default to allowing if error
+            'reason': f"Error in analysis: {e}",
+            'confidence': 0.5
+        }
+
+def validate_text_content(text):
+    """Validate if text content is meaningful and suitable for translation
+    
+    Args:
+        text (str): Text to validate
+        
+    Returns:
+        dict: {
+            'is_valid': bool,
+            'reason': str,
+            'confidence': float
+        }
+    """
+    try:
+        if not text or not text.strip():
+            return {
+                'is_valid': False,
+                'reason': 'Text is empty or whitespace only',
+                'confidence': 0.0
+            }
+        
+        cleaned_text = text.strip()
+        
+        # Filter 1: Text quá ngắn (< 2 ký tự)
+        if len(cleaned_text) < 2:
+            return {
+                'is_valid': False,
+                'reason': f'Text too short: "{cleaned_text}" ({len(cleaned_text)} chars)',
+                'confidence': 0.0
+            }
+        
+        # Filter 2: Text chỉ có 1 ký tự
+        if len(cleaned_text) == 1:
+            return {
+                'is_valid': False,
+                'reason': f'Single character: "{cleaned_text}"',
+                'confidence': 0.0
+            }
+        
+        # Filter 3: Text không có chữ cái (chỉ số và ký tự đặc biệt)
+        has_letters = any(c.isalpha() for c in cleaned_text)
+        if not has_letters:
+            return {
+                'is_valid': False,
+                'reason': f'No alphabetic characters: "{cleaned_text}"',
+                'confidence': 0.0
+            }
+        
+        # Filter 4: Text chỉ toàn số (ngay cả khi có dấu phẩy, chấm)
+        numeric_text = cleaned_text.replace(',', '').replace('.', '').replace('-', '').replace('+', '').replace(' ', '')
+        if numeric_text.isdigit():
+            return {
+                'is_valid': False,
+                'reason': f'Pure numeric content: "{cleaned_text}"',
+                'confidence': 0.0
+            }
+        
+        # Filter 5: File path patterns (C:\, /, file extensions)
+        if any(pattern in cleaned_text for pattern in ['C:\\', 'D:\\', 'E:\\', '\\\\', '.exe', '.dll', '.sys']):
+            return {
+                'is_valid': False,
+                'reason': f'File path pattern detected: "{cleaned_text[:30]}..."',
+                'confidence': 0.0
+            }
+        
+        # Filter 6: File extensions
+        file_extensions = [
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.svg',
+            '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv',
+            '.mp3', '.wav', '.flac', '.aac', '.wma',
+            '.zip', '.rar', '.7z', '.tar', '.gz',
+            '.exe', '.msi', '.dmg', '.deb', '.rpm',
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+            '.txt', '.csv', '.json', '.xml', '.html', '.css', '.js'
+        ]
+        
+        text_lower = cleaned_text.lower()
+        if any(ext in text_lower for ext in file_extensions):
+            # Additional check: if it's ONLY filename, reject it
+            if len(cleaned_text.split()) <= 2 and any(cleaned_text.lower().endswith(ext) for ext in file_extensions):
+                return {
+                    'is_valid': False,
+                    'reason': f'Filename detected: "{cleaned_text}"',
+                    'confidence': 0.0
+                }
+        
+        # Filter 7: Very short text with no meaningful words (< 3 characters and not a word)
+        if len(cleaned_text) < 3 and not any(c.isalpha() for c in cleaned_text):
+            return {
+                'is_valid': False,
+                'reason': f'Too short and no letters: "{cleaned_text}"',
+                'confidence': 0.0
+            }
+        
+        # Filter 8: Special patterns (URLs, email addresses)
+        if 'http://' in text_lower or 'https://' in text_lower or 'www.' in text_lower:
+            # URLs might be valid for translation in some cases, but usually not
+            word_count = len([w for w in cleaned_text.split() if any(c.isalpha() for c in w)])
+            if word_count <= 1:  # If it's just a URL without description
+                return {
+                    'is_valid': False,
+                    'reason': f'URL without meaningful text: "{cleaned_text[:30]}..."',
+                    'confidence': 0.2
+                }
+        
+        # Filter 9: Email addresses
+        if '@' in cleaned_text and '.' in cleaned_text:
+            words = cleaned_text.split()
+            if len(words) <= 2 and any('@' in word and '.' in word for word in words):
+                return {
+                    'is_valid': False,
+                    'reason': f'Email address: "{cleaned_text}"',
+                    'confidence': 0.1
+                }
+        
+        # Filter 10: Text quá ngắn nhưng có nghĩa - yêu cầu ít nhất 3 ký tự có chữ
+        meaningful_chars = sum(1 for c in cleaned_text if c.isalpha())
+        if meaningful_chars < 3:
+            return {
+                'is_valid': False,
+                'reason': f'Too few meaningful characters: "{cleaned_text}" ({meaningful_chars} letters)',
+                'confidence': 0.3
+            }
+        
+        # Calculate confidence based on text quality
+        confidence = 0.5  # Base confidence
+        
+        # Boost confidence for longer text
+        if len(cleaned_text) > 10:
+            confidence += 0.2
+        if len(cleaned_text) > 20:
+            confidence += 0.2
+            
+        # Boost confidence for multiple words
+        word_count = len([w for w in cleaned_text.split() if any(c.isalpha() for c in w)])
+        if word_count >= 2:
+            confidence += 0.2
+        if word_count >= 4:
+            confidence += 0.1
+            
+        # Boost confidence for sentences (punctuation)
+        if any(p in cleaned_text for p in ['.', '!', '?', ';', ':']):
+            confidence += 0.1
+        
+        confidence = min(confidence, 1.0)  # Cap at 1.0
+        
+        return {
+            'is_valid': True,
+            'reason': f'Valid text content ({word_count} words, {meaningful_chars} letters)',
+            'confidence': confidence
+        }
+        
+    except Exception as e:
+        print(f"❌ [TEXT_VALIDATION] Error validating text: {e}")
+        return {
+            'is_valid': True,  # Default to allowing if error
+            'reason': f'Validation error: {e}',
+            'confidence': 0.5
+        }
+
+def apply_smart_filters():
+    """Apply smart filters based on app behavior patterns and text content analysis
+    
+    Returns:
+        dict: {
+            'passed': bool,
+            'reason': str
+        }
+    """
+    try:
+        window_title = get_active_window_title().lower()
+        process_name = get_active_window_process_name().lower()
+        
+        # Filter 1: Excel/Spreadsheet auto-selection patterns
+        if any(app in process_name for app in ['excel', 'calc', 'sheets']):
+            # In spreadsheet apps, many clicks are just cell navigation
+            # We'll be more conservative and require longer drags
+            return {
+                'passed': True,  # Allow but we'll be more careful
+                'reason': 'Spreadsheet app - will apply stricter validation'
+            }
+        
+        # Filter 2: File managers and system apps
+        if any(app in process_name for app in ['explorer', 'finder', 'nautilus']):
+            return {
+                'passed': False,
+                'reason': 'File manager detected - likely file selection not text'
+            }
+        
+        # Filter 3: Media applications
+        if any(app in process_name for app in ['vlc', 'player', 'spotify', 'media']):
+            return {
+                'passed': False,
+                'reason': 'Media application - unlikely to have text selection'
+            }
+        
+        # Filter 4: Image/Design applications
+        if any(app in process_name for app in ['photoshop', 'gimp', 'paint', 'image']):
+            return {
+                'passed': False,
+                'reason': 'Image application - likely graphic selection not text'
+            }
+        
+        # Filter 5: Window title patterns that suggest non-text
+        if any(pattern in window_title for pattern in [
+            'untitled - paint', 'image viewer', 'photo viewer',
+            'video player', 'music player'
+        ]):
+            return {
+                'passed': False,
+                'reason': 'Window title suggests non-text application'
+            }
+        
+        # NEW: Filter 6: File extension patterns in window title (file/folder selection)
+        file_extensions = [
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.svg',  # Images
+            '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv',            # Videos
+            '.mp3', '.wav', '.flac', '.aac', '.wma',                   # Audio
+            '.zip', '.rar', '.7z', '.tar', '.gz',                     # Archives
+            '.exe', '.msi', '.dmg', '.deb', '.rpm',                   # Executables
+            '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx' # Documents
+        ]
+        
+        if any(ext in window_title for ext in file_extensions):
+            return {
+                'passed': False,
+                'reason': f'File extension detected in title - likely file selection: {window_title}'
+            }
+        
+        # NEW: Filter 7: Folder/directory patterns
+        folder_patterns = [
+            '\\', '/', 'folder', 'directory', 'downloads', 'documents',
+            'desktop', 'pictures', 'music', 'videos', 'c:', 'd:', 'e:'
+        ]
+        
+        if any(pattern in window_title for pattern in folder_patterns):
+            # Additional check: if it looks like a file path
+            if ('\\' in window_title and len(window_title.split('\\')) > 2) or \
+               ('/' in window_title and len(window_title.split('/')) > 2):
+                return {
+                    'passed': False,
+                    'reason': f'File path pattern detected: {window_title}'
+                }
+        
+        # If we reach here, it passed all filters
+        return {
+            'passed': True,
+            'reason': 'Passed all smart filters'
+        }
+        
+    except Exception as e:
+        print(f"❌ [FLOATING V3] Error in smart filters: {e}")
+        return {
+            'passed': True,  # Default to allowing if error
+            'reason': f'Filter error: {e}'
+        }
+
+def check_for_new_selection_OLD_METHOD(mouse_x, mouse_y):
+    """OLD METHOD: Kiểm tra xem có text mới được select không - DEPRECATED
+    
+    This function is kept for reference but should not be used.
+    Use check_for_text_selection_v3() instead for smart context-aware selection detection.
+    """
     global last_clipboard_text
     
     try:

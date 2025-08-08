@@ -1,0 +1,21 @@
+Test cases for Smart Text Filtering:
+
+1. Text hợp lệ: "Đây là một câu tiếng Việt có nghĩa để test dịch thuật."
+
+2. Text quá ngắn: "a"
+
+3. Text chỉ có số: "123456"
+
+4. Text chỉ có ký tự đặc biệt: "!@#$%"
+
+5. Filename: "document.pdf"
+
+6. File path: "C:\Users\Admin\Documents\file.txt"
+
+7. Email: "test@example.com"
+
+8. URL: "https://www.google.com"
+
+9. Text có nghĩa ngắn: "Hello world"
+
+10. Mixed content: "File size: 2.5MB"
