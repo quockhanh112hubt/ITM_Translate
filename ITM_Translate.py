@@ -173,18 +173,11 @@ def show_floating_translate_button(mouse_x, mouse_y):
         root.after_cancel(floating_btn_timer)
     floating_btn_timer = root.after(5000, hide_floating_button)
     
-    # Hide khi click ra ngoài (lose focus)
-    def on_focus_out(event):
-        # Delay một chút để tránh hide ngay khi click vào nút
-        root.after(100, hide_floating_button)
+    # DON'T use FocusOut since we don't want to steal focus from user's text selection
+    # Instead, button will auto-hide after 5 seconds or when user clicks it
+    # This preserves user's ability to Ctrl+C their selected text
     
-    floating_btn.bind('<FocusOut>', on_focus_out)
-    
-    # Focus để có thể nhận FocusOut event
-    try:
-        floating_btn.focus_force()
-    except:
-        pass
+    # Optional: Add click-outside detection via global mouse listener (already handled in mouse events)
 
 def hide_floating_button():
     """Ẩn nút floating"""
