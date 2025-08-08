@@ -203,80 +203,78 @@ def hide_floating_button():
         floating_btn = None
 
 def on_floating_translate_click_v3():
-    """V3: Handle floating translate click - ONLY now we interact with clipboard
+    """V3: Handle floating translate click - Use pre-validated text from last_selection_info
     
-    This is the ONLY place where we modify user's clipboard for translation.
+    Since text was already captured and validated during button show,
+    we can directly use it without Ctrl+C again.
     """
-    global last_selection_info
+    global last_selection_info, last_clipboard_text
     
-    print("🖱️ [FLOATING V3] User clicked translate button - NOW performing clipboard operation")
+    print("🖱️ [FLOATING V3] User clicked translate button")
     hide_floating_button()  # Hide button first
     
     try:
-        # Step 1: Backup user's current clipboard before any modification
-        original_clipboard = get_clipboard()
-        print(f"🖱️ [FLOATING V3] Backing up user clipboard: '{original_clipboard[:30]}...'")
-        
-        # Step 2: Use Ctrl+C to get the selected text (since we know there is selection)
-        print("🖱️ [FLOATING V3] Performing Ctrl+C to capture selected text...")
-        
-        kb.press(Key.ctrl)
-        kb.press('c')
-        kb.release('c')
-        kb.release(Key.ctrl)
-        
-        # Wait for clipboard update
-        time.sleep(0.15)
-        
-        # Step 3: Get the selected text from clipboard
-        selected_text = get_clipboard()
-        
-        # Step 4: Validate the text content with smart filters
-        if selected_text and selected_text.strip() and selected_text != original_clipboard:
-            print(f"🖱️ [FLOATING V3] Got selected text: '{selected_text[:50]}...'")
+        # Check if we have pre-validated text from selection detection
+        if last_selection_info and last_selection_info.get('validated_text'):
+            selected_text = last_selection_info['validated_text']
+            print(f"🖱️ [FLOATING V3] Using pre-validated text: '{selected_text[:50]}...'")
             
-            # Apply text content validation
-            validation_result = validate_text_content(selected_text)
-            
-            if not validation_result['is_valid']:
-                print(f"🚫 [FLOATING V3] Text validation failed: {validation_result['reason']}")
-                
-                # Restore original clipboard
-                if original_clipboard:
-                    set_clipboard(original_clipboard)
-                
-                # Show specific feedback based on validation failure
-                from ui.popup import get_app_version
-                version = get_app_version()
-                feedback_msg = f"Văn bản không phù hợp để dịch: {validation_result['reason']}"
-                show_popup(feedback_msg, master=root, version=version, auto_close_enabled=True)
-                return
-            
-            print(f"✅ [FLOATING V3] Text validation passed: {validation_result['reason']} (confidence: {validation_result['confidence']:.2f})")
-            
-            # Step 5: Process translation
-            global last_clipboard_text
+            # Process translation directly with pre-validated text
             last_clipboard_text = selected_text
             
             # Trigger translate
             action_queue.put(('translate', 'group1'))
             
-            print("🖱️ [FLOATING V3] Translation queued successfully")
+            print("🖱️ [FLOATING V3] Translation queued successfully with pre-validated text")
             
         else:
-            print("🖱️ [FLOATING V3] No valid text selection found")
+            # Fallback: Try to get text with Ctrl+C (in case validation failed or no stored text)
+            print("🖱️ [FLOATING V3] No pre-validated text found, falling back to Ctrl+C method")
             
-            # Restore original clipboard if no new text
-            if original_clipboard:
-                set_clipboard(original_clipboard)
+            # Step 1: Backup user's current clipboard before any modification
+            original_clipboard = get_clipboard()
+            print(f"🖱️ [FLOATING V3] Backing up user clipboard: '{original_clipboard[:30]}...'")
             
-            # Show feedback to user
-            from ui.popup import get_app_version
-            version = get_app_version()
-            show_popup("Không có văn bản nào được chọn để dịch.", 
-                      master=root, version=version, auto_close_enabled=True)
+            # Step 2: Use Ctrl+C to get the selected text (since we know there is selection)
+            print("🖱️ [FLOATING V3] Performing Ctrl+C to capture selected text...")
+            
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            
+            # Wait for clipboard update
+            time.sleep(0.15)
+            
+            # Step 3: Get the selected text from clipboard
+            selected_text = get_clipboard()
+            
+            # Step 4: Check if we got valid text
+            if selected_text and selected_text.strip() and selected_text != original_clipboard:
+                print(f"🖱️ [FLOATING V3] Got selected text via fallback: '{selected_text[:50]}...'")
+                
+                # Process translation
+                last_clipboard_text = selected_text
+                
+                # Trigger translate
+                action_queue.put(('translate', 'group1'))
+                
+                print("🖱️ [FLOATING V3] Translation queued successfully via fallback")
+                
+            else:
+                print("🖱️ [FLOATING V3] No valid text selection found via fallback")
+                
+                # Restore original clipboard if no new text
+                if original_clipboard:
+                    set_clipboard(original_clipboard)
+                
+                # Show feedback to user
+                from ui.popup import get_app_version
+                version = get_app_version()
+                show_popup("Không có văn bản nào được chọn để dịch.", 
+                          master=root, version=version, auto_close_enabled=True)
         
-        # Step 6: Reset selection info
+        # Step 5: Reset selection info
         last_selection_info = None
         
     except Exception as e:
@@ -489,15 +487,60 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
             print(f"🖱️ [FLOATING V3] Smart filter blocked: {filter_result['reason']}")
             return
         
-        # Step 7: If we reach here, likely a real text selection - show button
-        # Store context for later use when user clicks translate
+        # Step 7: If we reach here, likely a real text selection - VALIDATE TEXT FIRST
+        # NEW: Check text content BEFORE showing button to avoid showing unusable button
+        print(f"🔍 [FLOATING V3] Pre-validating text selection before showing button...")
+        
+        # We need to get the actual selected text to validate it
+        # This is a lightweight check - we'll do a quick Ctrl+C to peek at the content
+        validated_text = None
+        try:
+            # Backup current clipboard
+            temp_clipboard = get_clipboard()
+            
+            # Quick Ctrl+C to get selected text
+            kb.press(Key.ctrl)
+            kb.press('c')
+            kb.release('c')
+            kb.release(Key.ctrl)
+            
+            # Brief wait for clipboard
+            time.sleep(0.1)
+            
+            # Get the selected text
+            peek_text = get_clipboard()
+            
+            # Restore original clipboard immediately
+            if temp_clipboard:
+                set_clipboard(temp_clipboard)
+            
+            # Validate the peeked text
+            if peek_text and peek_text.strip() and peek_text != temp_clipboard:
+                validation_result = validate_text_content(peek_text)
+                
+                if not validation_result['is_valid']:
+                    print(f"🚫 [FLOATING V3] Text validation failed - NOT showing button: {validation_result['reason']}")
+                    return  # Don't show button for invalid text
+                
+                print(f"✅ [FLOATING V3] Text validation passed - safe to show button: {validation_result['reason']}")
+                validated_text = peek_text  # Store the validated text for later use
+            else:
+                print(f"🖱️ [FLOATING V3] No new text detected in selection")
+                return  # Don't show button if no new text
+                
+        except Exception as e:
+            print(f"❌ [FLOATING V3] Error in pre-validation: {e}")
+            # If validation fails, default to showing button (fallback)
+        
+        # Store context for later use when user clicks translate (INCLUDING the validated text)
         last_selection_info = {
             'mouse_pos': (mouse_x, mouse_y),
             'timestamp': time.time(),
             'active_window': get_active_window_title(),
             'process_name': get_active_window_process_name(),
             'context_analysis': context_analysis,
-            'ready_for_translation': True
+            'ready_for_translation': True,
+            'validated_text': validated_text  # Store the actual text for reuse
         }
         
         print(f"✅ [FLOATING V3] Text selection detected - showing translate button")
