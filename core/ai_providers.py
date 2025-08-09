@@ -120,9 +120,29 @@ Instructions:
             
         except Exception as e:
             raise Exception(f"Gemini translation error: {e}")
+    
+    def generate_text(self, prompt: str) -> str:
+        """Generate text using Gemini for unified smart translation"""
+        try:
+            genai.configure(api_key=self.api_key)
+            model = genai.GenerativeModel(self.model)
+            
+            response = model.generate_content(prompt)
+            return response.text.strip()
+            
+        except Exception as e:
+            raise Exception(f"Gemini text generation error: {e}")
 
 class ChatGPTProvider(BaseAIProvider):
     """OpenAI ChatGPT Provider"""
+    
+    def __init__(self, key_info: APIKeyInfo):
+        super().__init__(key_info)
+        if not OPENAI_AVAILABLE:
+            raise Exception("OpenAI library not available")
+        
+        # Use OpenAI v1.x client
+        self.client = openai.OpenAI(api_key=self.api_key)
     
     def get_default_model(self) -> str:
         return "gpt-3.5-turbo"
@@ -132,14 +152,8 @@ class ChatGPTProvider(BaseAIProvider):
     
     def detect_language(self, text: str) -> Optional[str]:
         """Detect language using ChatGPT"""
-        if not OPENAI_AVAILABLE:
-            raise Exception("OpenAI library not available")
-            
         try:
-            import openai
-            openai.api_key = self.api_key
-            
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a language detection expert. Respond only with the name of the primary language used in the text. If mixed languages, respond 'Mixed'."},
@@ -152,25 +166,25 @@ class ChatGPTProvider(BaseAIProvider):
             detected_lang = response.choices[0].message.content.strip()
             detected_lang = detected_lang.replace('"', '').replace("'", "").strip()
             return detected_lang
+        except openai.AuthenticationError as e:
+            print(f"ChatGPT authentication error: {e}")
+            return None
+        except openai.RateLimitError as e:
+            print(f"ChatGPT rate limit/quota error: {e}")
+            return None
         except Exception as e:
             print(f"ChatGPT language detection error: {e}")
             return None
     
     def translate_text(self, text: str, source_lang: str, target_lang: str) -> str:
         """Translate text using ChatGPT"""
-        if not OPENAI_AVAILABLE:
-            raise Exception("OpenAI library not available")
-            
         try:
-            import openai
-            openai.api_key = self.api_key
-            
             if source_lang and source_lang.lower() == "mixed":
                 system_prompt = f"You are a professional translator. Translate the following mixed-language text to {target_lang}. Maintain meaning and context. Return only the translation."
             else:
                 system_prompt = f"You are a professional translator. Translate from {source_lang} to {target_lang}. Provide accurate, natural translation. Return only the translation."
             
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -182,8 +196,45 @@ class ChatGPTProvider(BaseAIProvider):
             
             return response.choices[0].message.content.strip()
             
+        except openai.AuthenticationError as e:
+            raise Exception("401_UNAUTHORIZED")
+        except openai.RateLimitError as e:
+            error_str = str(e).lower()
+            if "insufficient_quota" in error_str or "exceed" in error_str:
+                raise Exception("402_INSUFFICIENT_BALANCE")
+            else:
+                raise Exception("429_QUOTA_EXCEEDED")
+        except openai.BadRequestError as e:
+            raise Exception("400_INVALID_KEY")
         except Exception as e:
             raise Exception(f"ChatGPT translation error: {e}")
+    
+    def generate_text(self, prompt: str) -> str:
+        """Generate text using ChatGPT for unified smart translation"""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.3
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except openai.AuthenticationError as e:
+            raise Exception("401_UNAUTHORIZED")
+        except openai.RateLimitError as e:
+            error_str = str(e).lower()
+            if "insufficient_quota" in error_str or "exceed" in error_str:
+                raise Exception("402_INSUFFICIENT_BALANCE")
+            else:
+                raise Exception("429_QUOTA_EXCEEDED")
+        except openai.BadRequestError as e:
+            raise Exception("400_INVALID_KEY")
+        except Exception as e:
+            raise Exception(f"ChatGPT text generation error: {e}")
 
 class DeepSeekProvider(BaseAIProvider):
     """DeepSeek AI Provider"""
@@ -291,6 +342,47 @@ class DeepSeekProvider(BaseAIProvider):
                 
         except Exception as e:
             raise Exception(f"DeepSeek translation error: {e}")
+    
+    def generate_text(self, prompt: str) -> str:
+        """Generate text using DeepSeek for unified smart translation"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 2000,
+                "temperature": 0.3
+            }
+            
+            response = requests.post(
+                'https://api.deepseek.com/v1/chat/completions',
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result['choices'][0]['message']['content'].strip()
+            elif response.status_code == 402:
+                raise Exception("402_INSUFFICIENT_BALANCE")
+            elif response.status_code == 401:
+                raise Exception("401_UNAUTHORIZED")
+            elif response.status_code == 429:
+                raise Exception("429_QUOTA_EXCEEDED")
+            else:
+                raise Exception(f"DeepSeek API error: {response.status_code}")
+                
+        except Exception as e:
+            if str(e).startswith(("402_", "401_", "429_")):
+                raise e
+            raise Exception(f"DeepSeek text generation error: {e}")
 
 class ClaudeProvider(BaseAIProvider):
     """Anthropic Claude Provider"""

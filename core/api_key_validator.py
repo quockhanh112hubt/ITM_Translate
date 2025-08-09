@@ -44,7 +44,7 @@ class APIKeyValidator:
                 return False, _('openai_key_format')
             if len(api_key) < 40:
                 return False, _('openai_key_short')
-            if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
+            if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('openai_key_invalid_chars')
                 
         elif provider == 'deepseek':
@@ -52,7 +52,7 @@ class APIKeyValidator:
                 return False, _('deepseek_key_format')
             if len(api_key) < 40:
                 return False, _('deepseek_key_short')
-            if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
+            if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('deepseek_key_invalid_chars')
                 
         elif provider == 'claude':
@@ -69,7 +69,7 @@ class APIKeyValidator:
                 return False, _('copilot_key_format')
             if len(api_key) < 40:
                 return False, _('openai_key_short')
-            if not re.match(r'^sk-[A-Za-z0-9]+$', api_key):
+            if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('openai_key_invalid_chars')
         else:
             return False, _('provider_not_supported_validator').format(provider=provider)
