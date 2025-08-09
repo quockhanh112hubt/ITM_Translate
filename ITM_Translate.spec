@@ -42,7 +42,6 @@ a = Analysis(
         ('Resource/icon_ON.ico', 'Resource'),
         ('Resource/Vietnam.png', 'Resource'),
         ('version.json', '.'),
-        ('core/version.json', 'core'),
         ('config.json', '.'),
     ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas,
     hiddenimports=[
