@@ -34,10 +34,10 @@ class HelpDialog:
         self.help_window.grab_set()
         self.help_window.configure(bg='#ffffff')  # Clean white background
         
-        # Center the dialog
+        # Center the dialog (positioned higher to avoid bottom cutoff)
         self.help_window.update_idletasks()
-        x = (self.help_window.winfo_screenwidth() // 2) - (900 // 2)
-        y = (self.help_window.winfo_screenheight() // 2) - (700 // 2)
+        x = (self.help_window.winfo_screenwidth() // 2) - (950 // 2)
+        y = (self.help_window.winfo_screenheight() // 2) - (900 // 2) - 50  # Moved 50px higher
         self.help_window.geometry(f"950x900+{x}+{y}")
         
         self._create_header()

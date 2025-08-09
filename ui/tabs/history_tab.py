@@ -273,8 +273,23 @@ class HistoryTab:
                 self.history_text.config(state='disabled')  # Make read-only again
                 return
             
+            # Calculate average translation time for header
+            avg_time_str = ""
+            if history_data:
+                total_time = 0
+                valid_times = 0
+                for entry in history_data:
+                    time_val = entry.get('translation_time', 0)
+                    if isinstance(time_val, (int, float)) and time_val > 0:
+                        total_time += time_val
+                        valid_times += 1
+                
+                if valid_times > 0:
+                    avg_time = total_time / valid_times
+                    avg_time_str = f" | ⚡ Average time: {avg_time:.2f}s"
+            
             # Display history in improved format with color coding
-            header = f"📚 Translation History ({len(history_data)} entries)\n"
+            header = f"📚 Translation History ({len(history_data)} entries){avg_time_str}\n"
             header += "=" * 60 + "\n\n"
             self.history_text.insert('1.0', header, "header")
             
@@ -325,22 +340,8 @@ class HistoryTab:
                 self.history_text.insert(tk.END, f"{entry['translated_text'][:250]}{'...' if len(entry['translated_text']) > 250 else ''}\n")
                 self.history_text.insert(tk.END, "-" * 60 + "\n\n")
             
-            # Add footer with total count and average time
+            # Add footer with total count
             footer = f"\n📊 Total entries displayed: {len(history_data)}"
-            
-            # Calculate average translation time for displayed entries
-            if history_data:
-                total_time = 0
-                valid_times = 0
-                for entry in history_data:
-                    time_val = entry.get('translation_time', 0)
-                    if isinstance(time_val, (int, float)) and time_val > 0:
-                        total_time += time_val
-                        valid_times += 1
-                
-                if valid_times > 0:
-                    avg_time = total_time / valid_times
-                    footer += f" | ⚡ Average time: {avg_time:.2f}s"
             
             footer += "\n"
             if len(history_data) < len(translation_history.history):
