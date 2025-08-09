@@ -36,7 +36,13 @@ venv.bak/
 
 # API Keys and sensitive config files
 api_keys.json
-*.json
+config.json
+hotkeys.json
+startup.json
+language.json
+translation_cache.json
+translation_history.json
+offline_dictionary.json
 
 # IDE
 .vscode/
@@ -56,6 +62,13 @@ Thumbs.db
 temp/
 tmp/
 *.tmp
+
+# Test and debug files
+test_*.py
+debug_*.py
+*_test.py
+test_*.txt
+debug_*.txt
 
 # Log files
 *.log

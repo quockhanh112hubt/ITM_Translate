@@ -21,18 +21,10 @@ def get_app_version():
     """Đọc version từ file version.json"""
     try:
         import json
-        # Thử đọc từ thư mục gốc trước
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        version_file = os.path.join(base_path, "version.json")
+        # Đọc từ thư mục gốc (1 level lên từ core/)
+        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
         if os.path.exists(version_file):
             with open(version_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                return data.get('version', '1.0.0')
-        
-        # Thử đọc từ core/version.json
-        core_version_file = os.path.join(os.path.dirname(__file__), "version.json")
-        if os.path.exists(core_version_file):
-            with open(core_version_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 return data.get('version', '1.0.0')
     except Exception:

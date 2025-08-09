@@ -171,7 +171,7 @@ def show_floating_translate_button(mouse_x, mouse_y):
     # Auto hide sau 5 giây
     if floating_btn_timer:
         root.after_cancel(floating_btn_timer)
-    floating_btn_timer = root.after(5000, hide_floating_button)
+    floating_btn_timer = root.after(3000, hide_floating_button)
     
     # DON'T use FocusOut since we don't want to steal focus from user's text selection
     # Instead, button will auto-hide after 5 seconds or when user clicks it

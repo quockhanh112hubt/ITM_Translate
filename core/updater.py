@@ -458,7 +458,8 @@ class Updater:
     def get_current_version(self):
         """Đọc version hiện tại từ file version.json"""
         try:
-            version_file = os.path.join(os.path.dirname(__file__), "version.json")
+            # Đọc từ thư mục gốc (đã di chuyển từ core/)
+            version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json")
             if os.path.exists(version_file):
                 with open(version_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
