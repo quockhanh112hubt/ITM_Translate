@@ -141,25 +141,30 @@ class ChatGPTProvider(BaseAIProvider):
         if not OPENAI_AVAILABLE:
             raise Exception("OpenAI library not available")
         
-        # Use OpenAI v1.x client
-        self.client = openai.OpenAI(api_key=self.api_key)
+        # Use OpenAI v1.x client with optimized timeout and SSL bypass for corporate networks
+        import httpx
+        self.client = openai.OpenAI(
+            api_key=self.api_key,
+            timeout=15.0,  # Reduced timeout for faster response
+            http_client=httpx.Client(verify=False)  # Disable SSL verification for corporate networks
+        )
     
     def get_default_model(self) -> str:
-        return "gpt-3.5-turbo"
+        return "gpt-4.1-mini"  # Latest and fastest model
     
     def get_provider_name(self) -> str:
         return "ChatGPT"
     
     def detect_language(self, text: str) -> Optional[str]:
-        """Detect language using ChatGPT"""
+        """Detect language using ChatGPT - Optimized for speed"""
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a language detection expert. Respond only with the name of the primary language used in the text. If mixed languages, respond 'Mixed'."},
-                    {"role": "user", "content": f"What language is this text: {text}"}
+                    {"role": "system", "content": "Detect language. Reply with language name only."},
+                    {"role": "user", "content": f"Language: {text[:200]}"}  # Limit text length
                 ],
-                max_tokens=50,
+                max_tokens=10,  # Very small for language detection
                 temperature=0
             )
             
@@ -177,12 +182,15 @@ class ChatGPTProvider(BaseAIProvider):
             return None
     
     def translate_text(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Translate text using ChatGPT"""
+        """Translate text using ChatGPT - Optimized for speed"""
         try:
             if source_lang and source_lang.lower() == "mixed":
-                system_prompt = f"You are a professional translator. Translate the following mixed-language text to {target_lang}. Maintain meaning and context. Return only the translation."
+                system_prompt = f"Translate mixed text to {target_lang}. Return only translation."
             else:
-                system_prompt = f"You are a professional translator. Translate from {source_lang} to {target_lang}. Provide accurate, natural translation. Return only the translation."
+                system_prompt = f"Translate from {source_lang} to {target_lang}. Return only translation."
+            
+            # Calculate optimal max_tokens based on input length
+            estimated_tokens = min(len(text) * 2, 1500)  # Reduced from 2000
             
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -190,8 +198,8 @@ class ChatGPTProvider(BaseAIProvider):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": text}
                 ],
-                max_tokens=2000,
-                temperature=0.3
+                max_tokens=estimated_tokens,
+                temperature=0.1  # Reduced for faster, more consistent response
             )
             
             return response.choices[0].message.content.strip()
@@ -206,19 +214,24 @@ class ChatGPTProvider(BaseAIProvider):
                 raise Exception("429_QUOTA_EXCEEDED")
         except openai.BadRequestError as e:
             raise Exception("400_INVALID_KEY")
+        except openai.APIConnectionError as e:
+            raise Exception(f"Connection error: {e}")
         except Exception as e:
             raise Exception(f"ChatGPT translation error: {e}")
     
     def generate_text(self, prompt: str) -> str:
-        """Generate text using ChatGPT for unified smart translation"""
+        """Generate text using ChatGPT for unified smart translation - Optimized for speed"""
         try:
+            # Calculate optimal max_tokens
+            estimated_tokens = min(len(prompt) * 1.5, 1500)
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=2000,
-                temperature=0.3
+                max_tokens=int(estimated_tokens),
+                temperature=0.1  # Lower temperature for faster response
             )
             
             return response.choices[0].message.content.strip()
@@ -233,6 +246,8 @@ class ChatGPTProvider(BaseAIProvider):
                 raise Exception("429_QUOTA_EXCEEDED")
         except openai.BadRequestError as e:
             raise Exception("400_INVALID_KEY")
+        except openai.APIConnectionError as e:
+            raise Exception(f"Connection error: {e}")
         except Exception as e:
             raise Exception(f"ChatGPT text generation error: {e}")
 
@@ -490,10 +505,12 @@ class CopilotProvider(BaseAIProvider):
                 "You can get one at: https://platform.openai.com/api-keys"
             )
         
-        # GitHub Copilot provider uses OpenAI API with Copilot personality
+        # GitHub Copilot provider uses OpenAI API with Copilot personality and SSL bypass
+        import httpx
         self.client = openai.OpenAI(
             api_key=self.api_key,
-            base_url="https://api.openai.com/v1"
+            base_url="https://api.openai.com/v1",
+            http_client=httpx.Client(verify=False)  # Disable SSL verification for corporate networks
         )
     
     def get_default_model(self) -> str:

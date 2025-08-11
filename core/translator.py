@@ -94,13 +94,13 @@ load_translation_cache()
 # def detect_language(text): - REMOVED
 # def is_same_language(detected_lang, target_lang): - REMOVED
 
-def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False, timeout_seconds=5):
+def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False, timeout_seconds=10):
     """
     Translate text with automatic provider failover and timeout protection
     
     Args:
         return_language_info: If True, detect language first (for popup). If False, use smart replacement logic.
-        timeout_seconds: Maximum time to wait for translation per attempt (default 5 seconds)
+        timeout_seconds: Maximum time to wait for translation per attempt (default 10 seconds)
     """
     
     # Check cache first
@@ -184,7 +184,7 @@ TEXT to translate:
 """
                     
                     # Use provider's text generation for smart translation
-                    print(f'smart_prompt2: {smart_prompt}"')
+                    print(f'smart_prompt: {smart_prompt}"')
                     if hasattr(provider, 'generate_text'):
                         print(f"🧠 [UNIFIED] Using provider.generate_text()")
                         translated_text = provider.generate_text(smart_prompt)

@@ -18,11 +18,12 @@ PROVIDER_MODELS = {
     ],
     'chatgpt': [
         'auto',
+        'gpt-4.1-mini',
+        'gpt-4o-mini',
         'gpt-3.5-turbo',
         'gpt-4',
         'gpt-4-turbo',
-        'gpt-4o',
-        'gpt-4o-mini'
+        'gpt-4o'
     ],
     'deepseek': [
         'auto',
@@ -60,6 +61,7 @@ MODEL_DESCRIPTIONS = {
     'gemini-1.5-pro-002': 'Gemini 1.5 Pro v002 - Phiên bản cập nhật',
     
     # ChatGPT models
+    'gpt-4.1-mini': 'GPT-4.1 Mini - Model mới nhất, siêu nhanh và hiệu quả',
     'gpt-3.5-turbo': 'GPT-3.5 Turbo - Nhanh, giá rẻ (Khuyến nghị)',
     'gpt-4': 'GPT-4 - Chất lượng cao, giá đắt',
     'gpt-4-turbo': 'GPT-4 Turbo - Cân bằng tốc độ và chất lượng',
