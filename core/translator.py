@@ -130,19 +130,19 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input TEXT.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Detect the language of the input text.
+2. If it is not in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, and sentence structure.
-- Ensure fluent and natural grammar.
-- Retain technical terms if commonly used.
-- Do not translate proper nouns or brand names.
+- Translate the input text so it is natural, fluent, and complete in meaning. Preserve the tone and style.
+- Keep all names, tags, and mentions exactly as they appear in the original.
+- Retain all information; do not omit or shorten sentences.
+- You may rephrase for clarity and naturalness, but do not change the meaning.
+- If there are technical terms or abbreviations, keep them as they are unless there is a widely accepted equivalent in the target language.
+- Do not output any explanations — only return the translated text.
 
-Output: Return ONLY the translated version of TEXT — no explanations, no comments.
-
-TEXT to translate:
+Text to translate:
 {text}
 """
                     
@@ -167,19 +167,19 @@ TEXT to translate:
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input TEXT.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Detect the language of the input text.
+2. If it is not in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it into {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, and sentence structure.
-- Ensure fluent and natural grammar.
-- Retain technical terms if commonly used.
-- Do not translate proper nouns or brand names.
+- Translate the input text so it is natural, fluent, and complete in meaning. Preserve the tone and style.
+- Keep all names, tags, and mentions exactly as they appear in the original.
+- Retain all information; do not omit or shorten sentences.
+- You may rephrase for clarity and naturalness, but do not change the meaning.
+- If there are technical terms or abbreviations, keep them as they are unless there is a widely accepted equivalent in the target language.
+- Do not output any explanations — only return the translated text.
 
-Output: Return ONLY the translated version of TEXT — no explanations, no comments.
-
-TEXT to translate:
+Text to translate:
 {text}
 """
                     
