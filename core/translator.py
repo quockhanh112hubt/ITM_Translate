@@ -130,7 +130,7 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input TEXT.
+1. Detect the language of the input text.
 2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
@@ -139,10 +139,9 @@ Translation rules:
 - Ensure fluent and natural grammar.
 - Retain technical terms if commonly used.
 - Do not translate proper nouns or brand names.
+- Do not output any explanations — only return the translated text.
 
-Output: Return ONLY the translated version of TEXT — no explanations, no comments.
-
-TEXT to translate:
+text to translate:
 {text}
 """
                     
@@ -167,7 +166,7 @@ TEXT to translate:
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input TEXT.
+1. Detect the language of the input text.
 2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
@@ -176,10 +175,9 @@ Translation rules:
 - Ensure fluent and natural grammar.
 - Retain technical terms if commonly used.
 - Do not translate proper nouns or brand names.
+- Do not output any explanations — only return the translated text.
 
-Output: Return ONLY the translated version of TEXT — no explanations, no comments.
-
-TEXT to translate:
+text to translate:
 {text}
 """
                     
