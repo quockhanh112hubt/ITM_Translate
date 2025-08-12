@@ -41,6 +41,11 @@ class BaseAIProvider(ABC):
         pass
     
     @abstractmethod
+    def test_connection(self) -> tuple[bool, str]:
+        """Test kết nối với provider"""
+        pass
+    
+    @abstractmethod
     def detect_language(self, text: str) -> Optional[str]:
         """Detect ngôn ngữ của text"""
         pass
@@ -58,11 +63,85 @@ class BaseAIProvider(ABC):
 class GeminiProvider(BaseAIProvider):
     """Google Gemini AI Provider"""
     
+    def __init__(self, key_info: APIKeyInfo):
+        super().__init__(key_info)
+        # Configure SSL bypass for Gemini
+        self._setup_gemini_ssl_bypass()
+    
+    def _setup_gemini_ssl_bypass(self):
+        """Setup SSL bypass specifically for Gemini in corporate networks"""
+        try:
+            import ssl
+            import os
+            
+            # Set environment variables for Google API client
+            os.environ['GRPC_SSL_CIPHER_SUITES'] = 'HIGH:ECDHE:!DH:!aNULL'
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS_UNSAFE_SKIP_VERIFICATION'] = 'true'
+            
+            # Disable SSL verification globally for requests used by google-generativeai
+            import requests
+            from requests.adapters import HTTPAdapter
+            from urllib3.util.retry import Retry
+            
+            class SSLBypassAdapter(HTTPAdapter):
+                def init_poolmanager(self, *args, **kwargs):
+                    kwargs['ssl_context'] = ssl._create_unverified_context()
+                    kwargs['cert_reqs'] = 'CERT_NONE'
+                    return super().init_poolmanager(*args, **kwargs)
+            
+            # Create a session with SSL bypass
+            session = requests.Session()
+            session.mount('https://', SSLBypassAdapter())
+            
+            # Monkey patch requests.get for google-generativeai
+            original_get = requests.get
+            original_post = requests.post
+            
+            def patched_get(*args, **kwargs):
+                kwargs['verify'] = False
+                return original_get(*args, **kwargs)
+            
+            def patched_post(*args, **kwargs):
+                kwargs['verify'] = False
+                return original_post(*args, **kwargs)
+            
+            requests.get = patched_get
+            requests.post = patched_post
+            
+            print("🔓 [SSL] Gemini SSL bypass configured for corporate networks")
+            
+        except Exception as e:
+            print(f"⚠️ [SSL] Warning: Could not setup Gemini SSL bypass: {e}")
+    
     def get_default_model(self) -> str:
         return "gemini-1.5-flash"  # Changed from gemini-2.0-flash-exp to stable version
     
     def get_provider_name(self) -> str:
         return "Gemini"
+    
+    def test_connection(self) -> tuple[bool, str]:
+        """Test kết nối với Gemini API"""
+        try:
+            genai.configure(api_key=self.api_key)
+            model = genai.GenerativeModel(self.model)
+            
+            # Test với một prompt đơn giản
+            response = model.generate_content("Hello")
+            if response and response.text:
+                return True, "✅ Gemini connection successful"
+            else:
+                return False, "❌ Gemini: No response received"
+                
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg or "verify" in error_msg:
+                return False, f"❌ Gemini SSL Error: {e} (Corporate network blocking connection)"
+            elif "api_key" in error_msg or "401" in error_msg:
+                return False, f"❌ Gemini API Key Error: {e}"
+            elif "quota" in error_msg or "429" in error_msg:
+                return False, f"❌ Gemini Quota Error: {e}"
+            else:
+                return False, f"❌ Gemini Connection Error: {e}"
     
     def detect_language(self, text: str) -> Optional[str]:
         """Detect language using Gemini"""
@@ -158,6 +237,33 @@ class ChatGPTProvider(BaseAIProvider):
     
     def get_provider_name(self) -> str:
         return "ChatGPT"
+    
+    def test_connection(self) -> tuple[bool, str]:
+        """Test kết nối với ChatGPT API"""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5
+            )
+            
+            if response and response.choices:
+                return True, "✅ ChatGPT connection successful"
+            else:
+                return False, "❌ ChatGPT: No response received"
+                
+        except openai.AuthenticationError as e:
+            return False, f"❌ ChatGPT API Key Error: {e}"
+        except openai.RateLimitError as e:
+            return False, f"❌ ChatGPT Quota Error: {e}"
+        except openai.APIConnectionError as e:
+            return False, f"❌ ChatGPT Connection Error: {e}"
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg:
+                return False, f"❌ ChatGPT SSL Error: {e}"
+            else:
+                return False, f"❌ ChatGPT Error: {e}"
     
     def detect_language(self, text: str) -> Optional[str]:
         """Detect language using ChatGPT - Optimized for speed"""
@@ -263,6 +369,49 @@ class DeepSeekProvider(BaseAIProvider):
     
     def get_provider_name(self) -> str:
         return "DeepSeek"
+    
+    def test_connection(self) -> tuple[bool, str]:
+        """Test kết nối với DeepSeek API"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
+            }
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": "Hello"}
+                ],
+                "max_tokens": 5,
+                "temperature": 0
+            }
+            
+            response = requests.post(
+                'https://api.deepseek.com/v1/chat/completions',
+                headers=headers,
+                json=payload,
+                timeout=10,
+                verify=False  # Disable SSL verification for corporate networks
+            )
+            
+            if response.status_code == 200:
+                return True, "✅ DeepSeek connection successful"
+            elif response.status_code == 402:
+                return False, "❌ DeepSeek: Insufficient Balance (Hết tiền)"
+            elif response.status_code == 401:
+                return False, "❌ DeepSeek: Invalid API Key"
+            elif response.status_code == 429:
+                return False, "❌ DeepSeek: Rate limit exceeded"
+            else:
+                return False, f"❌ DeepSeek API error: {response.status_code}"
+                
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "ssl" in error_msg or "certificate" in error_msg:
+                return False, f"❌ DeepSeek SSL Error: {e}"
+            else:
+                return False, f"❌ DeepSeek Connection Error: {e}"
     
     def detect_language(self, text: str) -> Optional[str]:
         """Detect language using DeepSeek"""
