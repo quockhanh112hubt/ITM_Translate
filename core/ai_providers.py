@@ -7,6 +7,10 @@ import json
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 from .api_key_manager import AIProvider, APIKeyInfo
+from .ssl_bypass import setup_ssl_bypass
+
+# Setup SSL bypass globally for all providers
+setup_ssl_bypass()
 
 # Optional imports with fallbacks
 try:
@@ -282,7 +286,8 @@ class DeepSeekProvider(BaseAIProvider):
                 'https://api.deepseek.com/v1/chat/completions',
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=30,
+                verify=False  # Disable SSL verification for corporate networks
             )
             
             if response.status_code == 200:
@@ -332,7 +337,8 @@ class DeepSeekProvider(BaseAIProvider):
                 'https://api.deepseek.com/v1/chat/completions',
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=30,
+                verify=False  # Disable SSL verification for corporate networks
             )
             
             if response.status_code == 200:
@@ -379,7 +385,8 @@ class DeepSeekProvider(BaseAIProvider):
                 'https://api.deepseek.com/v1/chat/completions',
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=30,
+                verify=False  # Disable SSL verification for corporate networks
             )
             
             if response.status_code == 200:
@@ -432,7 +439,8 @@ class ClaudeProvider(BaseAIProvider):
                 'https://api.anthropic.com/v1/messages',
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=30,
+                verify=False  # Disable SSL verification for corporate networks
             )
             
             if response.status_code == 200:
@@ -477,7 +485,8 @@ class ClaudeProvider(BaseAIProvider):
                 'https://api.anthropic.com/v1/messages',
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=30,
+                verify=False  # Disable SSL verification for corporate networks
             )
             
             if response.status_code == 200:
