@@ -7,6 +7,7 @@ import json
 from dotenv import load_dotenv
 from .api_key_manager import api_key_manager
 from .translation_history import translation_history
+from .config_manager import config_manager
 
 load_dotenv()
 
@@ -94,14 +95,18 @@ load_translation_cache()
 # def detect_language(text): - REMOVED
 # def is_same_language(detected_lang, target_lang): - REMOVED
 
-def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False, timeout_seconds=10):
+def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info=False, timeout_seconds=None):
     """
     Translate text with automatic provider failover and timeout protection
     
     Args:
         return_language_info: If True, detect language first (for popup). If False, use smart replacement logic.
-        timeout_seconds: Maximum time to wait for translation per attempt (default 10 seconds)
+        timeout_seconds: Maximum time to wait for translation per attempt (if None, use config default)
     """
+    
+    # Get timeout from config if not specified
+    if timeout_seconds is None:
+        timeout_seconds = config_manager.get_translation_retry_timeout()
     
     # Check cache first
     cached_result = get_cached_translation(text, Ngon_ngu_thu_2, Ngon_ngu_thu_3, return_language_info)
@@ -398,7 +403,8 @@ def _try_retry_disabled_keys(text: str, source_lang: str, target_lang: str, max_
             provider = get_ai_provider(retry_key.provider.value)
             if provider:
                 # Test with a single translation attempt
-                result = provider.translate(text, source_lang, target_lang, retry_key.key, retry_key.model, timeout=15)
+                retry_timeout = config_manager.get_translation_retry_timeout()
+                result = provider.translate(text, source_lang, target_lang, retry_key.key, retry_key.model, timeout=retry_timeout)
                 
                 if not result.startswith("Lỗi") and not result.startswith("❌") and not result.startswith("⏰"):
                     # Success! Key is working again

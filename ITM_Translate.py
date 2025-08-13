@@ -14,6 +14,7 @@ import tkinter as tk
 from ui.gui import MainGUI
 from core.tray import create_tray_icon
 from core.lockfile import acquire_lock, release_lock
+from core.config_manager import config_manager
 import ctypes
 import os
 import json
@@ -339,9 +340,14 @@ def on_mouse_move(x, y):
     except Exception as e:
         print(f"❌ [MOUSE] Error in on_mouse_move: {e}")
 
-def activate_screenshot_mode(duration_ms=15000):
+def activate_screenshot_mode(duration_ms=None):
     """Kích hoạt chế độ chụp ảnh trong khoảng thời gian nhất định"""
     global screenshot_mode_active, screenshot_mode_timer
+    
+    # Get timeout from config if not specified
+    if duration_ms is None:
+        duration_seconds = config_manager.get_floating_button_timeout()
+        duration_ms = duration_seconds * 1000  # Convert to milliseconds
     
     screenshot_mode_active = True
     print(f"📸 [FLOATING] Screenshot mode activated for {duration_ms}ms")
@@ -1149,10 +1155,11 @@ def _on_activate_translate():
             
             root.after(0, show_result)
         else:
-            # Check timeout (15 seconds)
+            # Check timeout (configurable)
+            floating_timeout = config_manager.get_floating_button_timeout()
             if hasattr(check_translation_status, 'start_time'):
                 elapsed = time.time() - check_translation_status.start_time
-                if elapsed >= 15.0:  # 15 second timeout
+                if elapsed >= floating_timeout:  # Configurable timeout
                     print(f"⏰ [GROUP 1] Translation timeout after {elapsed:.1f}s")
                     def show_timeout():
                         if loading and loading.winfo_exists():
@@ -1296,10 +1303,11 @@ def _on_activate_replace():
             
             root.after(0, handle_result)
         else:
-            # Check timeout (15 seconds)
+            # Check timeout (configurable)
+            floating_timeout = config_manager.get_floating_button_timeout()
             if hasattr(check_translation_status, 'start_time'):
                 elapsed = time.time() - check_translation_status.start_time
-                if elapsed >= 15.0:  # 15 second timeout
+                if elapsed >= floating_timeout:  # Configurable timeout
                     print(f"⏰ [GROUP 1 REPLACE] Translation timeout after {elapsed:.1f}s")
                     def show_timeout():
                         if loading and loading.winfo_exists():
@@ -1431,10 +1439,11 @@ def _on_activate_translate_group2():
             
             root.after(0, show_result)
         else:
-            # Check timeout (15 seconds)
+            # Check timeout (configurable)
+            floating_timeout = config_manager.get_floating_button_timeout()
             if hasattr(check_translation_status, 'start_time'):
                 elapsed = time.time() - check_translation_status.start_time
-                if elapsed >= 15.0:  # 15 second timeout
+                if elapsed >= floating_timeout:  # Configurable timeout
                     print(f"⏰ [GROUP 2] Translation timeout after {elapsed:.1f}s")
                     def show_timeout():
                         if loading and loading.winfo_exists():
@@ -1578,10 +1587,11 @@ def _on_activate_replace_group2():
             
             root.after(0, handle_result)
         else:
-            # Check timeout (15 seconds)
+            # Check timeout (configurable)
+            floating_timeout = config_manager.get_floating_button_timeout()
             if hasattr(check_translation_status, 'start_time'):
                 elapsed = time.time() - check_translation_status.start_time
-                if elapsed >= 15.0:  # 15 second timeout
+                if elapsed >= floating_timeout:  # Configurable timeout
                     print(f"⏰ [GROUP 2 REPLACE] Translation timeout after {elapsed:.1f}s")
                     def show_timeout():
                         if loading and loading.winfo_exists():
@@ -1888,7 +1898,7 @@ class MultiHotKey:
                 keyboard.Key.alt in self._pressed and 
                 key == keyboard.KeyCode.from_char('s')):
                 print(f"📸 [FLOATING] Ctrl+Alt+S screenshot sequence detected!")
-                activate_screenshot_mode(15000)
+                activate_screenshot_mode()  # Use config default
                 return
                 
             # Special handling for Win+Shift+S sequence  
@@ -1896,13 +1906,13 @@ class MultiHotKey:
                 keyboard.Key.shift in self._pressed and 
                 key == keyboard.KeyCode.from_char('s')):
                 print(f"📸 [FLOATING] Win+Shift+S screenshot sequence detected!")
-                activate_screenshot_mode(15000)
+                activate_screenshot_mode()  # Use config default
                 return
                 
             # Print Screen variations
             if key == keyboard.Key.print_screen:
                 print(f"📸 [FLOATING] Print Screen detected!")
-                activate_screenshot_mode(15000)
+                activate_screenshot_mode()  # Use config default
                 return
                 
             # ShareX shortcuts
@@ -1910,7 +1920,7 @@ class MultiHotKey:
                 keyboard.Key.shift in self._pressed and 
                 hasattr(key, 'char') and key.char in ['1', '2', '3', '4']):
                 print(f"📸 [FLOATING] ShareX shortcut Ctrl+Shift+{key.char} detected!")
-                activate_screenshot_mode(15000)
+                activate_screenshot_mode()  # Use config default
                 return
                 
         # Keep track of pressed keys for combo detection

@@ -530,6 +530,23 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "arabic": "العربية",
         "thai": "ไทย",
         "indonesian": "Bahasa Indonesia",
+        
+        # Timeout tooltips
+        "tooltip_floating_timeout": "Thời gian hiển thị nút dịch nổi khi phát hiện chụp ảnh màn hình.\nSau thời gian này, nút dịch sẽ tự động xuất hiện trở lại.",
+        "tooltip_retry_timeout": "Thời gian chờ tối đa cho mỗi lần thử dịch.\nNếu quá thời gian này, hệ thống sẽ thử API khác.",
+        "tooltip_validation_timeout": "Thời gian chờ tối đa khi kiểm tra API key.\nTăng giá trị này nếu mạng chậm.",
+        "tooltip_switching_delay": "Thời gian chờ trước khi chuyển sang model khác khi lỗi.\nGiúp tránh spam API khi có lỗi liên tục.",
+        
+        # Timeout settings UI
+        "timeout_settings_title": "⏱️ Cài đặt thời gian chờ",
+        "timeout_settings_help": "Tuỳ chỉnh thời gian chờ cho các hoạt động khác nhau (tính bằng giây)",
+        "floating_button_timeout_label": "Nút dịch nổi (chụp ảnh màn hình):",
+        "retry_timeout_label": "Thử lại dịch khi lỗi:",
+        "validation_timeout_label": "Kiểm tra API key:",
+        "switching_delay_label": "Chờ trước khi chuyển model:",
+        "seconds_unit": "giây",
+        "save_timeout_settings": "💾 Lưu cài đặt",
+        "reset_timeout_settings": "🔄 Khôi phục mặc định",
     },
     
     "en": {
@@ -1053,6 +1070,23 @@ Custom group (Study/Projects):
         "arabic": "Arabic",
         "thai": "Thai",
         "indonesian": "Indonesian",
+        
+        # Timeout tooltips
+        "tooltip_floating_timeout": "Time to display floating translate button when screenshot is detected.\nAfter this time, the translate button will automatically reappear.",
+        "tooltip_retry_timeout": "Maximum wait time for each translation attempt.\nIf exceeded, the system will try another API.",
+        "tooltip_validation_timeout": "Maximum wait time when checking API keys.\nIncrease this value if network is slow.",
+        "tooltip_switching_delay": "Wait time before switching to another model on error.\nHelps avoid API spam when continuous errors occur.",
+        
+        # Timeout settings UI
+        "timeout_settings_title": "⏱️ Timeout Settings",
+        "timeout_settings_help": "Customize timeout values for different operations (in seconds)",
+        "floating_button_timeout_label": "Floating translate button (screenshot):",
+        "retry_timeout_label": "Translation retry on error:",
+        "validation_timeout_label": "API key validation:",
+        "switching_delay_label": "Wait before model switching:",
+        "seconds_unit": "seconds",
+        "save_timeout_settings": "💾 Save Settings",
+        "reset_timeout_settings": "🔄 Reset to Default",
     }
 }
 

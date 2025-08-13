@@ -141,10 +141,10 @@ class MainGUI:
                 print(f"Warning: Could not auto-refresh API keys: {e}")
         elif tab_index == 2:  # Advanced tab
             # Tab Nâng Cao: kích thước nhỏ gọn
-            self.root.geometry('1070x600')
+            self.root.geometry('1070x800')
         elif tab_index == 3:  # History tab
             # Tab History: cần không gian lớn để hiển thị danh sách history
-            self.root.geometry('1200x700')
+            self.root.geometry('1070x800')
             # Refresh history when switching to this tab
             try:
                 if hasattr(self, 'history_tab_component'):

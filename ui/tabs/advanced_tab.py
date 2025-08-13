@@ -6,8 +6,11 @@ Quản lý tab Advanced với các tùy chọn nâng cao của ứng dụng
 import tkinter as tk
 import json
 import threading
-from tkinter import messagebox
+from tkinter import messagebox, ttk
+from ttkbootstrap import SUCCESS, SECONDARY, INFO, DANGER, PRIMARY
 from core.i18n import get_language_manager, _
+from core.config_manager import config_manager
+from ui.tooltip import create_tooltip
 
 
 class AdvancedTab:
@@ -65,6 +68,9 @@ class AdvancedTab:
             command=self.on_floating_button_toggle
         )
         floating_button_check.pack(anchor='w', padx=20, pady=(0, 5))
+        
+        # Timeout Settings section
+        self._create_timeout_settings()
         
         # Excluded Applications section - đặt ngay cạnh floating button
         self.excluded_frame = tk.LabelFrame(self.frame, text=_('excluded_applications'), padx=10, pady=10)
@@ -700,3 +706,137 @@ class AdvancedTab:
             self.excluded_apps_listbox.delete(0, tk.END)
             self._save_excluded_applications()
             messagebox.showinfo(_('success'), _('list_cleared'))
+    
+    def _create_timeout_settings(self):
+        """Tạo section cài đặt timeout"""
+        # Timeout Settings frame
+        timeout_frame = tk.LabelFrame(self.frame, text=_("timeout_settings_title"), padx=10, pady=10)
+        timeout_frame.pack(fill='x', padx=20, pady=(10, 10))
+        
+        # Help text
+        help_label = tk.Label(
+            timeout_frame,
+            text=_("timeout_settings_help"),
+            font=("Arial", 8),
+            fg="gray"
+        )
+        help_label.pack(anchor='w', pady=(0, 10))
+        
+        # Create grid for timeout settings
+        grid_frame = tk.Frame(timeout_frame)
+        grid_frame.pack(fill='x')
+        
+        # Configure grid columns
+        grid_frame.columnconfigure(1, weight=1)
+        
+        # Floating button timeout
+        floating_label = tk.Label(grid_frame, text=_("floating_button_timeout_label"))
+        floating_label.grid(row=0, column=0, sticky='w', padx=(0, 10), pady=2)
+        self.floating_timeout_var = tk.StringVar(value=str(config_manager.get_floating_button_timeout()))
+        floating_entry = tk.Entry(grid_frame, textvariable=self.floating_timeout_var, width=10)
+        floating_entry.grid(row=0, column=1, sticky='w', pady=2)
+        tk.Label(grid_frame, text=_("seconds_unit")).grid(row=0, column=2, sticky='w', padx=(5, 0), pady=2)
+        
+        # Add tooltip
+        create_tooltip(floating_label, "tooltip_floating_timeout")
+        
+        # Translation retry timeout
+        retry_label = tk.Label(grid_frame, text=_("retry_timeout_label"))
+        retry_label.grid(row=1, column=0, sticky='w', padx=(0, 10), pady=2)
+        self.retry_timeout_var = tk.StringVar(value=str(config_manager.get_translation_retry_timeout()))
+        retry_entry = tk.Entry(grid_frame, textvariable=self.retry_timeout_var, width=10)
+        retry_entry.grid(row=1, column=1, sticky='w', pady=2)
+        tk.Label(grid_frame, text=_("seconds_unit")).grid(row=1, column=2, sticky='w', padx=(5, 0), pady=2)
+        
+        # Add tooltip
+        create_tooltip(retry_label, "tooltip_retry_timeout")
+        
+        # API validation timeout
+        validation_label = tk.Label(grid_frame, text=_("validation_timeout_label"))
+        validation_label.grid(row=2, column=0, sticky='w', padx=(0, 10), pady=2)
+        self.validation_timeout_var = tk.StringVar(value=str(config_manager.get_api_validation_timeout()))
+        validation_entry = tk.Entry(grid_frame, textvariable=self.validation_timeout_var, width=10)
+        validation_entry.grid(row=2, column=1, sticky='w', pady=2)
+        tk.Label(grid_frame, text=_("seconds_unit")).grid(row=2, column=2, sticky='w', padx=(5, 0), pady=2)
+        
+        # Add tooltip
+        create_tooltip(validation_label, "tooltip_validation_timeout")
+        
+        # Model switching delay
+        switching_label = tk.Label(grid_frame, text=_("switching_delay_label"))
+        switching_label.grid(row=3, column=0, sticky='w', padx=(0, 10), pady=2)
+        self.switching_delay_var = tk.StringVar(value=str(config_manager.get_model_switching_delay()))
+        switching_entry = tk.Entry(grid_frame, textvariable=self.switching_delay_var, width=10)
+        switching_entry.grid(row=3, column=1, sticky='w', pady=2)
+        tk.Label(grid_frame, text=_("seconds_unit")).grid(row=3, column=2, sticky='w', padx=(5, 0), pady=2)
+        
+        # Add tooltip
+        create_tooltip(switching_label, "tooltip_switching_delay")
+        
+        # Buttons frame
+        btn_frame = tk.Frame(timeout_frame)
+        btn_frame.pack(fill='x', pady=(10, 0))
+        
+        # Save button
+        save_btn = tk.Button(btn_frame, text=_("save_timeout_settings"), command=self._save_timeout_settings, bg='#4CAF50', fg='white')
+        save_btn.pack(side='left', padx=(0, 10))
+        
+        # Reset button
+        reset_btn = tk.Button(btn_frame, text=_("reset_timeout_settings"), command=self._reset_timeout_settings, bg='#FF9800', fg='white')
+        reset_btn.pack(side='left')
+    
+    def _save_timeout_settings(self):
+        """Lưu cài đặt timeout"""
+        try:
+            # Validate inputs
+            floating_timeout = int(self.floating_timeout_var.get())
+            retry_timeout = int(self.retry_timeout_var.get())
+            validation_timeout = int(self.validation_timeout_var.get())
+            switching_delay = int(self.switching_delay_var.get())
+            
+            # Validate ranges
+            if floating_timeout < 5 or floating_timeout > 300:
+                messagebox.showerror("Lỗi", "Thời gian nút dịch nổi phải từ 5-300 giây")
+                return
+            
+            if retry_timeout < 5 or retry_timeout > 60:
+                messagebox.showerror("Lỗi", "Thời gian thử lại dịch phải từ 5-60 giây")
+                return
+            
+            if validation_timeout < 10 or validation_timeout > 120:
+                messagebox.showerror("Lỗi", "Thời gian kiểm tra API key phải từ 10-120 giây")
+                return
+            
+            if switching_delay < 1 or switching_delay > 30:
+                messagebox.showerror("Lỗi", "Thời gian chờ chuyển model phải từ 1-30 giây")
+                return
+            
+            # Save to config
+            config_manager.set_floating_button_timeout(floating_timeout)
+            config_manager.set_translation_retry_timeout(retry_timeout)
+            config_manager.set_api_validation_timeout(validation_timeout)
+            config_manager.set_model_switching_delay(switching_delay)
+            
+            messagebox.showinfo("Thành công", "Đã lưu cài đặt thời gian chờ!\n\nMột số thay đổi có thể cần khởi động lại ứng dụng để có hiệu lực.")
+            
+        except ValueError:
+            messagebox.showerror("Lỗi", "Vui lòng nhập số nguyên hợp lệ cho tất cả các trường")
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể lưu cài đặt: {e}")
+    
+    def _reset_timeout_settings(self):
+        """Khôi phục cài đặt timeout về mặc định"""
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn khôi phục tất cả thời gian chờ về mặc định?"):
+            # Reset to defaults
+            self.floating_timeout_var.set("15")
+            self.retry_timeout_var.set("10")
+            self.validation_timeout_var.set("30")
+            self.switching_delay_var.set("10")
+            
+            # Save to config
+            config_manager.set_floating_button_timeout(15)
+            config_manager.set_translation_retry_timeout(10)
+            config_manager.set_api_validation_timeout(30)
+            config_manager.set_model_switching_delay(10)
+            
+            messagebox.showinfo("Thành công", "Đã khôi phục cài đặt thời gian chờ về mặc định!")
