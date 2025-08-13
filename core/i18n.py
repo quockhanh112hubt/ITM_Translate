@@ -532,7 +532,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "indonesian": "Bahasa Indonesia",
         
         # Timeout tooltips
-        "tooltip_floating_timeout": "Thời gian hiển thị nút dịch nổi khi phát hiện chụp ảnh màn hình.\nSau thời gian này, nút dịch sẽ tự động xuất hiện trở lại.",
+        "tooltip_floating_timeout": "Thời gian tạm tắt chức năng nút dịch nổi khi phát hiện chụp ảnh màn hình.\nSau thời gian này, nút dịch sẽ tự động xuất hiện trở lại.",
         "tooltip_retry_timeout": "Thời gian chờ tối đa cho mỗi lần thử dịch.\nNếu quá thời gian này, hệ thống sẽ thử API khác.",
         "tooltip_validation_timeout": "Thời gian chờ tối đa khi kiểm tra API key.\nTăng giá trị này nếu mạng chậm.",
         "tooltip_switching_delay": "Thời gian chờ trước khi chuyển sang model khác khi lỗi.\nGiúp tránh spam API khi có lỗi liên tục.",
@@ -624,7 +624,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "floating_translate_button": "Floating translate button (appears when selecting text)",
         "auto_close_popup": "Auto close translation popup",
         "excluded_applications": "Excluded Applications",
-        "excluded_apps_help": "List of applications that will NOT apply for 'Floating Button'",
+        "excluded_apps_help": "List of applications that will NOT apply for 'Floating Translate Button'",
         "add_application": "Add Application",
         "remove_application": "Remove Application",
         "add_office_apps": "Add Office",
@@ -1072,7 +1072,7 @@ Custom group (Study/Projects):
         "indonesian": "Indonesian",
         
         # Timeout tooltips
-        "tooltip_floating_timeout": "Time to display floating translate button when screenshot is detected.\nAfter this time, the translate button will automatically reappear.",
+        "tooltip_floating_timeout": "The time to temporarily disable floating translate button function when screenshot is detected.\nAfter this time, the translate button will automatically reappear.",
         "tooltip_retry_timeout": "Maximum wait time for each translation attempt.\nIf exceeded, the system will try another API.",
         "tooltip_validation_timeout": "Maximum wait time when checking API keys.\nIncrease this value if network is slow.",
         "tooltip_switching_delay": "Wait time before switching to another model on error.\nHelps avoid API spam when continuous errors occur.",
