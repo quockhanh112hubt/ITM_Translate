@@ -135,9 +135,8 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, and sentence structure.
-- Ensure fluent and natural grammar.
-- Retain technical terms if commonly used.
+- Preserve the tone, style, prioritize natural.
+- Retain technical terms.
 - Do not translate proper nouns or brand names.
 - Do not output any explanations — only return the translated text.
 
@@ -171,9 +170,8 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, and sentence structure.
-- Ensure fluent and natural grammar.
-- Retain technical terms if commonly used.
+- Preserve the tone, style, prioritize natural.
+- Retain technical terms.
 - Do not translate proper nouns or brand names.
 - Do not output any explanations — only return the translated text.
 
