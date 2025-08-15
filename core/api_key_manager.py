@@ -10,6 +10,7 @@ class AIProvider(Enum):
     DEEPSEEK = "deepseek"
     CLAUDE = "claude"
     COPILOT = "copilot"
+    GOOGLE_TRANSLATE = "google_translate"
 
 @dataclass
 class APIKeyInfo:
@@ -27,7 +28,7 @@ class APIKeyManager:
         self.keys_file = keys_file
         self.keys: List[APIKeyInfo] = []
         self.active_index = 0
-        self.provider_priority = [AIProvider.GEMINI, AIProvider.CHATGPT, AIProvider.COPILOT, AIProvider.DEEPSEEK, AIProvider.CLAUDE]
+        self.provider_priority = [AIProvider.GEMINI, AIProvider.CHATGPT, AIProvider.GOOGLE_TRANSLATE, AIProvider.COPILOT, AIProvider.DEEPSEEK, AIProvider.CLAUDE]
         self.load_keys()
     
     def load_keys(self):

@@ -71,6 +71,14 @@ class APIKeyValidator:
                 return False, _('openai_key_short')
             if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('openai_key_invalid_chars')
+                
+        elif provider == 'google_translate':
+            # Google Cloud Translation API key format
+            if len(api_key) < 30:
+                return False, _('google_translate_key_short')
+            # Google API keys typically start with AIza or can be other formats
+            if not re.match(r'^[A-Za-z0-9_-]+$', api_key):
+                return False, _('google_translate_key_invalid_chars')
         else:
             return False, _('provider_not_supported_validator').format(provider=provider)
         
@@ -316,6 +324,75 @@ class APIKeyValidator:
             else:
                 return ValidationResult.PROVIDER_ERROR, _('copilot_error').format(error=str(e))
     
+    @staticmethod
+    def test_google_translate_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
+        """Test Google Cloud Translation API key using REST API"""
+        try:
+            import requests
+            
+            # Test với simple translation using REST API
+            url = "https://translation.googleapis.com/language/translate/v2"
+            test_text = "Hello"
+            
+            params = {
+                'key': api_key,
+                'q': test_text,
+                'target': 'vi',  # Translate to Vietnamese
+                'format': 'text'
+            }
+            
+            response = requests.post(url, data=params, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            
+            if 'data' in result and 'translations' in result['data']:
+                translated = result['data']['translations'][0]['translatedText']
+                if translated and translated != test_text:
+                    model_name = model if model != "auto" else "google-translate-v2"
+                    return ValidationResult.SUCCESS, _('google_translate_working').format(model=model_name)
+                else:
+                    return ValidationResult.PROVIDER_ERROR, _('google_translate_empty_response')
+            else:
+                return ValidationResult.PROVIDER_ERROR, _('google_translate_empty_response')
+                
+        except ImportError:
+            return ValidationResult.PROVIDER_ERROR, _('google_translate_missing_library')
+        except requests.exceptions.RequestException as e:
+            error_msg = str(e).lower()
+            response_text = ""
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    response_data = e.response.json()
+                    if 'error' in response_data:
+                        error_msg = response_data['error'].get('message', '').lower()
+                        response_text = str(response_data['error'])
+                except:
+                    response_text = e.response.text
+                    
+            if "400" in str(e) or "invalid api key" in error_msg or "api key not valid" in error_msg:
+                return ValidationResult.INVALID_KEY, _('google_translate_invalid_key')
+            elif "403" in str(e) or "forbidden" in error_msg:
+                return ValidationResult.INVALID_KEY, _('google_translate_billing_error')
+            elif "429" in str(e) or "quota" in error_msg or "rate limit" in error_msg:
+                return ValidationResult.QUOTA_EXCEEDED, _('google_translate_quota_exceeded')
+            elif "timeout" in error_msg:
+                return ValidationResult.TIMEOUT, _('google_translate_timeout')
+            else:
+                return ValidationResult.PROVIDER_ERROR, _('google_translate_error').format(error=f"{str(e)} - {response_text}")
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "invalid api key" in error_msg or "unauthorized" in error_msg or "403" in error_msg:
+                return ValidationResult.INVALID_KEY, _('google_translate_invalid_key')
+            elif "quota" in error_msg or "rate limit" in error_msg or "429" in error_msg:
+                return ValidationResult.QUOTA_EXCEEDED, _('google_translate_quota_exceeded')
+            elif "billing" in error_msg or "project" in error_msg or "400" in error_msg:
+                return ValidationResult.INVALID_KEY, _('google_translate_billing_error')
+            elif "timeout" in error_msg:
+                return ValidationResult.TIMEOUT, _('google_translate_timeout')
+            else:
+                return ValidationResult.PROVIDER_ERROR, _('google_translate_error').format(error=str(e))
+    
     @classmethod
     def validate_api_key(cls, provider: str, api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
         """
@@ -336,7 +413,8 @@ class APIKeyValidator:
             'chatgpt': cls.test_openai_key,
             'deepseek': cls.test_deepseek_key,
             'claude': cls.test_claude_key,
-            'copilot': cls.test_copilot_key
+            'copilot': cls.test_copilot_key,
+            'google_translate': cls.test_google_translate_key
         }
         
         test_func = test_functions.get(provider)

@@ -498,6 +498,19 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "copilot_no_credit": "❌ GitHub Copilot: Hết credit hoặc quota",
         "copilot_timeout": "❌ GitHub Copilot API: Timeout - thử lại sau",
         "copilot_error": "❌ GitHub Copilot API error: {error}",
+        
+        # Google Translate validation messages
+        "google_translate_key_short": "Google Translate API key quá ngắn (tối thiểu 30 ký tự)",
+        "google_translate_key_invalid_chars": "Google Translate API key chứa ký tự không hợp lệ",
+        "google_translate_working": "✅ Google Translate API key hoạt động tốt (model: {model})",
+        "google_translate_missing_library": "❌ Thiếu thư viện google-cloud-translate (pip install google-cloud-translate)",
+        "google_translate_invalid_key": "❌ Google Translate API key không hợp lệ",
+        "google_translate_quota_exceeded": "❌ Google Translate: Vượt quá quota hoặc rate limit",
+        "google_translate_billing_error": "❌ Google Translate: Chưa kích hoạt billing hoặc project không tồn tại",
+        "google_translate_timeout": "❌ Google Translate API: Timeout - thử lại sau",
+        "google_translate_error": "❌ Google Translate API error: {error}",
+        "google_translate_empty_response": "❌ Google Translate trả về response rỗng",
+        
         "unexpected_error": "❌ Lỗi không mong đợi: {error}",
         "validation_success_title": "✅ API Key hợp lệ!",
         "validation_format_error_title": "❌ Định dạng API Key không đúng",
@@ -1038,6 +1051,19 @@ Custom group (Study/Projects):
         "copilot_no_credit": "❌ GitHub Copilot: Out of credit or quota",
         "copilot_timeout": "❌ GitHub Copilot API: Timeout - try again later",
         "copilot_error": "❌ GitHub Copilot API error: {error}",
+        
+        # Google Translate validation messages
+        "google_translate_key_short": "Google Translate API key too short (minimum 30 characters)",
+        "google_translate_key_invalid_chars": "Google Translate API key contains invalid characters",
+        "google_translate_working": "✅ Google Translate API key working well (model: {model})",
+        "google_translate_missing_library": "❌ Missing google-cloud-translate library (pip install google-cloud-translate)",
+        "google_translate_invalid_key": "❌ Google Translate API key is invalid",
+        "google_translate_quota_exceeded": "❌ Google Translate: Quota or rate limit exceeded",
+        "google_translate_billing_error": "❌ Google Translate: Billing not enabled or project not found",
+        "google_translate_timeout": "❌ Google Translate API: Timeout - try again later",
+        "google_translate_error": "❌ Google Translate API error: {error}",
+        "google_translate_empty_response": "❌ Google Translate returned empty response",
+        
         "unexpected_error": "❌ Unexpected error: {error}",
         "validation_success_title": "✅ API Key Valid!",
         "validation_format_error_title": "❌ API Key Format Error",

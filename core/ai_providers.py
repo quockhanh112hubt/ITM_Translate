@@ -23,6 +23,13 @@ except ImportError:
     ANTHROPIC_AVAILABLE = False
     print("Warning: Anthropic library not available. Claude provider will be disabled.")
 
+try:
+    from google.cloud import translate_v2 as translate
+    GOOGLE_CLOUD_TRANSLATE_AVAILABLE = True
+except ImportError:
+    GOOGLE_CLOUD_TRANSLATE_AVAILABLE = False
+    print("Warning: Google Cloud Translate library not available. Google Translate provider will be disabled.")
+
 class BaseAIProvider(ABC):
     """Base class cho tất cả AI providers"""
     
@@ -583,6 +590,238 @@ Maintain the original meaning and tone."""
     def get_provider_name(self) -> str:
         return "GitHub Copilot"
 
+
+class GoogleTranslateProvider(BaseAIProvider):
+    """Google Cloud Translation API Provider"""
+    
+    def __init__(self, key_info: APIKeyInfo):
+        super().__init__(key_info)
+        if not GOOGLE_CLOUD_TRANSLATE_AVAILABLE:
+            raise ImportError("Google Cloud Translate library not available. Run: pip install google-cloud-translate")
+        
+        # Sử dụng REST API trực tiếp với requests thay vì client library
+        # Vì Google Cloud Translate v2 API có thể gây conflict với credentials
+        self.api_key = self.api_key
+        self.base_url = "https://translation.googleapis.com/language/translate/v2"
+        
+        # Language mapping - Google Translate codes to our internal codes
+        self.language_map = {
+            'vi': 'vi',     # Vietnamese
+            'en': 'en',     # English
+            'zh': 'zh-cn',  # Chinese Simplified
+            'zh-cn': 'zh-cn',
+            'zh-tw': 'zh-tw',
+            'ja': 'ja',     # Japanese
+            'ko': 'ko',     # Korean
+            'fr': 'fr',     # French
+            'de': 'de',     # German
+            'es': 'es',     # Spanish
+            'it': 'it',     # Italian
+            'pt': 'pt',     # Portuguese
+            'ru': 'ru',     # Russian
+            'ar': 'ar',     # Arabic
+            'th': 'th',     # Thai
+            'id': 'id',     # Indonesian
+        }
+    
+    def get_default_model(self) -> str:
+        return "google-translate-v2"
+    
+    def detect_language(self, text: str) -> Optional[str]:
+        """Detect ngôn ngữ sử dụng Google Cloud Translation REST API"""
+        try:
+            import requests
+            
+            url = f"{self.base_url}/detect"
+            params = {
+                'key': self.api_key,
+                'q': text
+            }
+            
+            response = requests.post(url, data=params, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            if 'data' in result and 'detections' in result['data']:
+                detected_lang = result['data']['detections'][0][0]['language']
+                # Convert Google language code to our internal format
+                return self._convert_from_google_lang(detected_lang)
+            
+            return None
+            
+        except Exception as e:
+            print(f"🚫 Google Translate language detection error: {e}")
+            return None
+    
+    def translate_text(self, text: str, source_lang: str, target_lang: str) -> str:
+        """Dịch text sử dụng Google Cloud Translation REST API"""
+        try:
+            import requests
+            
+            # Handle 'auto' source language - detect first
+            if source_lang == 'auto' or source_lang.lower() == 'auto':
+                detected_lang = self.detect_language(text)
+                google_source = self._convert_to_google_lang(detected_lang) if detected_lang else 'en'
+            else:
+                # Convert our internal language codes to Google format
+                google_source = self._convert_to_google_lang(source_lang)
+            
+            google_target = self._convert_to_google_lang(target_lang)
+            
+            # Prepare API call
+            url = f"{self.base_url}"
+            params = {
+                'key': self.api_key,
+                'q': text,
+                'source': google_source,
+                'target': google_target,
+                'format': 'text'
+            }
+            
+            # Perform translation
+            response = requests.post(url, data=params, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            
+            if 'data' in result and 'translations' in result['data']:
+                translated_text = result['data']['translations'][0]['translatedText']
+                
+                # Clean up HTML entities that might be returned
+                import html
+                translated_text = html.unescape(translated_text)
+                
+                return translated_text
+            else:
+                raise Exception("No translation data in response")
+            
+        except Exception as e:
+            raise Exception(f"Google Translate API error: {str(e)}")
+    
+    def _convert_to_google_lang(self, lang: str) -> str:
+        """Convert internal language code to Google Translate format"""
+        # Google Translate usually uses simpler codes
+        lang_mapping = {
+            'vietnamese': 'vi',
+            'english': 'en',
+            'chinese': 'zh-cn',
+            'japanese': 'ja',
+            'korean': 'ko',
+            'french': 'fr',
+            'german': 'de',
+            'spanish': 'es',
+            'italian': 'it',
+            'portuguese': 'pt',
+            'russian': 'ru',
+            'arabic': 'ar',
+            'thai': 'th',
+            'indonesian': 'id'
+        }
+        
+        # Return mapped language or original if not found
+        return lang_mapping.get(lang.lower(), lang.lower())
+    
+    def _convert_from_google_lang(self, google_lang: str) -> str:
+        """Convert Google language code to our internal format"""
+        reverse_mapping = {
+            'vi': 'vietnamese',
+            'en': 'english', 
+            'zh': 'chinese',
+            'zh-cn': 'chinese',
+            'zh-tw': 'chinese',
+            'ja': 'japanese',
+            'ko': 'korean',
+            'fr': 'french',
+            'de': 'german',
+            'es': 'spanish',
+            'it': 'italian',
+            'pt': 'portuguese',
+            'ru': 'russian',
+            'ar': 'arabic',
+            'th': 'thai',
+            'id': 'indonesian'
+        }
+        
+        return reverse_mapping.get(google_lang, google_lang)
+    
+    def generate_text(self, prompt: str) -> str:
+        """
+        Extract text from smart prompt and translate directly.
+        Translator.py uses this for unified interface.
+        """
+        try:
+            # Extract text from smart prompt
+            # Format: "...If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.\n3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}..."
+            
+            lines = prompt.split('\n')
+            text_to_translate = None
+            ngon_ngu_thu_2 = None
+            ngon_ngu_thu_3 = None
+            
+            # Extract target languages from smart prompt
+            for line in lines:
+                if 'If it is not in' in line and 'translate it to' in line:
+                    # Parse: "2. If it is not in Vietnamese, translate it to Vietnamese."
+                    parts = line.split('translate it to')
+                    if len(parts) >= 2:
+                        ngon_ngu_thu_2 = parts[1].strip(' .').lower()
+                elif 'If it is already in' in line and 'translate it to' in line:
+                    # Parse: "3. If it is already in Vietnamese, translate it to English."
+                    parts = line.split('translate it to')
+                    if len(parts) >= 2:
+                        ngon_ngu_thu_3 = parts[1].strip(' .').lower()
+            
+            # Find the line with "text to translate:" and extract everything after it
+            for i, line in enumerate(lines):
+                if 'text to translate:' in line.lower():
+                    # Get all remaining lines after "text to translate:"
+                    remaining_lines = lines[i + 1:]
+                    # Join them and strip whitespace
+                    text_to_translate = '\n'.join(remaining_lines).strip()
+                    break
+            
+            if not text_to_translate:
+                # Fallback: try to find text after the last line break
+                if lines:
+                    text_to_translate = lines[-1].strip()
+                
+            if not text_to_translate:
+                raise Exception("Could not extract text from translation prompt")
+            
+            # Set fallback values if parsing failed
+            if not ngon_ngu_thu_2:
+                ngon_ngu_thu_2 = 'vietnamese'
+            if not ngon_ngu_thu_3:
+                ngon_ngu_thu_3 = 'english'
+            
+            print(f"🔍 [GOOGLE] Extracted text: '{text_to_translate[:100]}...'")
+            print(f"🎯 [GOOGLE] Target languages: {ngon_ngu_thu_2} ↔ {ngon_ngu_thu_3}")
+            
+            # Auto-detect source language
+            detected_lang = self.detect_language(text_to_translate)
+            print(f"🌐 [GOOGLE] Detected language: {detected_lang}")
+            
+            # Apply correct logic: if detected == Ngon_ngu_thu_2 → translate to Ngon_ngu_thu_3, else → translate to Ngon_ngu_thu_2
+            if detected_lang and detected_lang.lower() == ngon_ngu_thu_2.lower():
+                target_lang = ngon_ngu_thu_3
+                print(f"📝 [GOOGLE] Text is in {ngon_ngu_thu_2} → translating to {ngon_ngu_thu_3}")
+            else:
+                target_lang = ngon_ngu_thu_2
+                print(f"📝 [GOOGLE] Text is not in {ngon_ngu_thu_2} → translating to {ngon_ngu_thu_2}")
+            
+            # Use translate_text method with proper language handling
+            result = self.translate_text(text_to_translate, detected_lang or 'en', target_lang)
+            print(f"✅ [GOOGLE] Translation result: '{result[:100]}...'")
+            return result
+            
+        except Exception as e:
+            print(f"❌ [GOOGLE] Generate text error: {str(e)}")
+            raise Exception(f"Google Translate generate_text error: {str(e)}")
+    
+    def get_provider_name(self) -> str:
+        return "Google Translate"
+
+
 # Factory function để tạo provider instance
 def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
     """Factory function để tạo AI provider instance"""
@@ -591,7 +830,8 @@ def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
         AIProvider.CHATGPT: ChatGPTProvider if OPENAI_AVAILABLE else None,
         AIProvider.DEEPSEEK: DeepSeekProvider,
         AIProvider.CLAUDE: ClaudeProvider if ANTHROPIC_AVAILABLE else None,
-        AIProvider.COPILOT: CopilotProvider if OPENAI_AVAILABLE else None
+        AIProvider.COPILOT: CopilotProvider if OPENAI_AVAILABLE else None,
+        AIProvider.GOOGLE_TRANSLATE: GoogleTranslateProvider if GOOGLE_CLOUD_TRANSLATE_AVAILABLE else None
     }
     
     provider_class = provider_map.get(key_info.provider)
@@ -602,6 +842,8 @@ def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
             raise ValueError("Claude provider requires 'anthropic' library. Run: pip install anthropic")
         elif key_info.provider == AIProvider.COPILOT and not OPENAI_AVAILABLE:
             raise ValueError("GitHub Copilot provider requires 'openai' library. Run: pip install openai")
+        elif key_info.provider == AIProvider.GOOGLE_TRANSLATE and not GOOGLE_CLOUD_TRANSLATE_AVAILABLE:
+            raise ValueError("Google Translate provider requires 'google-cloud-translate' library. Run: pip install google-cloud-translate")
         else:
             raise ValueError(f"Unsupported provider: {key_info.provider}")
     

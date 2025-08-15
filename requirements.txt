@@ -2,6 +2,7 @@ pynput==1.8.1
 requests==2.32.3
 pillow==10.4.0
 google-generativeai==0.8.5
+google-cloud-translate==3.16.0
 ttkbootstrap==1.13.11
 python-dotenv
 pywin32

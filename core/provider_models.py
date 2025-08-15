@@ -42,6 +42,11 @@ PROVIDER_MODELS = {
         'gpt-4',
         'gpt-3.5-turbo',
         'copilot-codex'
+    ],
+    'google_translate': [
+        'auto',
+        'google-translate-v2',
+        'google-translate-advanced'
     ]
 }
 
@@ -81,7 +86,11 @@ MODEL_DESCRIPTIONS = {
     # GitHub Copilot models (requires OpenAI API key)
     'gpt-4': 'GitHub Copilot với GPT-4 - Chất lượng cao (Cần OpenAI API key)',
     'gpt-3.5-turbo': 'GitHub Copilot với GPT-3.5 - Nhanh, hiệu quả (Cần OpenAI API key)',
-    'copilot-codex': 'GitHub Copilot Codex - Chuyên về code và ngôn ngữ (Cần OpenAI API key)'
+    'copilot-codex': 'GitHub Copilot Codex - Chuyên về code và ngôn ngữ (Cần OpenAI API key)',
+    
+    # Google Cloud Translate models
+    'google-translate-v2': 'Google Translate v2 - Dịch thuật chính thức của Google (Khuyến nghị)',
+    'google-translate-advanced': 'Google Translate Advanced - Phiên bản nâng cao với neural networks'
 }
 
 def get_models_for_provider(provider: str) -> list:
