@@ -843,7 +843,8 @@ def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
         elif key_info.provider == AIProvider.COPILOT and not OPENAI_AVAILABLE:
             raise ValueError("GitHub Copilot provider requires 'openai' library. Run: pip install openai")
         elif key_info.provider == AIProvider.GOOGLE_TRANSLATE and not GOOGLE_CLOUD_TRANSLATE_AVAILABLE:
-            raise ValueError("Google Translate provider requires 'google-cloud-translate' library. Run: pip install google-cloud-translate")
+            # Return None instead of raising error - let caller handle this gracefully
+            return None
         else:
             raise ValueError(f"Unsupported provider: {key_info.provider}")
     

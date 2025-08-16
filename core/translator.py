@@ -503,6 +503,10 @@ def translate_with_specific_provider(text, provider_name, Ngon_ngu_thu_2, Ngon_n
         if AI_PROVIDERS_AVAILABLE:
             provider = create_ai_provider(target_key)
             
+            # Check if provider creation failed (e.g., library not available)
+            if provider is None:
+                return f"❌ Provider '{provider_name}' is not available in this build (missing required libraries)"
+            
             # For Google Translate: Use efficient 2-step detection + translation
             if target_key.provider.value == 'google_translate':
                 # Step 1: Detect source language (REST API - fast & cheap)
