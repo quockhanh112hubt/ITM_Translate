@@ -11,6 +11,9 @@ win32_submodules = collect_submodules('win32com')
 pythoncom_submodules = collect_submodules('pythoncom')
 pywintypes_submodules = collect_submodules('pywintypes')
 
+# Google Cloud collection
+google_cloud_datas, google_cloud_binaries, google_cloud_hiddenimports = collect_all('google.cloud')
+
 # Comprehensive pydantic collection
 pydantic_datas, pydantic_binaries, pydantic_hiddenimports = collect_all('pydantic')
 pydantic_core_datas, pydantic_core_binaries, pydantic_core_hiddenimports = collect_all('pydantic_core')
@@ -34,7 +37,7 @@ except (ImportError, AttributeError):
 a = Analysis(
     ['ITM_Translate.py'],
     pathex=[],
-    binaries=[] + pydantic_binaries + pydantic_core_binaries,
+    binaries=[] + pydantic_binaries + pydantic_core_binaries + google_cloud_binaries,
     datas=[
         ('Resource/icon.ico', 'Resource'),
         ('Resource/English.png', 'Resource'),
@@ -43,7 +46,7 @@ a = Analysis(
         ('Resource/Vietnam.png', 'Resource'),
         ('version.json', '.'),
         ('config.json', '.'),
-    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas,
+    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas + google_cloud_datas,
     hiddenimports=[
         # GUI frameworks
         'ttkbootstrap',
@@ -74,6 +77,14 @@ a = Analysis(
         'pynput.mouse',
         # AI and HTTP
         'google.generativeai',
+        'google.cloud',
+        'google.cloud.translate',
+        'google.cloud.translate_v2',
+        'google.auth',
+        'google.auth.transport',
+        'google.auth.transport.requests',
+        'google.oauth2',
+        'google.oauth2.service_account',
         'requests',
         'requests.adapters',
         'requests.packages',
@@ -122,7 +133,7 @@ a = Analysis(
         'stat',
         'os',
         'sys',
-    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules + pydantic_hiddenimports + pydantic_core_hiddenimports,
+    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules + pydantic_hiddenimports + pydantic_core_hiddenimports + google_cloud_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
