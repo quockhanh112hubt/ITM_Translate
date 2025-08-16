@@ -404,7 +404,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         # Info text (right side)
         info_label = tk.Label(
             footer_content_frame,
-            text=f"ITM Translate v{get_app_version()} - Quick comparison",
+            text=f"ITM Translate v{get_app_version()} - Quick Translate",
             bg='#dee2e6',
             fg='#495057',
             font=('Segoe UI', 8, 'italic'),
