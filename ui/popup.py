@@ -377,28 +377,40 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     text_widget.config(state='normal')
     
     # ===== FOOTER SECTION =====
-    # Create a footer frame at the bottom with distinct styling
-    footer_frame = tk.Frame(frame, bg='#dee2e6', relief='solid', bd=1, height=25)
-    footer_frame.pack(fill='x', side='bottom', padx=0, pady=0)
-    footer_frame.pack_propagate(False)  # Prevent frame from shrinking
-    
-    # ===== PROVIDER COMPARISON BUTTONS =====
-    # Create button frame for provider comparison (above footer)
-    button_frame = tk.Frame(frame, bg='#f8f9fa')
-    button_frame.pack(fill='x', side='bottom', padx=5, pady=(5, 2))  # Pack before footer
-    
-    # Add a separator line above footer
+    # Add a subtle separator line above footer
     separator = tk.Frame(frame, bg='#ced4da', height=1)
     separator.pack(fill='x', side='bottom', padx=0, pady=0)
+    
+    # Create a footer frame at the bottom with distinct styling
+    footer_frame = tk.Frame(frame, bg='#dee2e6', relief='flat', bd=0, height=45)
+    footer_frame.pack(fill='x', side='bottom', padx=0, pady=0)
+    footer_frame.pack_propagate(False)  # Prevent frame from shrinking
     
     # Get all available API keys for comparison buttons
     all_keys = api_key_manager.get_all_keys()
     print(f"🔑 [POPUP] Found {len(all_keys)} API keys for comparison buttons")
     
+    # Create footer content with buttons and info
+    footer_content_frame = tk.Frame(footer_frame, bg='#dee2e6')
+    footer_content_frame.pack(fill='both', expand=True, padx=5, pady=2)
+    print(f"🔑 [POPUP] Found {len(all_keys)} API keys for comparison buttons")
+    
     if len(all_keys) > 1:  # Only show buttons if multiple providers available
-        # Button container with horizontal layout - auto height
-        buttons_container = tk.Frame(button_frame, bg='#f8f9fa')
-        buttons_container.pack(fill='x', pady=2)  # Small padding for buttons
+        # Left side: buttons, Right side: info text
+        # Buttons container (left side)
+        buttons_container = tk.Frame(footer_content_frame, bg='#dee2e6')
+        buttons_container.pack(side='left', fill='y')
+        
+        # Info text (right side)
+        info_label = tk.Label(
+            footer_content_frame,
+            text=f"ITM Translate v{get_app_version()} - Quick comparison",
+            bg='#dee2e6',
+            fg='#495057',
+            font=('Segoe UI', 8, 'italic'),
+            anchor='e'
+        )
+        info_label.pack(side='right', fill='y', pady=3)
         
         # Store original text for comparison
         original_text_for_comparison = original_text if original_text is not None else text
@@ -513,34 +525,32 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                 buttons_container,
                 text=key_info.name,
                 command=on_provider_button_click(key_info.name),
-                bg='#3498db',
+                bg='#6c757d',
                 fg='white',
                 font=('Segoe UI', 9),
                 relief='flat',
-                padx=15,
-                pady=5,
+                padx=12,
+                pady=4,
                 cursor='hand2'
             )
             
             # Pack with minimal spacing
-            btn.pack(side='left', padx=(0, 6), pady=3)
+            btn.pack(side='left', padx=(0, 4), pady=1)
             button_count += 1
             
             # Limit to 5 buttons per row to avoid overcrowding
             if button_count >= 5:
                 break
-    
-    # ===== FOOTER CONTENT =====
-    # Add footer content with better styling
-    footer_content = tk.Label(
-        footer_frame,
-        text=f"ITM Translate v{get_app_version()} - Quick comparison with other providers",
-        bg='#dee2e6',
-        fg='#495057',
-        font=('Segoe UI', 8, 'italic'),
-        pady=2
-    )
-    footer_content.pack(pady=3)
+    else:
+        # If only one provider, just show info text
+        info_label = tk.Label(
+            footer_content_frame,
+            text=f"ITM Translate v{get_app_version()}",
+            bg='#dee2e6',
+            fg='#495057',
+            font=('Segoe UI', 8, 'italic')
+        )
+        info_label.pack(pady=3)
     
     win.update_idletasks()
     # Đặt width/height cố định dựa trên widget
@@ -551,7 +561,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     extra_height = 80 if len(all_keys) > 1 else 25  # Footer always adds some height
     
     width = req_width + 20
-    height = req_height + 15 + extra_height  # Moderate base height with footer
+    height = req_height + 25 + extra_height  # Moderate base height with footer
     text_widget.config(state='disabled')
     
     # Combined click handler for both link opening and text selection
