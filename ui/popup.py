@@ -244,15 +244,15 @@ def apply_text_formatting(text_widget, text):
         pass
     return '1.0.0'
 
-def show_loading_popup(root):
-    # Hiện popup nhỏ với hiệu ứng loading spinner dots hiện đại
-    loading_win = tk.Toplevel(root)
+def show_loading_popup(root=None):
+    # Hiện popup nhỏ với hiệu ứng loading spinner dots hiện đại - independent
+    loading_win = tk.Toplevel()
     loading_win.overrideredirect(True)
     loading_win.attributes('-topmost', True)
     
     # Smart positioning for loading popup
     size = 40
-    x, y = get_smart_popup_position(root, size, size)
+    x, y = get_smart_popup_position(loading_win, size, size)
     loading_win.geometry(f"{size}x{size}+{x}+{y}")
 
     canvas = tk.Canvas(loading_win, width=size, height=size, bg='white', highlightthickness=0)
@@ -301,10 +301,16 @@ def show_loading_popup(root):
     return loading_win
 
 def show_popup(text, master=None, source_lang=None, target_lang=None, version=None, auto_close_enabled=True, original_text=None):
-    if master is None:
-        master = tk._default_root
+    # Create independent popup window (not tied to master)
+    win = tk.Toplevel()
+    win.withdraw()
+    win.title('ITM Translate')
+    # Create independent popup window (not tied to master)
+    win = tk.Toplevel()
+    win.withdraw()
+    win.title('ITM Translate')
     
-    # Tạo title với thông tin chi tiết
+    # Build title with detailed information
     title = 'ITM Translate'
     provider_info = api_key_manager.get_provider_info()
     
@@ -330,8 +336,6 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             title += f' ({model_name})'
         title += f' - API: {key_preview}'
     
-    win = tk.Toplevel(master)
-    win.withdraw()
     win.title(title)
     win.attributes('-topmost', True)
     # Đặt icon cho popup nếu có icon.ico
@@ -343,7 +347,8 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             win.iconbitmap(icon_path_ico)
     except Exception:
         pass
-    win.transient(master)
+    # Remove transient to make popup independent
+    # win.transient(master)  # Commented out to make popup independent
     # Tạo frame với màu nền nhẹ, viền bo tròn
     frame = tk.Frame(win, bg='#f8f9fa', bd=2, relief='groove')
     frame.pack(fill='both', expand=True, padx=10, pady=10)
@@ -634,8 +639,8 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     text_widget.bind('<KeyPress>', on_key_press)
     text_widget.bind('<ButtonRelease-1>', on_selection_change)
     
-    # Smart popup positioning
-    x, y = get_smart_popup_position(master, width, height)
+    # Smart popup positioning (independent of master window)
+    x, y = get_smart_popup_position(win, width, height)
     win.geometry(f"{width}x{height}+{x}+{y}")
     
     # Chỉ đóng tự động khi auto_close_enabled=True
