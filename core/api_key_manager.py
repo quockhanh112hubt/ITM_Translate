@@ -162,10 +162,22 @@ class APIKeyManager:
             # Check if key already exists
             if any(k.key == key and k.provider == provider for k in self.keys):
                 return False
-                
-            if not name:
+            
+            # Check if name already exists (case insensitive)
+            if name and name.strip():
+                name = name.strip()
+                if any(k.name.lower() == name.lower() for k in self.keys):
+                    return False
+            else:
+                # Generate unique name
                 provider_count = sum(1 for k in self.keys if k.provider == provider)
                 name = f"{provider.value.title()} Key {provider_count + 1}"
+                
+                # Ensure generated name is unique
+                counter = provider_count + 1
+                while any(k.name.lower() == name.lower() for k in self.keys):
+                    counter += 1
+                    name = f"{provider.value.title()} Key {counter}"
                 
             key_info = APIKeyInfo(
                 key=key,
@@ -177,6 +189,12 @@ class APIKeyManager:
             self.save_keys()
             return True
         return False
+    
+    def is_name_exists(self, name: str) -> bool:
+        """Kiểm tra xem tên đã tồn tại chưa (case insensitive)"""
+        if not name or not name.strip():
+            return False
+        return any(k.name.lower() == name.strip().lower() for k in self.keys)
     
     def remove_key(self, index: int) -> bool:
         """Xóa API key theo index"""

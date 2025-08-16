@@ -348,6 +348,11 @@ class ApiKeyTab:
             messagebox.showwarning(_('warning'), _('please_enter_api_key'))
             return
         
+        # Check if name already exists
+        if name and api_key_manager.is_name_exists(name):
+            messagebox.showerror(_('error'), f"Tên '{name}' đã tồn tại. Vui lòng chọn tên khác.")
+            return
+        
         if not model:
             model = "auto"
         
@@ -445,7 +450,13 @@ class ApiKeyTab:
                 self.name_var.set('')
                 self.refresh_api_keys()
             else:
-                messagebox.showerror(_('error'), _('api_key_exists'))
+                # Check specific reason for failure
+                if name and api_key_manager.is_name_exists(name):
+                    messagebox.showerror(_('error'), f"Tên '{name}' đã tồn tại. Vui lòng chọn tên khác.")
+                elif any(k.key == new_key and k.provider == provider for k in api_key_manager.keys):
+                    messagebox.showerror(_('error'), _('api_key_exists'))
+                else:
+                    messagebox.showerror(_('error'), "Không thể thêm API key. Vui lòng kiểm tra lại thông tin.")
                 
         except ValueError:
             messagebox.showerror(_('error'), _('provider_not_supported').format(provider=provider_str))
