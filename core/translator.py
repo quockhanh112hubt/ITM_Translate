@@ -155,9 +155,25 @@ text to translate:
                     print(f"✨ [UNIFIED] Translation result: {translated_text[:50]}...")
                     
                     if return_language_info:
-                        # POPUP MODE: Return translation with simplified language info
-                        # Use simplified language info (no actual detection needed)
-                        translation_result['result'] = (translated_text, "Auto-detected", "Auto-selected")
+                        # POPUP MODE: Return translation with actual language detection
+                        try:
+                            # Detect source language using Gemini
+                            detect_model = genai.GenerativeModel("gemini-1.5-flash")
+                            detect_prompt = f"What language is this text? Reply with language name only: {text}"
+                            detect_response = detect_model.generate_content(detect_prompt)
+                            detected_lang = detect_response.text.strip()
+                            
+                            # Determine target language based on detection logic
+                            if detected_lang.lower() == Ngon_ngu_thu_2.lower():
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
+                                
+                            print(f"🌐 [UNIFIED] Detected language: {detected_lang} → Target: {target_lang}")
+                            translation_result['result'] = (translated_text, detected_lang, target_lang)
+                        except:
+                            # Fallback to simplified info if detection fails
+                            translation_result['result'] = (translated_text, "Auto-detected", "Auto-selected")
                     else:
                         # REPLACE MODE: Return only translation
                         translation_result['result'] = translated_text
@@ -201,8 +217,29 @@ text to translate:
                     print(f"✨ [UNIFIED] Translation result: {translated_text[:50]}...")
                     
                     if return_language_info:
-                        # POPUP MODE: Return translation with simplified language info
-                        translation_result['result'] = (translated_text, "Auto-detected", "Auto-selected")
+                        # POPUP MODE: Return translation with actual language detection
+                        try:
+                            # Detect source language using the provider
+                            detected_lang = None
+                            if hasattr(provider, 'detect_language'):
+                                detected_lang = provider.detect_language(text)
+                                print(f"🌐 [UNIFIED] {provider.__class__.__name__} detected language: {detected_lang}")
+                            
+                            if not detected_lang:
+                                detected_lang = "Unknown"
+                            
+                            # Determine target language based on detection logic
+                            if detected_lang.lower() == Ngon_ngu_thu_2.lower():
+                                target_lang = Ngon_ngu_thu_3
+                            else:
+                                target_lang = Ngon_ngu_thu_2
+                                
+                            print(f"📝 [UNIFIED] Translation direction: {detected_lang} → {target_lang}")
+                            translation_result['result'] = (translated_text, detected_lang, target_lang)
+                        except Exception as e:
+                            print(f"⚠️ [UNIFIED] Language detection failed: {e}")
+                            # Fallback to simplified info if detection fails
+                            translation_result['result'] = (translated_text, "Auto-detected", "Auto-selected")
                     else:
                         # REPLACE MODE: Return only translation
                         translation_result['result'] = translated_text
@@ -433,3 +470,168 @@ def _try_retry_disabled_keys(text: str, source_lang: str, target_lang: str, max_
     
     print(f"❌ [RETRY] All {retry_count} retry attempts failed")
     return None
+
+
+def translate_with_specific_provider(text, provider_name, Ngon_ngu_thu_2, Ngon_ngu_thu_3):
+    """
+    Translate text using a specific provider by name (for comparison UI)
+    Does not change the active provider.
+    
+    Args:
+        text: Text to translate
+        provider_name: Name of the provider to use (e.g., "Gemini", "ChatGPT")
+        Ngon_ngu_thu_2: Primary language 
+        Ngon_ngu_thu_3: Secondary language
+        
+    Returns:
+        Tuple: (translated_text, detected_source_lang, target_lang) or error message
+    """
+    try:
+        # Find the API key with matching name
+        target_key = None
+        for key_info in api_key_manager.get_all_keys():
+            if key_info.name == provider_name:
+                target_key = key_info
+                break
+        
+        if not target_key:
+            return f"❌ Provider '{provider_name}' not found"
+        
+        print(f"🔄 [SPECIFIC] Using {provider_name} ({target_key.provider.value}) for comparison")
+        
+        # Create provider instance
+        if AI_PROVIDERS_AVAILABLE:
+            provider = create_ai_provider(target_key)
+            
+            # For Google Translate: Use efficient 2-step detection + translation
+            if target_key.provider.value == 'google_translate':
+                # Step 1: Detect source language (REST API - fast & cheap)
+                detected_lang = None
+                try:
+                    if hasattr(provider, 'detect_language'):
+                        detected_lang = provider.detect_language(text)
+                        print(f"🌐 [SPECIFIC] {provider_name} detected language: {detected_lang}")
+                except Exception as e:
+                    print(f"⚠️ [SPECIFIC] Language detection failed for {provider_name}: {e}")
+                    detected_lang = "Unknown"
+                
+                # Step 2: Determine target language based on detection
+                if detected_lang and detected_lang.lower() == Ngon_ngu_thu_2.lower():
+                    target_lang = Ngon_ngu_thu_3
+                    print(f"📝 [SPECIFIC] Text is in {Ngon_ngu_thu_2} → translating to {Ngon_ngu_thu_3}")
+                else:
+                    target_lang = Ngon_ngu_thu_2  
+                    print(f"📝 [SPECIFIC] Text is not in {Ngon_ngu_thu_2} → translating to {Ngon_ngu_thu_2}")
+                
+                # Step 3: Create optimized prompt for Google Translate
+                smart_prompt = f"""You are a professional translation model.
+
+Translate the following text to {target_lang}.
+
+Translation rules:
+- Preserve the tone, style, prioritize natural.
+- Retain technical terms.
+- Do not translate proper nouns or brand names.
+- Do not output any explanations — only return the translated text.
+
+text to translate:
+{text}
+"""
+                
+                # Use provider's generate_text method
+                if hasattr(provider, 'generate_text'):
+                    print(f"Dich: {smart_prompt}")
+                    translated_text = provider.generate_text(smart_prompt)
+                else:
+                    translated_text = f"❌ Provider {provider_name} doesn't support smart translation"
+                
+                print(f"✅ [SPECIFIC] {provider_name} translation: {translated_text[:50]}...")
+                
+                # Return tuple with language info
+                return (translated_text, detected_lang or "Unknown", target_lang)
+            
+            else:
+                # For AI Providers: Use single smart prompt with language detection + translation
+                print(f"🧠 [SPECIFIC] {provider_name} using single smart AI call (detect + translate)")
+                
+                smart_prompt = f"""You are a professional translation model.
+
+Your task:
+1. Detect the language of the input text.
+2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+
+Translation rules:
+- Preserve the tone, style, prioritize natural.
+- Retain technical terms.
+- Do not translate proper nouns or brand names.
+- Do not output any explanations — only return the translated text.
+
+text to translate:
+{text}
+"""
+                
+                # Use provider's generate_text method
+                if hasattr(provider, 'generate_text'):
+                    print(f"Dich: {smart_prompt}")
+                    translated_text = provider.generate_text(smart_prompt)
+                else:
+                    translated_text = f"❌ Provider {provider_name} doesn't support smart translation"
+                
+                print(f"✅ [SPECIFIC] {provider_name} translation: {translated_text[:50]}...")
+                
+                # For AI providers, we need to infer the language direction from the result
+                # Since we can't detect without extra AI call, use simplified approach
+                detected_lang = "Auto-detected"
+                target_lang = "Auto-selected"
+                
+                # Return tuple with simplified language info for AI providers
+                return (translated_text, detected_lang, target_lang)
+            
+        else:
+            # Fallback to Gemini if AI providers not available
+            import google.generativeai as genai
+            genai.configure(api_key=target_key.key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            
+            # Detect language with Gemini
+            try:
+                detect_prompt = f"What language is this text? Reply with language name only: {text}"
+                detect_response = model.generate_content(detect_prompt)
+                detected_lang = detect_response.text.strip()
+                print(f"🌐 [SPECIFIC] Gemini fallback detected language: {detected_lang}")
+            except:
+                detected_lang = "Unknown"
+            
+            # Determine target language
+            if detected_lang and detected_lang.lower() == Ngon_ngu_thu_2.lower():
+                target_lang = Ngon_ngu_thu_3
+            else:
+                target_lang = Ngon_ngu_thu_2
+            
+            smart_prompt = f"""You are a professional translation model.
+
+Your task:
+1. Detect the language of the input text.
+2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
+3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+
+Translation rules:
+- Preserve the tone, style, prioritize natural.
+- Retain technical terms.
+- Do not translate proper nouns or brand names.
+- Do not output any explanations — only return the translated text.
+
+text to translate:
+{text}
+"""
+            
+            response = model.generate_content(smart_prompt)
+            translated_text = response.text.strip()
+            print(f"✅ [SPECIFIC] {provider_name} (Gemini fallback) translation: {translated_text[:50]}...")
+            return (translated_text, detected_lang, target_lang)
+            
+    except Exception as e:
+        error_msg = f"❌ Error with {provider_name}: {str(e)}"
+        print(error_msg)
+        return error_msg

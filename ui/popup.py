@@ -300,7 +300,7 @@ def show_loading_popup(root):
     animate()
     return loading_win
 
-def show_popup(text, master=None, source_lang=None, target_lang=None, version=None, auto_close_enabled=True):
+def show_popup(text, master=None, source_lang=None, target_lang=None, version=None, auto_close_enabled=True, original_text=None):
     if master is None:
         master = tk._default_root
     
@@ -363,7 +363,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         fg='#2c3e50',  # Darker text for better contrast
         font=('Segoe UI', 12),
         width=max_chars_per_line,
-        height=height_lines+1,
+        height=height_lines+2,  # Increase height by +2 for better spacing
         borderwidth=0,
         highlightthickness=0,
         selectbackground='#3498db',  # Nice blue selection
@@ -373,14 +373,185 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     # Apply beautiful text formatting instead of plain insert
     apply_text_formatting(text_widget, text)
     
-    text_widget.pack(fill='both', expand=True, padx=0, pady=0)
+    text_widget.pack(fill='both', expand=True, padx=0, pady=0)  # No padding at all for tight fit
     text_widget.config(state='normal')
+    
+    # ===== FOOTER SECTION =====
+    # Create a footer frame at the bottom with distinct styling
+    footer_frame = tk.Frame(frame, bg='#dee2e6', relief='solid', bd=1, height=25)
+    footer_frame.pack(fill='x', side='bottom', padx=0, pady=0)
+    footer_frame.pack_propagate(False)  # Prevent frame from shrinking
+    
+    # ===== PROVIDER COMPARISON BUTTONS =====
+    # Create button frame for provider comparison (above footer)
+    button_frame = tk.Frame(frame, bg='#f8f9fa')
+    button_frame.pack(fill='x', side='bottom', padx=5, pady=(5, 2))  # Pack before footer
+    
+    # Add a separator line above footer
+    separator = tk.Frame(frame, bg='#ced4da', height=1)
+    separator.pack(fill='x', side='bottom', padx=0, pady=0)
+    
+    # Get all available API keys for comparison buttons
+    all_keys = api_key_manager.get_all_keys()
+    print(f"🔑 [POPUP] Found {len(all_keys)} API keys for comparison buttons")
+    
+    if len(all_keys) > 1:  # Only show buttons if multiple providers available
+        # Button container with horizontal layout - auto height
+        buttons_container = tk.Frame(button_frame, bg='#f8f9fa')
+        buttons_container.pack(fill='x', pady=2)  # Small padding for buttons
+        
+        # Store original text for comparison
+        original_text_for_comparison = original_text if original_text is not None else text
+        
+        # Function to handle provider button clicks
+        def on_provider_button_click(provider_name):
+            """Handle click on provider comparison button"""
+            def handler():
+                try:
+                    print(f"🔄 [UI] Comparing with {provider_name}...")
+                    
+                    # Import here to avoid circular import
+                    from core.translator import translate_with_specific_provider
+                    
+                    # Show loading state
+                    text_widget.config(state='normal')
+                    text_widget.delete(1.0, tk.END)
+                    text_widget.insert(1.0, f"🔄 Translating with {provider_name}...")
+                    text_widget.config(state='disabled')
+                    text_widget.update()
+                    
+                    # Get target languages from window title or use defaults
+                    # Extract from title: "*** source → target ***"
+                    title_text = win.title()
+                    if "→" in title_text:
+                        try:
+                            lang_part = title_text.split("***")[1].strip()
+                            source_lang, target_lang = lang_part.split("→")
+                            source_lang = source_lang.strip()
+                            target_lang = target_lang.strip()
+                        except:
+                            source_lang, target_lang = "English", "Vietnamese"
+                    else:
+                        source_lang, target_lang = "English", "Vietnamese"
+                    
+                    # Convert display names to internal format
+                    lang_mapping = {
+                        "Auto": "english", "English": "english", "Vietnamese": "vietnamese",
+                        "Korean": "korean", "Japanese": "japanese", "Chinese": "chinese"
+                    }
+                    
+                    ngon_ngu_thu_2 = lang_mapping.get(target_lang, "vietnamese")
+                    ngon_ngu_thu_3 = lang_mapping.get(source_lang, "english")
+                    
+                    # Call translation with specific provider
+                    result = translate_with_specific_provider(
+                        original_text_for_comparison, 
+                        provider_name, 
+                        ngon_ngu_thu_2, 
+                        ngon_ngu_thu_3
+                    )
+                    
+                    # Handle tuple result (translated_text, detected_lang, target_lang)
+                    if isinstance(result, tuple) and len(result) == 3:
+                        translated_text, detected_lang, target_lang = result
+                        
+                        # Update popup with new result
+                        text_widget.config(state='normal')
+                        text_widget.delete(1.0, tk.END)
+                        apply_text_formatting(text_widget, translated_text)
+                        text_widget.config(state='disabled')
+                        
+                        # Update title with actual language info
+                        from ui.popup import get_app_version
+                        version = get_app_version()
+                        
+                        # Create title with actual detected and target languages
+                        title_prefix = f'ITM Translate v{version}' if version else 'ITM Translate'
+                        language_info = f"{detected_lang} → {target_lang}"
+                        new_title = f"{title_prefix} *** {language_info} *** - {provider_name}"
+                        
+                    else:
+                        # Handle error message (string)
+                        text_widget.config(state='normal')
+                        text_widget.delete(1.0, tk.END)
+                        text_widget.insert(1.0, str(result))
+                        text_widget.config(state='disabled')
+                        
+                        # Keep original title format for errors
+                        current_title = win.title()
+                        if " - " in current_title:
+                            base_title = current_title.split(" - ")[0]
+                        else:
+                            base_title = current_title
+                        new_title = f"{base_title} - {provider_name}"
+                    
+                    # Set the new title
+                    win.title(new_title)
+                    
+                    print(f"✅ [UI] Updated popup with {provider_name} result")
+                    
+                except Exception as e:
+                    print(f"❌ [UI] Error with {provider_name}: {e}")
+                    text_widget.config(state='normal')
+                    text_widget.delete(1.0, tk.END)
+                    text_widget.insert(1.0, f"❌ Error with {provider_name}: {str(e)}")
+                    text_widget.config(state='disabled')
+            
+            return handler
+        
+        # Create buttons for each provider (excluding current active one)
+        current_active = api_key_manager.get_active_key()
+        button_count = 0
+        
+        for key_info in all_keys:
+            # Skip if this is the currently active provider 
+            if current_active and key_info.name == current_active.name:
+                continue
+                
+            # Create button
+            btn = tk.Button(
+                buttons_container,
+                text=key_info.name,
+                command=on_provider_button_click(key_info.name),
+                bg='#3498db',
+                fg='white',
+                font=('Segoe UI', 9),
+                relief='flat',
+                padx=15,
+                pady=5,
+                cursor='hand2'
+            )
+            
+            # Pack with minimal spacing
+            btn.pack(side='left', padx=(0, 6), pady=3)
+            button_count += 1
+            
+            # Limit to 5 buttons per row to avoid overcrowding
+            if button_count >= 5:
+                break
+    
+    # ===== FOOTER CONTENT =====
+    # Add footer content with better styling
+    footer_content = tk.Label(
+        footer_frame,
+        text=f"ITM Translate v{get_app_version()} - Quick comparison with other providers",
+        bg='#dee2e6',
+        fg='#495057',
+        font=('Segoe UI', 8, 'italic'),
+        pady=2
+    )
+    footer_content.pack(pady=3)
+    
     win.update_idletasks()
     # Đặt width/height cố định dựa trên widget
     req_width = text_widget.winfo_reqwidth()
     req_height = text_widget.winfo_reqheight()
+    
+    # Add extra height for buttons and footer if they exist
+    extra_height = 80 if len(all_keys) > 1 else 25  # Footer always adds some height
+    
     width = req_width + 20
-    height = req_height + 20
+    height = req_height + 15 + extra_height  # Moderate base height with footer
     text_widget.config(state='disabled')
     
     # Combined click handler for both link opening and text selection

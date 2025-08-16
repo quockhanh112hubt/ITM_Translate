@@ -82,7 +82,7 @@ class GeminiProvider(BaseAIProvider):
             Text:
             {text}
             """
-            
+            print(f"Phat hien ngonngu{prompt}")
             response = model.generate_content(prompt)
             detected_lang = response.text.strip()
             detected_lang = detected_lang.replace('"', '').replace("'", "").strip()

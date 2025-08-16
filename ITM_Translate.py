@@ -1050,7 +1050,7 @@ def _on_activate_translate():
     
     # Timeout mechanism
     translation_completed = threading.Event()
-    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None, 'original_text': None}
     
     def do_translate():
         try:
@@ -1085,6 +1085,7 @@ def _on_activate_translate():
                     translation_result['translated'] = translated
                     translation_result['actual_source'] = actual_source
                     translation_result['actual_target'] = actual_target
+                    translation_result['original_text'] = selected_text
                     
                     # Log translation time
                     translation_time = time.time() - start_time
@@ -1148,7 +1149,8 @@ def _on_activate_translate():
                               source_lang=display_source,
                               target_lang=display_target,
                               version=version,
-                              auto_close_enabled=load_auto_close_popup())
+                              auto_close_enabled=load_auto_close_popup(),
+                              original_text=translation_result.get('original_text'))
                 else:
                     # No text selected or other issue
                     pass
@@ -1186,7 +1188,7 @@ def _on_activate_replace():
     
     # Timeout mechanism
     translation_completed = threading.Event()
-    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None}
+    translation_result = {'translated': None, 'actual_source': None, 'actual_target': None, 'error': None, 'original_text': None}
     
     def do_replace():
         try:
