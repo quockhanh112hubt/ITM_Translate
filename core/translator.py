@@ -160,12 +160,57 @@ text to translate:
                         # REPLACE MODE: Return only translation
                         translation_result['result'] = translated_text
                 else:
-                    # Use AI providers system with simplified smart translation
+                    # Use AI providers system with smart translation
                     provider = create_ai_provider(key_info)
                     
-                    # SIMPLIFIED SMART PROMPT: Direct translation using settings  
-                    print(f"🧠 [SIMPLIFIED PROVIDER] Using single smart AI call")
-                    smart_prompt = f"""You are a professional translation model.
+                    # DIFFERENTIATE: Google Translate vs AI Providers (same as translate_with_specific_provider)
+                    if key_info.provider.value == 'google_translate':
+                        # GOOGLE TRANSLATE: Use direct API calls (no prompts needed)
+                        print(f"🌐 [TRANSLATE_TEXT] {key_info.name} using direct Google Translate API")
+                        
+                        # Step 1: Detect source language
+                        detected_lang = "Auto"
+                        try:
+                            if hasattr(provider, 'detect_language'):
+                                detected_lang = provider.detect_language(text)
+                                print(f"🌐 [TRANSLATE_TEXT] Detected language: {detected_lang}")
+                        except Exception as e:
+                            print(f"⚠️ [TRANSLATE_TEXT] Language detection failed: {e}")
+                        
+                        # Step 2: Determine target language based on settings
+                        if detected_lang and detected_lang.lower() == Ngon_ngu_thu_2.lower():
+                            target_lang = Ngon_ngu_thu_3
+                            print(f"📝 [TRANSLATE_TEXT] Text is in {Ngon_ngu_thu_2} → translating to {Ngon_ngu_thu_3}")
+                        else:
+                            target_lang = Ngon_ngu_thu_2
+                            print(f"📝 [TRANSLATE_TEXT] Text is not in {Ngon_ngu_thu_2} → translating to {Ngon_ngu_thu_2}")
+                        
+                        # Step 3: Direct translation (no prompt)
+                        try:
+                            if hasattr(provider, 'translate_text'):
+                                # Google Translate uses translate_text method
+                                translated_text = provider.translate_text(text, "auto", target_lang)
+                            elif hasattr(provider, 'translate'):
+                                # Other direct translation providers
+                                translated_text = provider.translate(text, target_lang)
+                            else:
+                                raise Exception("Provider doesn't support direct translation")
+                        except Exception as e:
+                            raise Exception(f"Google Translate error: {str(e)}")
+                        
+                        print(f"✅ [TRANSLATE_TEXT] Google Translate result: {translated_text[:50]}...")
+                        
+                        if return_language_info:
+                            # POPUP MODE: Return actual language info from detection
+                            translation_result['result'] = (translated_text, detected_lang, target_lang)
+                        else:
+                            # REPLACE MODE: Return only translation
+                            translation_result['result'] = translated_text
+                            
+                    else:
+                        # AI PROVIDERS: Use smart prompt for detection + translation
+                        print(f"🧠 [SIMPLIFIED PROVIDER] {key_info.name} using single smart AI call")
+                        smart_prompt = f"""You are a professional translation model.
 
 Your task:
 1. Detect the language of the input text.
@@ -181,28 +226,28 @@ Translation rules:
 text to translate:
 {text}
 """
-                    
-                    # Use provider's text generation for smart translation
-                    if hasattr(provider, 'generate_text'):
-                        print(f"🧠 [SIMPLIFIED] {smart_prompt}")
-                        translated_text = provider.generate_text(smart_prompt)
-                    else:
-                        # Fallback: use Gemini directly with smart prompt
-                        print(f"🧠 [SIMPLIFIED] Provider lacks generate_text, using Gemini fallback")
-                        import google.generativeai as genai
-                        genai.configure(api_key=key_info.key)
-                        model = genai.GenerativeModel("gemini-2.0-flash-exp")
-                        response = model.generate_content(smart_prompt)
-                        translated_text = response.text.strip()
-                    
-                    print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
-                    
-                    if return_language_info:
-                        # POPUP MODE: Return fixed language info from settings (no separate detection)
-                        translation_result['result'] = (translated_text, Ngon_ngu_dau_tien, f"{Ngon_ngu_thu_2}/{Ngon_ngu_thu_3}")
-                    else:
-                        # REPLACE MODE: Return only translation
-                        translation_result['result'] = translated_text
+                        
+                        # Use provider's text generation for smart translation
+                        if hasattr(provider, 'generate_text'):
+                            print(f"🧠 [SIMPLIFIED] {smart_prompt}")
+                            translated_text = provider.generate_text(smart_prompt)
+                        else:
+                            # Fallback: use Gemini directly with smart prompt
+                            print(f"🧠 [SIMPLIFIED] Provider lacks generate_text, using Gemini fallback")
+                            import google.generativeai as genai
+                            genai.configure(api_key=key_info.key)
+                            model = genai.GenerativeModel("gemini-2.0-flash-exp")
+                            response = model.generate_content(smart_prompt)
+                            translated_text = response.text.strip()
+                        
+                        print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
+                        
+                        if return_language_info:
+                            # POPUP MODE: Return fixed language info from settings (no separate detection)
+                            translation_result['result'] = (translated_text, Ngon_ngu_dau_tien, f"{Ngon_ngu_thu_2}/{Ngon_ngu_thu_3}")
+                        else:
+                            # REPLACE MODE: Return only translation
+                            translation_result['result'] = translated_text
                         
                 translation_result['completed'] = True
                 
@@ -570,6 +615,7 @@ text to translate:
                 # Use provider's generate_text method
                 if hasattr(provider, 'generate_text'):
                     translated_text = provider.generate_text(smart_prompt)
+                    print(f" 1prompt: {smart_prompt}")
                 else:
                     translated_text = f"❌ Provider {provider_name} doesn't support smart translation"
                 
