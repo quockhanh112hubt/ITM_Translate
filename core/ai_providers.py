@@ -661,6 +661,7 @@ class GoogleTranslateProvider(BaseAIProvider):
             # Handle 'auto' source language - detect first
             if source_lang == 'auto' or source_lang.lower() == 'auto':
                 detected_lang = self.detect_language(text)
+                # print(f"🔍 [GOOGLE1] Detected language: {detected_lang}")
                 google_source = self._convert_to_google_lang(detected_lang) if detected_lang else 'en'
             else:
                 # Convert our internal language codes to Google format
