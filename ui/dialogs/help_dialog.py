@@ -28,7 +28,7 @@ class HelpDialog:
         # Beautiful modern help window with light theme
         self.help_window = tk.Toplevel(self.parent_root)
         self.help_window.title("🌟 ITM Translate - Multi-AI User Guide")
-        self.help_window.geometry("950x900")
+        self.help_window.geometry("1100x900")
         self.help_window.resizable(True, True)
         self.help_window.transient(self.parent_root)
         self.help_window.grab_set()
@@ -36,9 +36,9 @@ class HelpDialog:
         
         # Center the dialog (positioned higher to avoid bottom cutoff)
         self.help_window.update_idletasks()
-        x = (self.help_window.winfo_screenwidth() // 2) - (950 // 2)
+        x = (self.help_window.winfo_screenwidth() // 2) - (1100 // 2)
         y = (self.help_window.winfo_screenheight() // 2) - (900 // 2) - 50  # Moved 50px higher
-        self.help_window.geometry(f"950x900+{x}+{y}")
+        self.help_window.geometry(f"1100x900+{x}+{y}")
         
         self._create_header()
         self._create_content()
@@ -183,6 +183,13 @@ class HelpDialog:
                  activebackground='#3367d6', activeforeground='white')
         gemini_btn.pack(side='left', padx=(0, 8))
         
+        # Google Translate button
+        translate_btn = tk.Button(parent_frame, text="🌍 Google Translate", command=self._open_google_translate,
+                 font=('Segoe UI', 10, 'bold'), bg='#34a853', fg='white', 
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#2d7d32', activeforeground='white')
+        translate_btn.pack(side='left', padx=(0, 8))
+        
         # OpenAI button
         openai_btn = tk.Button(parent_frame, text="🧠 OpenAI Platform", command=self._open_openai_platform,
                  font=('Segoe UI', 10, 'bold'), bg='#00a67e', fg='white', 
@@ -232,6 +239,9 @@ class HelpDialog:
     # Provider URL opening methods
     def _open_gemini_studio(self):
         webbrowser.open('https://aistudio.google.com/')
+    
+    def _open_google_translate(self):
+        webbrowser.open('https://console.cloud.google.com/apis/library/translate.googleapis.com')
     
     def _open_openai_platform(self):
         webbrowser.open('https://platform.openai.com/api-keys')

@@ -337,31 +337,45 @@ Bước 2: Tạo API Key
 - Add vào tab "Quản lý API KEY" trong ứng dụng
 • Chi phí: Đây là key miễn phí với giới hạn 15 requests/phút
 
-🧠 2. OPENAI CHATGPT (TRẢ PHÍ):
+🌍 2. GOOGLE TRANSLATE (MIỄN PHÍ/TRẢ PHÍ):
+Bước 1: Truy cập Google Cloud Console
+- Mở: https://console.cloud.google.com/
+- Đăng nhập bằng tài khoản Google
+
+Bước 2: Tạo API Key cho Translation API
+- Tạo project mới hoặc chọn project hiện có
+- Enable "Cloud Translation API"
+- Tạo API Key trong "Credentials"
+- Sao chép key (bắt đầu bằng "AIza...")
+• Chi phí: Free tier 500,000 characters/tháng, sau đó $20/1M characters
+• Ưu điểm: Dịch trực tiếp, không cần AI prompt, tốc độ nhanh
+
+🧠 3. OPENAI CHATGPT (TRẢ PHÍ):
 - Vào: https://platform.openai.com/api-keys
 - Tạo API key mới
 - Models: gpt-4o, gpt-4, gpt-3.5-turbo
 • Chi phí: ~$0.01-0.06 per 1000 tokens
 
-🎭 3. ANTHROPIC CLAUDE (TRẢ PHÍ):
+🎭 4. ANTHROPIC CLAUDE (TRẢ PHÍ):
 - Vào: https://console.anthropic.com/
 - Tạo API key
 - Models: claude-3.5-sonnet, claude-3-opus
 • Có free tier hạn chế
 
-🐙 4. GITHUB COPILOT:
+🐙 5. GITHUB COPILOT:
 - Cần GitHub Copilot subscription
 - Sử dụng GitHub personal access token
 • Chỉ dành cho token từ Copilot, không phải GitHub API key
 
-🌊 5. DEEPSEEK (GIÁ RẺ):
+🌊 6. DEEPSEEK (GIÁ RẺ):
 - Vào: https://platform.deepseek.com/
 - Models: deepseek-chat, deepseek-coder
 • Có free tier hạn chế
 
 💡 KHUYẾN NGHỊ:
-• Bắt đầu với Gemini (miễn phí)
+• Bắt đầu với Gemini (miễn phí) hoặc Google Translate (reliable)
 • Thêm 2-3 providers khác để tăng độ tin cậy
+• Google Translate cho tốc độ, AI providers cho chất lượng
 • Sử dụng priority system để ưu tiên provider yêu thích
 
 
@@ -890,27 +904,46 @@ Step 2: Create API Key
 - Add to "API KEY Management" tab in app
 • Cost: Free key with 15 requests/minute limit
 
-🧠 2. OPENAI CHATGPT (PAID):
+🌍 2. GOOGLE TRANSLATE (FREE/PAID):
+Step 1: Visit Google Cloud Console
+- Open: https://console.cloud.google.com/
+- Sign in with Google account
+
+Step 2: Create API Key for Translation API
+- Create new project or select existing project
+- Enable "Cloud Translation API"
+- Create API Key in "Credentials"
+- Copy key (starts with "AIza...")
+• Cost: Free tier 500,000 characters/month, then $20/1M characters
+• Advantage: Direct translation, no AI prompts needed, fast speed
+
+🧠 3. OPENAI CHATGPT (PAID):
 - Go to: https://platform.openai.com/api-keys
 - Create new API key
 - Models: gpt-4o, gpt-4, gpt-3.5-turbo
 • Cost: ~$0.01-0.06 per 1000 tokens
 
-🎭 3. ANTHROPIC CLAUDE (PAID):
+🎭 4. ANTHROPIC CLAUDE (PAID):
 - Go to: https://console.anthropic.com/
 - Create API key
 - Models: claude-3.5-sonnet, claude-3-opus
 • Has limited free tier
 
-🐙 4. GITHUB COPILOT:
+🐙 5. GITHUB COPILOT:
 - Requires GitHub Copilot subscription
 - Use GitHub personal access token
 • Only for Copilot tokens, not GitHub API keys
 
-🌊 5. DEEPSEEK (AFFORDABLE):
+🌊 6. DEEPSEEK (AFFORDABLE):
 - Go to: https://platform.deepseek.com/
 - Models: deepseek-chat, deepseek-coder
 • Has limited free tier
+
+💡 RECOMMENDATIONS:
+• Start with Gemini (free) or Google Translate (reliable)
+• Add 2-3 more providers for increased reliability
+• Google Translate for speed, AI providers for quality
+• Use priority system to prefer your favorite provider
 
 💡 RECOMMENDATIONS:
 • Start with Gemini (free)
