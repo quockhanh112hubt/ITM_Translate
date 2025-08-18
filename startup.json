@@ -1,8 +1,8 @@
 {
   "startup": false,
   "show_on_startup": false,
-  "floating_button": true,
-  "auto_close_popup": true,
+  "floating_button": false,
+  "auto_close_popup": false,
   "excluded_applications": [
     "excel",
     "word",

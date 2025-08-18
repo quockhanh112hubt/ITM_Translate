@@ -6,6 +6,14 @@ import os
 import json
 from core.api_key_manager import api_key_manager
 
+# Import language config with fallback
+try:
+    from core.language_config import get_main_languages, map_language_to_code
+    LANGUAGE_CONFIG_AVAILABLE = True
+except ImportError:
+    LANGUAGE_CONFIG_AVAILABLE = False
+    print("Warning: Language config module not available, using fallback")
+
 def get_app_version():
     """Đọc version từ file version.json"""
     try:
@@ -310,28 +318,43 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     win.withdraw()
     win.title('ITM Translate')
     
-    # Build title with detailed information
+    # Build title with language settings from configuration
     title = 'ITM Translate'
     provider_info = api_key_manager.get_provider_info()
     
     if version:
         title += f' v{version}'
     
-    if source_lang and target_lang:
-        # Handle special cases
-        if source_lang.lower() == "mixed":
-            source_display = "Multi language"
-        else:
-            source_display = source_lang.replace('Any Language', 'Auto').replace('Tiếng ', '')
-        
-        target_display = target_lang.replace('Tiếng ', '')
-        
-        # Add provider and model info
+    # SIMPLIFIED: Use fixed language display from settings
+    if LANGUAGE_CONFIG_AVAILABLE:
+        try:
+            main_languages = get_main_languages()
+            
+            # Display format: "Any Language → Primary → Secondary"  
+            title += f' *** Auto → {main_languages["source"]} → {main_languages["target"]} ***'
+            
+            # Add provider and model info
+            provider_name = provider_info['provider'].title()
+            model_name = provider_info['model']
+            key_preview = provider_info['key_preview']
+            
+            title += f' {provider_name}'
+            if model_name != "auto":
+                title += f' ({model_name})'
+            title += f' - API: {key_preview}'
+            
+        except Exception as e:
+            print(f"Warning: Could not get language config for popup title: {e}")
+            # Fallback to basic title if language config fails
+            provider_name = provider_info['provider'].title()
+            title += f' *** {provider_name} ***'
+    else:
+        # Fallback when language config module is not available
         provider_name = provider_info['provider'].title()
-        model_name = provider_info['model']
+        model_name = provider_info['model'] 
         key_preview = provider_info['key_preview']
         
-        title += f' *** {source_display} → {target_display} *** {provider_name}'
+        title += f' *** Auto → Vietnamese → English *** {provider_name}'
         if model_name != "auto":
             title += f' ({model_name})'
         title += f' - API: {key_preview}'
@@ -460,12 +483,10 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                     ngon_ngu_thu_2 = lang_mapping.get(target_lang, "vietnamese")
                     ngon_ngu_thu_3 = lang_mapping.get(source_lang, "english")
                     
-                    # Call translation with specific provider
+                    # SIMPLIFIED: Call translation with specific provider (uses config languages)
                     result = translate_with_specific_provider(
                         original_text_for_comparison, 
-                        provider_name, 
-                        ngon_ngu_thu_2, 
-                        ngon_ngu_thu_3
+                        provider_name
                     )
                     
                     # Handle tuple result (translated_text, detected_lang, target_lang)
