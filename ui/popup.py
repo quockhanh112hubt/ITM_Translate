@@ -445,9 +445,20 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         tts_container = tk.Frame(tts_frame, bg='#f8f9fa')
         tts_container.pack(side='right', padx=(0, 10))
         
+        # Add loading text indicator (initially hidden)
+        loading_label = tk.Label(
+            tts_container,
+            text="⏳ Loading voice...",
+            bg='#f8f9fa',
+            fg='#6c757d',
+            font=('Segoe UI', 10, 'italic'),
+            anchor='e'
+        )
+        
         # TTS Control State Variables
         tts_buttons = {}  # Store button references
         tts_timeout_job = None  # Store timeout job reference
+        loading_label_visible = False  # Track loading label state
         
         def create_tts_flag_button(language_name, flag_emoji, bg_color='#28a745'):
             """Create a TTS button with speaker + flag design and advanced controls"""
@@ -474,6 +485,9 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                         return
                     
                     print(f"🔊 [TTS] Starting {language_name} TTS: {current_text[:50]}...")
+                    
+                    # Show loading text indicator
+                    show_loading_text()
                     
                     # Disable OTHER TTS buttons but keep this one active for stop functionality
                     disable_other_tts_buttons(tts_btn)
@@ -568,9 +582,26 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             for btn in tts_buttons.values():
                 btn.config(state='normal')
         
+        def show_loading_text():
+            """Show loading text indicator"""
+            nonlocal loading_label_visible
+            if not loading_label_visible:
+                loading_label.pack(side='right', padx=(0, 5))
+                loading_label_visible = True
+        
+        def hide_loading_text():
+            """Hide loading text indicator"""
+            nonlocal loading_label_visible
+            if loading_label_visible:
+                loading_label.pack_forget()
+                loading_label_visible = False
+        
         def reset_all_buttons():
             """Reset all TTS buttons to normal state"""
             nonlocal tts_timeout_job
+            
+            # Hide loading text
+            hide_loading_text()
             
             # Cancel timeout if exists
             if tts_timeout_job:
