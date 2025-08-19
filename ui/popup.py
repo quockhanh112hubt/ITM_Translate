@@ -6,6 +6,28 @@ import os
 import json
 from core.api_key_manager import api_key_manager
 
+# Import TTS module
+try:
+    from core.tts import speak_text, stop_tts, is_tts_playing, set_generation_complete_callback, TTS_AVAILABLE
+    print("✅ [POPUP] TTS module imported successfully")
+except ImportError as e:
+    print(f"⚠️ [POPUP] TTS module not available: {e}")
+    TTS_AVAILABLE = False
+    
+    def speak_text(text, language_hint=None):
+        print("❌ [TTS] TTS not available")
+        return False
+    
+    def stop_tts():
+        print("❌ [TTS] TTS not available")
+        return False
+    
+    def is_tts_playing():
+        return False
+    
+    def set_generation_complete_callback(callback):
+        pass
+
 # Import language config with fallback
 try:
     from core.language_config import get_main_languages, map_language_to_code
@@ -375,6 +397,11 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     # Tạo frame với màu nền nhẹ, viền bo tròn
     frame = tk.Frame(win, bg='#f8f9fa', bd=2, relief='groove')
     frame.pack(fill='both', expand=True, padx=10, pady=10)
+    
+    # Create main content frame
+    content_frame = tk.Frame(frame, bg='#f8f9fa')
+    content_frame.pack(fill='both', expand=True, padx=0, pady=0)
+    
     # Đặt width cố định cho Text widget để text tự động xuống dòng
     max_chars_per_line = 70
     # Tính số dòng thực tế dựa trên số ký tự mỗi dòng (wrap word)
@@ -384,8 +411,13 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         wrapped_lines.extend(textwrap.wrap(line, width=max_chars_per_line) or [''])
     num_lines = len(wrapped_lines)
     height_lines = min(max(num_lines, 2), 20)  # min 2, max 20 dòng
+    
+    # Create text content frame
+    text_content_frame = tk.Frame(content_frame, bg='#f8f9fa')
+    text_content_frame.pack(fill='both', expand=True, pady=0)
+    
     text_widget = tk.Text(
-        frame,
+        text_content_frame,
         wrap='word',
         bg='#f8f9fa',
         fg='#2c3e50',  # Darker text for better contrast
@@ -397,20 +429,335 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         selectbackground='#3498db',  # Nice blue selection
         selectforeground='white'
     )
+    text_widget.pack(padx=10, pady=5, fill='both', expand=True)
     
     # Apply beautiful text formatting instead of plain insert
     apply_text_formatting(text_widget, text)
-    
-    text_widget.pack(fill='both', expand=True, padx=0, pady=0)  # No padding at all for tight fit
     text_widget.config(state='normal')
     
+    # Add TTS buttons at bottom-right before footer (if available)
+    if TTS_AVAILABLE:
+        # Create TTS frame positioned at bottom-right of text content
+        tts_frame = tk.Frame(content_frame, bg='#f8f9fa')
+        tts_frame.pack(fill='x', pady=(0, 5))
+        
+        # Create TTS container at right side
+        tts_container = tk.Frame(tts_frame, bg='#f8f9fa')
+        tts_container.pack(side='right', padx=(0, 10))
+        
+        # TTS Control State Variables
+        tts_buttons = {}  # Store button references
+        tts_timeout_job = None  # Store timeout job reference
+        
+        def create_tts_flag_button(language_name, flag_emoji, bg_color='#28a745'):
+            """Create a TTS button with speaker + flag design and advanced controls"""
+            
+            def on_tts_button_click():
+                try:
+                    # Immediate visual feedback
+                    tts_btn.config(relief='sunken')
+                    content_frame.after(100, lambda: tts_btn.config(relief='flat'))
+                    
+                    # Check current TTS state
+                    if is_tts_playing():
+                        # If playing, stop TTS immediately
+                        print(f"🛑 [TTS] User clicked stop for {language_name} TTS")
+                        stop_tts()
+                        # Reset will happen automatically via check_tts_completion
+                        return
+                    
+                    # Get current text from text widget
+                    current_text = text_widget.get(1.0, tk.END).strip()
+                    
+                    if not current_text:
+                        print("⚠️ [TTS] No text to speak")
+                        return
+                    
+                    print(f"🔊 [TTS] Starting {language_name} TTS: {current_text[:50]}...")
+                    
+                    # Disable OTHER TTS buttons but keep this one active for stop functionality
+                    disable_other_tts_buttons(tts_btn)
+                    set_button_playing_state(tts_btn, language_name, flag_emoji)
+                    
+                    # Set generation timeout (20s to wait for TTS response)
+                    set_tts_generation_timeout()
+                    
+                    # Set callback to cancel timeout when generation complete
+                    set_generation_complete_callback(cancel_generation_timeout)
+                    
+                    # Start TTS
+                    success = speak_text(current_text, language_name)
+                    
+                    if not success:
+                        print(f"❌ [TTS] Failed to start {language_name} TTS")
+                        reset_all_buttons()
+                    else:
+                        # Check TTS completion in background
+                        check_tts_completion()
+                    
+                except Exception as e:
+                    print(f"❌ [TTS] Error in {language_name} TTS button: {e}")
+                    reset_all_buttons()
+            
+            # Create button with speaker + flag
+            tts_btn = tk.Button(
+                tts_container,
+                text=f"🔊{flag_emoji}",
+                command=on_tts_button_click,
+                bg=bg_color,
+                fg='white',
+                font=('Segoe UI', 10),
+                relief='flat',
+                padx=6,
+                pady=3,
+                cursor='hand2',
+                width=4,
+                height=1,
+                activebackground=bg_color,  # Keep color when pressed
+                activeforeground='white',   # Keep text color when pressed
+                highlightthickness=0        # Remove focus outline
+            )
+            
+            # Force apply background color (Windows theme override fix)
+            tts_btn.configure(bg=bg_color)
+            
+            # Additional Windows theme override attempts
+            try:
+                # Method 1: Update after creation
+                tts_btn.update()
+                tts_btn.configure(bg=bg_color, activebackground=bg_color)
+                
+                # Method 2: Force update in next event loop
+                def force_color_update():
+                    try:
+                        tts_btn.configure(bg=bg_color, activebackground=bg_color)
+                        tts_btn.update_idletasks()
+                    except:
+                        pass
+                
+                tts_container.after(50, force_color_update)
+                tts_container.after(200, force_color_update)
+            except:
+                pass
+            
+            # Store original properties for reset
+            tts_btn.original_text = f"🔊{flag_emoji}"
+            tts_btn.original_bg = bg_color
+            tts_btn.language_name = language_name
+            tts_btn.flag_emoji = flag_emoji
+            
+            # Store button reference
+            tts_buttons[language_name] = tts_btn
+            
+            return tts_btn
+        
+        def disable_all_tts_buttons():
+            """Disable all TTS buttons to prevent multiple clicks"""
+            for btn in tts_buttons.values():
+                btn.config(state='disabled')
+        
+        def disable_other_tts_buttons(active_button):
+            """Disable other TTS buttons but keep active one enabled for stop functionality"""
+            for btn in tts_buttons.values():
+                if btn != active_button:
+                    btn.config(state='disabled')
+                # Keep active button enabled so user can click to stop
+        
+        def enable_all_tts_buttons():
+            """Enable all TTS buttons"""
+            for btn in tts_buttons.values():
+                btn.config(state='normal')
+        
+        def reset_all_buttons():
+            """Reset all TTS buttons to normal state"""
+            nonlocal tts_timeout_job
+            
+            # Cancel timeout if exists
+            if tts_timeout_job:
+                try:
+                    content_frame.after_cancel(tts_timeout_job)
+                except:
+                    pass
+                tts_timeout_job = None
+            
+            # Reset all buttons
+            for btn in tts_buttons.values():
+                btn.config(
+                    text=btn.original_text,
+                    bg=btn.original_bg,
+                    state='normal',
+                    cursor='hand2'
+                )
+        
+        def set_button_playing_state(button, language_name, flag_emoji):
+            """Set button to playing state - simple and responsive"""
+            # Change button appearance to show it's active/playing
+            button.config(
+                text=f"⏹️{flag_emoji}",  # Stop icon + flag
+                bg='#dc3545',  # Red color for stop
+                fg='white',
+                state='normal',  # CRITICAL: Keep enabled for stop functionality
+                cursor='hand2',  # Keep clickable
+                relief='flat'
+            )
+            
+            # Simple pulsing effect without interfering with click events
+            def simple_pulse(count=0):
+                if count < 40 and is_tts_playing():  # Pulse for 20 seconds max
+                    try:
+                        # Only change if still in playing state
+                        current_text = button.cget('text')
+                        if '⏹️' in current_text:  # Still in stop state
+                            alpha = 0.7 + 0.3 * (count % 2)  # Simple on/off effect
+                            new_bg = '#dc3545' if count % 4 < 2 else '#c82333'
+                            button.config(bg=new_bg)
+                            content_frame.after(500, lambda: simple_pulse(count + 1))
+                    except:
+                        pass  # Button might be destroyed
+            
+            # Start subtle animation
+            simple_pulse()
+        
+        def set_tts_generation_timeout():
+            """Set 20-second timeout only for TTS generation phase (waiting for response)"""
+            nonlocal tts_timeout_job
+            
+            def timeout_handler():
+                print("⏰ [TTS] 20-second generation timeout - no TTS response received")
+                stop_tts()  # Force stop any TTS
+                reset_all_buttons()
+            
+            # Only 20 seconds to wait for TTS generation response
+            tts_timeout_job = content_frame.after(20000, timeout_handler)
+        
+        def cancel_generation_timeout():
+            """Cancel generation timeout when TTS audio starts playing"""
+            nonlocal tts_timeout_job
+            
+            if tts_timeout_job:
+                try:
+                    content_frame.after_cancel(tts_timeout_job)
+                    print("✅ [TTS] Generation timeout cancelled - audio is playing")
+                except:
+                    pass
+                tts_timeout_job = None
+        
+        def check_tts_completion():
+            """Check if TTS has completed and reset buttons - more responsive"""
+            def check():
+                if not is_tts_playing():
+                    print("✅ [TTS] Playback completed, resetting buttons")
+                    reset_all_buttons()
+                else:
+                    # Check more frequently for better responsiveness
+                    content_frame.after(200, check)  # Check every 200ms instead of 500ms
+            
+            # Start checking after enough time for TTS thread to initialize
+            content_frame.after(1000, check)  # Start after 1000ms to allow thread setup
+        
+        # Get language configuration for flag selection
+        try:
+            if LANGUAGE_CONFIG_AVAILABLE:
+                main_languages = get_main_languages()
+                lang2_name = main_languages["source"]  # Ngôn ngữ thứ 2
+                lang3_name = main_languages["target"]  # Ngôn ngữ thứ 3
+            else:
+                # Fallback
+                lang2_name = "Vietnamese"
+                lang3_name = "English"
+            
+            # Language to flag mapping
+            language_flags = {
+                "Vietnamese": "🇻🇳",
+                "English": "🇺🇸", 
+                "Korean": "🇰🇷",
+                "Japanese": "🇯🇵",
+                "Chinese": "🇨🇳",
+                "Indonesian": "🇮🇩",
+                "Thai": "🇹🇭",
+                "French": "🇫🇷",
+                "German": "🇩🇪",
+                "Spanish": "🇪🇸",
+                "Russian": "🇷🇺"
+            }
+            
+            # Get flags for configured languages
+            flag2 = language_flags.get(lang2_name, "🏳️")
+            flag3 = language_flags.get(lang3_name, "🏳️")
+            
+            # Create TTS button for Language 2 (Source)
+            tts_btn2 = create_tts_flag_button(
+                language_name=lang2_name,
+                flag_emoji=flag2,
+                bg_color='#17a2b8'  # Info blue color
+            )
+            tts_btn2.pack(side='right', padx=(0, 2))
+            
+            # Create TTS button for Language 3 (Target) 
+            tts_btn3 = create_tts_flag_button(
+                language_name=lang3_name,
+                flag_emoji=flag3,
+                bg_color='#28a745'  # Success green color
+            )
+            tts_btn3.pack(side='right', padx=(0, 0))
+            
+            # Force update colors after packing (Windows theme override fix)
+            content_frame.after(100, lambda: tts_btn2.configure(bg='#17a2b8'))
+            content_frame.after(100, lambda: tts_btn3.configure(bg='#28a745'))
+            
+            # Add tooltip functionality
+            def create_tooltip(widget, text):
+                def on_enter(event):
+                    tooltip = tk.Toplevel()
+                    tooltip.wm_overrideredirect(True)
+                    tooltip.wm_geometry(f"+{event.x_root+10}+{event.y_root+10}")
+                    label = tk.Label(tooltip, text=text, background="#ffffe0", 
+                                   relief="solid", borderwidth=1, font=("Segoe UI", 8))
+                    label.pack()
+                    widget.tooltip = tooltip
+                
+                def on_leave(event):
+                    if hasattr(widget, 'tooltip'):
+                        widget.tooltip.destroy()
+                        del widget.tooltip
+                
+                widget.bind('<Enter>', on_enter)
+                widget.bind('<Leave>', on_leave)
+            
+            # Add tooltips
+            create_tooltip(tts_btn2, f"Speak in {lang2_name}")
+            create_tooltip(tts_btn3, f"Speak in {lang3_name}")
+            
+        except Exception as lang_error:
+            print(f"⚠️ [TTS] Could not get language config for flag buttons: {lang_error}")
+            # Fallback: Create 2 standard TTS buttons with proper colors
+            # Vietnamese button (blue)
+            tts_btn_vn = create_tts_flag_button(
+                language_name="Vietnamese",
+                flag_emoji="🇻🇳",
+                bg_color='#17a2b8'  # Info blue color
+            )
+            tts_btn_vn.pack(side='right', padx=(0, 2))
+            
+            # English button (green)
+            tts_btn_en = create_tts_flag_button(
+                language_name="English",
+                flag_emoji="🇺🇸",
+                bg_color='#28a745'  # Success green color
+            )
+            tts_btn_en.pack(side='right', padx=(0, 0))
+            
+            # Force update colors after packing (Windows theme override fix)
+            content_frame.after(100, lambda: tts_btn_vn.configure(bg='#17a2b8'))
+            content_frame.after(100, lambda: tts_btn_en.configure(bg='#28a745'))
+
     # ===== FOOTER SECTION =====
     # Add a subtle separator line above footer
-    separator = tk.Frame(frame, bg='#ced4da', height=1)
+    separator = tk.Frame(content_frame, bg='#ced4da', height=1)
     separator.pack(fill='x', side='bottom', padx=0, pady=0)
     
     # Create a footer frame at the bottom with distinct styling
-    footer_frame = tk.Frame(frame, bg='#dee2e6', relief='flat', bd=0, height=45)
+    footer_frame = tk.Frame(content_frame, bg='#dee2e6', relief='flat', bd=0, height=45)
     footer_frame.pack(fill='x', side='bottom', padx=0, pady=0)
     footer_frame.pack_propagate(False)  # Prevent frame from shrinking
     
