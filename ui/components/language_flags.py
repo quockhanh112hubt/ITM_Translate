@@ -40,7 +40,7 @@ class LanguageFlagButtons:
                 img = Image.open(vietnam_path)
                 img = img.resize((32, 22), Image.Resampling.LANCZOS)  # Larger size
                 self.vietnam_img = ImageTk.PhotoImage(img)
-                print("✅ Vietnam flag loaded successfully")
+
             else:
                 print("❌ Vietnam.png not found")
             
@@ -48,7 +48,7 @@ class LanguageFlagButtons:
                 img = Image.open(english_path)
                 img = img.resize((32, 22), Image.Resampling.LANCZOS)  # Larger size
                 self.english_img = ImageTk.PhotoImage(img)
-                print("✅ English flag loaded successfully")
+
             else:
                 print("❌ English.png not found")
                 

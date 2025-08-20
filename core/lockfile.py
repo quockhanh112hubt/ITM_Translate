@@ -14,7 +14,6 @@ def release_lock():
     except Exception:
         pass
 
-
 def acquire_lock():
     try:
         if os.path.exists(LOCK_FILE):

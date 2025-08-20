@@ -12,7 +12,6 @@ from core.i18n import get_language_manager, _
 from core.config_manager import config_manager
 from ui.tooltip import create_tooltip
 
-
 class AdvancedTab:
     """Component quản lý tab Advanced với các tùy chọn nâng cao"""
     

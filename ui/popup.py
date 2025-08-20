@@ -9,17 +9,15 @@ from core.api_key_manager import api_key_manager
 # Import TTS module
 try:
     from core.tts import speak_text, stop_tts, is_tts_playing, set_generation_complete_callback, TTS_AVAILABLE
-    print("✅ [POPUP] TTS module imported successfully")
 except ImportError as e:
-    print(f"⚠️ [POPUP] TTS module not available: {e}")
     TTS_AVAILABLE = False
     
     def speak_text(text, language_hint=None):
-        print("❌ [TTS] TTS not available")
+
         return False
     
     def stop_tts():
-        print("❌ [TTS] TTS not available")
+
         return False
     
     def is_tts_playing():
@@ -107,13 +105,11 @@ def get_smart_popup_position(master, popup_width, popup_height, mouse_x=None, mo
         # Final boundary check
         x = max(10, min(x, screen_width - popup_width - 10))
         y = max(10, min(y, screen_height - popup_height - 10))
-        
-        print(f"🎯 [POPUP] Smart positioning: mouse({mouse_x},{mouse_y}) → popup({x},{y}) size({popup_width}x{popup_height}) screen({screen_width}x{screen_height})")
-        
+
         return x, y
         
     except Exception as e:
-        print(f"❌ [POPUP] Error calculating smart position: {e}")
+
         # Fallback to simple positioning
         return mouse_x or 100, mouse_y or 100
 
@@ -228,9 +224,10 @@ def apply_text_formatting(text_widget, text):
                                         
                                 try:
                                     webbrowser.open(url)
-                                    print(f"✅ [POPUP] Opened link: {url}")
+
                                 except Exception as e:
-                                    print(f"❌ [POPUP] Failed to open link: {e}")
+                                    pass
+
                                 return
         
         def on_motion(event):
@@ -253,8 +250,7 @@ def apply_text_formatting(text_widget, text):
     
     # Enable clickable links
     make_links_clickable()
-    
-    print(f"🎨 [POPUP] Applied text formatting with {len(patterns)} pattern rules")
+
     """Lấy version hiện tại từ file version.json"""
     try:
         # Thử đọc từ core/version.json trước
@@ -472,7 +468,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                     # Check current TTS state
                     if is_tts_playing():
                         # If playing, stop TTS immediately
-                        print(f"🛑 [TTS] User clicked stop for {language_name} TTS")
+
                         stop_tts()
                         # Reset will happen automatically via check_tts_completion
                         return
@@ -481,11 +477,9 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                     current_text = text_widget.get(1.0, tk.END).strip()
                     
                     if not current_text:
-                        print("⚠️ [TTS] No text to speak")
+
                         return
-                    
-                    print(f"🔊 [TTS] Starting {language_name} TTS: {current_text[:50]}...")
-                    
+
                     # Show loading text indicator
                     show_loading_text()
                     
@@ -503,14 +497,14 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                     success = speak_text(current_text, language_name)
                     
                     if not success:
-                        print(f"❌ [TTS] Failed to start {language_name} TTS")
+
                         reset_all_buttons()
                     else:
                         # Check TTS completion in background
                         check_tts_completion()
                     
                 except Exception as e:
-                    print(f"❌ [TTS] Error in {language_name} TTS button: {e}")
+
                     reset_all_buttons()
             
             # Create button with speaker + flag
@@ -654,7 +648,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             nonlocal tts_timeout_job
             
             def timeout_handler():
-                print("⏰ [TTS] 20-second generation timeout - no TTS response received")
+
                 stop_tts()  # Force stop any TTS
                 reset_all_buttons()
             
@@ -668,7 +662,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             if tts_timeout_job:
                 try:
                     content_frame.after_cancel(tts_timeout_job)
-                    print("✅ [TTS] Generation timeout cancelled - audio is playing")
+
                 except:
                     pass
                 tts_timeout_job = None
@@ -677,7 +671,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             """Check if TTS has completed and reset buttons - more responsive"""
             def check():
                 if not is_tts_playing():
-                    print("✅ [TTS] Playback completed, resetting buttons")
+
                     reset_all_buttons()
                 else:
                     # Check more frequently for better responsiveness
@@ -760,7 +754,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             create_tooltip(tts_btn3, f"Speak in {lang3_name}")
             
         except Exception as lang_error:
-            print(f"⚠️ [TTS] Could not get language config for flag buttons: {lang_error}")
+
             # Fallback: Create 2 standard TTS buttons with proper colors
             # Vietnamese button (blue)
             tts_btn_vn = create_tts_flag_button(
@@ -794,13 +788,11 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     
     # Get all available API keys for comparison buttons
     all_keys = api_key_manager.get_all_keys()
-    print(f"🔑 [POPUP] Found {len(all_keys)} API keys for comparison buttons")
-    
+
     # Create footer content with buttons and info
     footer_content_frame = tk.Frame(footer_frame, bg='#dee2e6')
     footer_content_frame.pack(fill='both', expand=True, padx=5, pady=2)
-    print(f"🔑 [POPUP] Found {len(all_keys)} API keys for comparison buttons")
-    
+
     if len(all_keys) > 1:  # Only show buttons if multiple providers available
         # Left side: buttons, Right side: info text
         # Buttons container (left side)
@@ -826,8 +818,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             """Handle click on provider comparison button"""
             def handler():
                 try:
-                    print(f"🔄 [UI] Comparing with {provider_name}...")
-                    
+
                     # Import here to avoid circular import
                     from core.translator import translate_with_specific_provider
                     
@@ -903,11 +894,9 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                     
                     # Set the new title
                     win.title(new_title)
-                    
-                    print(f"✅ [UI] Updated popup with {provider_name} result")
-                    
+
                 except Exception as e:
-                    print(f"❌ [UI] Error with {provider_name}: {e}")
+
                     text_widget.config(state='normal')
                     text_widget.delete(1.0, tk.END)
                     text_widget.insert(1.0, f"❌ Error with {provider_name}: {str(e)}")
@@ -1001,9 +990,10 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                                     
                             try:
                                 webbrowser.open(url)
-                                print(f"✅ [POPUP] Opened link: {url}")
+
                             except Exception as e:
-                                print(f"❌ [POPUP] Failed to open link: {e}")
+                                pass
+
                             return  # Don't enable text editing after opening link
         
         # If not clicking on a link, temporarily enable selection but prevent editing

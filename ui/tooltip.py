@@ -6,7 +6,6 @@ Creates hover tooltips for GUI elements with i18n support
 import tkinter as tk
 from core.i18n import get_language_manager, _
 
-
 class ToolTip:
     """
     Create a tooltip for a given widget with i18n support
@@ -95,7 +94,6 @@ class ToolTip:
         """Update tooltip text (useful for dynamic content)"""
         self.text = new_text
 
-
 def create_tooltip(widget, text, delay=500, wraplength=300):
     """
     Convenience function to create a tooltip
@@ -110,7 +108,6 @@ def create_tooltip(widget, text, delay=500, wraplength=300):
         ToolTip instance
     """
     return ToolTip(widget, text, delay, wraplength)
-
 
 def create_help_tooltip(widget, help_key, delay=500):
     """

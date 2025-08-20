@@ -592,8 +592,7 @@ class Updater:
             # Đảm bảo progress cuối cùng là 100%
             if progress_callback:
                 progress_callback(100.0)
-            
-            print(f"✅ Download completed: {temp_file_path}")
+
             return temp_file_path
             
         except requests.exceptions.SSLError as e:

@@ -7,7 +7,6 @@ import sys
 from tkinter import messagebox
 from core.i18n import get_language_manager, _
 
-
 class SettingsTab:
     """Component quản lý tab Settings với cấu hình hotkey và ngôn ngữ"""
     

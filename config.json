@@ -21,7 +21,7 @@
         ]
     },
     "timeouts": {
-        "floating_button_screenshot_timeout": 20,
+        "floating_button_screenshot_timeout": 30,
         "translation_retry_timeout": 10,
         "api_validation_timeout": 30,
         "model_switching_delay": 10

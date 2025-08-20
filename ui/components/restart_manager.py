@@ -8,7 +8,6 @@ import time
 import ctypes
 import subprocess
 
-
 class RestartManager:
     """Quản lý việc restart ứng dụng"""
     

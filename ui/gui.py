@@ -12,7 +12,6 @@ import subprocess
 from core.i18n import get_language_manager, _
 from ui.components.language_flags import LanguageFlagButtons
 
-
 def get_app_version():
     """Đọc version từ file version.json"""
     try:
@@ -166,7 +165,6 @@ class MainGUI:
         self.entries = self.settings_tab_instance.entries
         self.lang_selects = self.settings_tab_instance.lang_selects
         self.initial_hotkeys = self.settings_tab_instance.initial_hotkeys
-
 
     def create_api_key_tab(self):
         """Tạo tab quản lý API KEY sử dụng ApiKeyTab component"""

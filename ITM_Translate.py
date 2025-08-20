@@ -23,7 +23,6 @@ from ttkbootstrap import Window
 import queue
 from core.i18n import get_language_manager, _
 
-
 acquire_lock()
 atexit.register(release_lock)
 
@@ -203,35 +202,28 @@ def on_floating_translate_click_v3():
     we can directly use it without Ctrl+C again.
     """
     global last_selection_info, last_clipboard_text
-    
-    print("🖱️ [FLOATING V3] User clicked translate button")
+
     hide_floating_button()  # Hide button first
     
     try:
         # Check if we have pre-validated text from selection detection
         if last_selection_info and last_selection_info.get('validated_text'):
             selected_text = last_selection_info['validated_text']
-            print(f"🖱️ [FLOATING V3] Using pre-validated text: '{selected_text[:50]}...'")
-            
+
             # Process translation directly with pre-validated text
             last_clipboard_text = selected_text
             
             # Trigger translate
             action_queue.put(('translate', 'group1'))
-            
-            print("🖱️ [FLOATING V3] Translation queued successfully with pre-validated text")
-            
+
         else:
             # Fallback: Try to get text with Ctrl+C (in case validation failed or no stored text)
-            print("🖱️ [FLOATING V3] No pre-validated text found, falling back to Ctrl+C method")
-            
+
             # Step 1: Backup user's current clipboard before any modification
             original_clipboard = get_clipboard()
-            print(f"🖱️ [FLOATING V3] Backing up user clipboard: '{original_clipboard[:30]}...'")
-            
+
             # Step 2: Use Ctrl+C to get the selected text (since we know there is selection)
-            print("🖱️ [FLOATING V3] Performing Ctrl+C to capture selected text...")
-            
+
             kb.press(Key.ctrl)
             kb.press('c')
             kb.release('c')
@@ -245,19 +237,15 @@ def on_floating_translate_click_v3():
             
             # Step 4: Check if we got valid text
             if selected_text and selected_text.strip() and selected_text != original_clipboard:
-                print(f"🖱️ [FLOATING V3] Got selected text via fallback: '{selected_text[:50]}...'")
-                
+
                 # Process translation
                 last_clipboard_text = selected_text
                 
                 # Trigger translate
                 action_queue.put(('translate', 'group1'))
-                
-                print("🖱️ [FLOATING V3] Translation queued successfully via fallback")
-                
+
             else:
-                print("🖱️ [FLOATING V3] No valid text selection found via fallback")
-                
+
                 # Restore original clipboard if no new text
                 if original_clipboard:
                     set_clipboard(original_clipboard)
@@ -289,19 +277,16 @@ def on_mouse_click(x, y, button, pressed):
             
             # Kiểm tra nếu ứng dụng hiện tại bị loại trừ
             if is_current_app_excluded():
-                print(f"🚫 [DEBUG] Current app excluded, ignoring mouse drag")
                 return
             
             # Bắt đầu có thể drag (select text)
             mouse_drag_start = (x, y)
             is_dragging = False
-            # print(f"🖱️ [DEBUG] Mouse drag started at ({x}, {y})")
         else:
             # Kết thúc click/drag
             if mouse_drag_start and is_dragging and not screenshot_mode_active and not screenshot_mode_keys and not is_current_app_excluded():
                 # Đã drag (select text), check for selection WITHOUT Ctrl+C
                 # NEW APPROACH: Show button based on drag pattern, Ctrl+C only when user clicks
-                # print(f"🖱️ [DEBUG] Mouse drag ended at ({x}, {y}), checking for text selection...")
                 try:
                     import threading
                     # Pass current dragging state to avoid race condition
@@ -309,9 +294,9 @@ def on_mouse_click(x, y, button, pressed):
                     # Delay 200ms để đảm bảo text selection hoàn tất
                     threading.Timer(0.2, lambda: check_for_text_selection_v3(x, y, current_dragging)).start()
                 except Exception as e:
-                    print(f"❌ [DEBUG] Error calling check_for_text_selection_v3: {e}")
+                    pass
             else:
-                # print(f"🖱️ [DEBUG] Mouse click ended without dragging or conditions not met")
+                pass
                 pass
             
             mouse_drag_start = None
@@ -336,9 +321,8 @@ def on_mouse_move(x, y):
             
             if horizontal_drag or meaningful_drag:
                 is_dragging = True
-                # print(f"🖱️ [DEBUG] Dragging detected: dx={dx}, dy={dy}, is_dragging={is_dragging}")
     except Exception as e:
-        print(f"❌ [MOUSE] Error in on_mouse_move: {e}")
+        pass
 
 def activate_screenshot_mode(duration_ms=None):
     """Kích hoạt chế độ chụp ảnh trong khoảng thời gian nhất định"""
@@ -435,9 +419,7 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
         was_dragging: Dragging state at the time of call (to avoid race conditions)
     """
     global last_selection_info, is_dragging
-    
-    # print(f"🔍 [FLOATING V3] check_for_text_selection_v3 called at ({mouse_x}, {mouse_y})")
-    
+
     try:
         # Step 1: Check if current app is excluded
         if is_current_app_excluded():
@@ -452,10 +434,7 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
         # Step 3: Only trigger if we detect actual dragging motion (text selection behavior)
         dragging_state = was_dragging if was_dragging is not None else is_dragging
         if not dragging_state:
-            # print(f"🖱️ [FLOATING V3] No dragging detected, skipping (dragging_state={dragging_state})")
             return
-        
-        # print(f"✅ [FLOATING V3] Dragging confirmed (dragging_state={dragging_state}), proceeding...")
         
         # Step 4: Avoid triggering near existing floating button
         if floating_btn and floating_btn.winfo_exists():
@@ -467,7 +446,7 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
                 
                 if (btn_x - 50 <= mouse_x <= btn_x + btn_w + 50 and 
                     btn_y - 50 <= mouse_y <= btn_y + btn_h + 50):
-                    print(f"🖱️ [FLOATING V3] Mouse near existing button, skipping")
+
                     return
             except:
                 pass
@@ -476,14 +455,14 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
         context_analysis = analyze_selection_context()
         
         if not context_analysis['likely_text_selection']:
-            print(f"🖱️ [FLOATING V3] Context analysis: {context_analysis['reason']}")
+
             return
         
         # Step 6: Apply smart filters based on window context and app behavior
         filter_result = apply_smart_filters()
         
         if not filter_result['passed']:
-            print(f"🖱️ [FLOATING V3] Smart filter blocked: {filter_result['reason']}")
+
             return
         
         # Step 7: If we reach here, likely a real text selection - VALIDATE TEXT FIRST
@@ -524,7 +503,7 @@ def check_for_text_selection_v3(mouse_x, mouse_y, was_dragging=None):
                 print(f"✅ [FLOATING V3] Text validation passed - safe to show button: {validation_result['reason']}")
                 validated_text = peek_text  # Store the validated text for later use
             else:
-                print(f"🖱️ [FLOATING V3] No new text detected in selection")
+
                 return  # Don't show button if no new text
                 
         except Exception as e:
@@ -908,7 +887,7 @@ def check_for_new_selection_OLD_METHOD(mouse_x, mouse_y):
                 # Nếu chuột gần floating button, không check selection
                 if (btn_x - 50 <= mouse_x <= btn_x + btn_w + 50 and 
                     btn_y - 50 <= mouse_y <= btn_y + btn_h + 50):
-                    print(f"🖱️ [FLOATING] Mouse near floating button, skipping")
+
                     return
             except:
                 pass
@@ -960,8 +939,7 @@ def check_for_new_selection_OLD_METHOD(mouse_x, mouse_y):
                  len(cleaned_text.split()) <= 2 or  # Max 2 words
                  cleaned_text.startswith('='))):  # Excel formulas
                 is_excel_auto_copy = True
-                print(f"🖱️ [FLOATING] Detected Excel auto-copy pattern, skipping: '{cleaned_text}'")
-        
+
         # Nếu không phải Excel, cũng check pattern tương tự cho các ứng dụng khác
         elif clipboard_changed and current_text and not is_excel_app:
             cleaned_text = current_text.strip()
@@ -972,26 +950,25 @@ def check_for_new_selection_OLD_METHOD(mouse_x, mouse_y):
                 (cleaned_text.replace('.', '').replace(',', '').replace('-', '').isdigit() or  # Numbers
                  len(cleaned_text.split()) <= 1)):  # Single word
                 is_excel_auto_copy = True
-                print(f"🖱️ [FLOATING] Detected auto-copy pattern from {active_window}, skipping: '{cleaned_text}'")
-        
+
         if clipboard_changed and has_meaningful_text and is_new_text and not is_excel_auto_copy:
             # Kiểm tra thêm: text không được quá ngắn hoặc chỉ là ký tự đặc biệt
             cleaned_text = current_text.strip()
             
             # Bỏ qua nếu chỉ là 1 ký tự hoặc toàn ký tự đặc biệt/số
             if len(cleaned_text) < 2:
-                print(f"🖱️ [FLOATING] Text too short, skipping: '{cleaned_text}'")
+
                 return
                 
             # Bỏ qua nếu toàn là ký tự không phải chữ (số, ký tự đặc biệt)
             if not any(c.isalpha() for c in cleaned_text):
-                print(f"🖱️ [FLOATING] No alphabetic characters, skipping: '{cleaned_text}'")
+
                 return
             
             # Kiểm tra thêm cho meaningful content (ít nhất 3 từ hoặc 15 ký tự có ý nghĩa)
             word_count = len([w for w in cleaned_text.split() if any(c.isalpha() for c in w)])
             if word_count < 2 and len(cleaned_text) < 15:
-                print(f"🖱️ [FLOATING] Not enough meaningful content, skipping: '{cleaned_text}' (words: {word_count})")
+
                 return
             
             # KIỂM TRA CUỐI CÙNG: Ứng dụng hiện tại có bị loại trừ không
@@ -1002,15 +979,15 @@ def check_for_new_selection_OLD_METHOD(mouse_x, mouse_y):
             # Text hợp lệ, cập nhật last_clipboard_text và hiển thị floating button
             last_clipboard_text = current_text
             show_floating_translate_button(mouse_x, mouse_y)
-            print(f"🖱️ [FLOATING] New text selected: {current_text[:30]}...")
+
         else:
             # Debug: in lý do không hiển thị
             if not clipboard_changed:
-                print(f"🖱️ [FLOATING] No clipboard change detected")
+                pass
             elif not has_meaningful_text:
-                print(f"🖱️ [FLOATING] No meaningful text: '{current_text}'")
+                pass
             elif not is_new_text:
-                print(f"🖱️ [FLOATING] Already processed this text")
+                pass
             elif is_excel_auto_copy:
                 # Already logged above
                 pass
@@ -1723,7 +1700,7 @@ def is_current_app_excluded():
             app_lower = app.lower()
             # Chỉ kiểm tra process name, không check window title
             if app_lower in process_name:
-                # print(f"🚫 [FLOATING] Current app excluded - Process: '{process_name}' (matched: {app})")
+
                 return True
         
         return False

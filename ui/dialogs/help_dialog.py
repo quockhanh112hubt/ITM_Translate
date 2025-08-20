@@ -9,7 +9,6 @@ import os
 import sys
 from core.i18n import get_language_manager, _
 
-
 class HelpDialog:
     """Component quản lý hộp thoại Help với hướng dẫn sử dụng chi tiết"""
     

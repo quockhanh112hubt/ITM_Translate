@@ -9,7 +9,6 @@ import json
 import os
 from core.i18n import get_language_manager, _
 
-
 class AboutDialog:
     """Component quản lý hộp thoại About với thông tin chi tiết về chương trình"""
     

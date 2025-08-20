@@ -378,7 +378,6 @@ Bước 2: Tạo API Key cho Translation API
 • Google Translate cho tốc độ, AI providers cho chất lượng
 • Sử dụng priority system để ưu tiên provider yêu thích
 
-
 📋 B. QUẢN LÝ API KEYS TRONG ỨNG DỤNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Bước 1: Mở tab "Quản lý API KEY"
@@ -396,7 +395,6 @@ Bước 3: Hệ thống tự động validate
 - Thông báo nếu key hợp lệ
 - Cảnh báo nếu key có vấn đề
 
-
 🚀 C. CÁCH SỬ DỤNG DỊCH THUẬT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Bước 1: Chọn văn bản
@@ -413,7 +411,6 @@ Bước 3: Hệ thống AI xử lý
 - Retry thông minh nếu gặp lỗi
 - Hiển thị kết quả < 2 giây
 
-
 ⭐ D. CẤU HÌNH HOTKEYS & NGÔN NGỮ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Nhóm mặc định (Công việc chính):
@@ -429,7 +426,6 @@ Nhóm tùy chỉnh (Học tập/Dự án):
 💡 MẸO HOTKEYS:
 • Tránh các phím F1-F12, hoặc phím hệ thống
 • Không dùng phím đã có ứng dụng khác sử dụng
-
 
 🔧 E. TROUBLESHOOTING & OPTIMIZATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -950,7 +946,6 @@ Step 2: Create API Key for Translation API
 • Add 2-3 other providers for reliability
 • Use priority system to favor preferred provider
 
-
 📋 B. API KEYS MANAGEMENT IN APP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Step 1: Open "API KEY Management" tab
@@ -968,7 +963,6 @@ Step 3: System auto-validates
 - Notifies if key is valid
 - Warns if key has issues
 
-
 🚀 C. HOW TO USE TRANSLATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Step 1: Select text
@@ -985,7 +979,6 @@ Step 3: AI system processes
 - Smart retry on errors
 - Shows results < 2 seconds
 
-
 ⭐ D. HOTKEYS & LANGUAGE CONFIGURATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Default group (Main work):
@@ -1001,7 +994,6 @@ Custom group (Study/Projects):
 💡 HOTKEY TIPS:
 • Avoid F1-F12 keys or system keys
 • Don't use keys already used by other apps
-
 
 🔧 E. TROUBLESHOOTING & OPTIMIZATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
