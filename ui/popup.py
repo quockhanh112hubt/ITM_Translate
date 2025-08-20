@@ -8,9 +8,13 @@ from core.api_key_manager import api_key_manager
 
 # Import TTS module
 try:
-    from core.tts import speak_text, stop_tts, is_tts_playing, set_generation_complete_callback, TTS_AVAILABLE
+    from core.tts import (speak_text, stop_tts, is_tts_playing, 
+                         set_generation_complete_callback, TTS_AVAILABLE,
+                         set_subtitle_callback, prepare_text_for_sync)
+    SUBTITLE_SYNC_AVAILABLE = True
 except ImportError as e:
     TTS_AVAILABLE = False
+    SUBTITLE_SYNC_AVAILABLE = False
     
     def speak_text(text, language_hint=None):
 
@@ -430,6 +434,37 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     # Apply beautiful text formatting instead of plain insert
     apply_text_formatting(text_widget, text)
     text_widget.config(state='normal')
+    
+    # Configure subtitle sync highlighting tags
+    if SUBTITLE_SYNC_AVAILABLE:
+        text_widget.tag_configure("subtitle_highlight", 
+                                background="#3498db", 
+                                foreground="white",
+                                relief="raised",
+                                borderwidth=1)
+        
+        # Subtitle highlighting callback
+        def highlight_text(start_pos, end_pos):
+            """Callback to highlight text during TTS playback"""
+            try:
+                # Clear previous highlights
+                text_widget.tag_remove("subtitle_highlight", "1.0", "end")
+                
+                if start_pos >= 0 and end_pos >= 0:
+                    # Convert character positions to text widget indices
+                    start_index = f"1.0+{start_pos}c"
+                    end_index = f"1.0+{end_pos}c"
+                    
+                    # Apply highlight
+                    text_widget.tag_add("subtitle_highlight", start_index, end_index)
+                    
+                    # Scroll to highlighted word if needed
+                    text_widget.see(start_index)
+            except Exception:
+                pass  # Ignore highlighting errors
+        
+        # Set the callback for subtitle sync
+        set_subtitle_callback(highlight_text)
     
     # Add TTS buttons at bottom-right before footer (if available)
     if TTS_AVAILABLE:

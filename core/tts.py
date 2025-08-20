@@ -10,7 +10,38 @@ import asyncio
 import tempfile
 import html
 import subprocess
-from typing import Optional, Dict
+import logging
+import warnings
+from typing import Optional, Dict, Callable
+
+# Suppress asyncio connection reset warnings
+logging.getLogger('asyncio').setLevel(logging.ERROR)
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="asyncio")
+
+# Custom exception handler for asyncio to suppress connection errors
+def handle_asyncio_exception(loop, context):
+    """Custom exception handler to suppress non-critical asyncio errors"""
+    exception = context.get('exception')
+    if isinstance(exception, (ConnectionResetError, ConnectionAbortedError, OSError)):
+        # Suppress connection reset errors - these are expected when Edge-TTS connections close
+        return
+    # For other exceptions, use default handling
+    if 'message' in context:
+        logging.error(f"Asyncio error: {context['message']}")
+
+# Set custom exception handler for asyncio
+try:
+    loop = asyncio.get_event_loop()
+    loop.set_exception_handler(handle_asyncio_exception)
+except RuntimeError:
+    pass  # No current event loop
+
+# Import subtitle sync for word-by-word highlighting
+try:
+    from .subtitle_sync import start_subtitle_sync, stop_subtitle_sync, prepare_subtitle_sync
+    SUBTITLE_SYNC_AVAILABLE = True
+except ImportError:
+    SUBTITLE_SYNC_AVAILABLE = False
 
 # TTS Engine availability check
 TTS_AVAILABLE = False
@@ -22,6 +53,10 @@ tts_is_playing = False
 tts_current_process = None
 tts_stop_requested = False
 tts_generation_complete_callback = None
+
+# Subtitle sync state
+tts_subtitle_callback = None
+tts_current_text = ""
 
 # Edge-TTS voice mapping (Neural voices for better quality)
 EDGE_VOICE_MAPPING = {
@@ -174,6 +209,13 @@ async def speak_with_edge_tts(text, language_hint=None):
             except:
                 pass
             return False
+        except (ConnectionResetError, ConnectionAbortedError, OSError) as conn_error:
+            # Handle connection errors gracefully
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            return False
         except Exception as gen_error:
             try:
                 os.unlink(tmp_path)
@@ -200,8 +242,40 @@ async def speak_with_edge_tts(text, language_hint=None):
             # Use a simpler approach - PowerShell with no window
             import subprocess
             
-            # Use PowerShell to play audio silently (no window)
-            powershell_cmd = f'''
+            # First get duration using a separate PowerShell command
+            duration_cmd = f'''
+            Add-Type -AssemblyName presentationCore
+            $mediaPlayer = New-Object system.windows.media.mediaplayer
+            $mediaPlayer.open([uri]"{tmp_path}")
+            Start-Sleep 1
+            while($mediaPlayer.NaturalDuration.HasTimeSpan -eq $false) {{
+                Start-Sleep 0.1
+            }}
+            $duration = $mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds
+            $mediaPlayer.Close()
+            Write-Output $duration
+            '''
+            
+            # Get actual audio duration
+            try:
+                duration_result = subprocess.run([
+                    'powershell', '-WindowStyle', 'Hidden', '-Command', duration_cmd
+                ], creationflags=subprocess.CREATE_NO_WINDOW,
+                   capture_output=True, text=True, timeout=10)
+                
+                if duration_result.returncode == 0 and duration_result.stdout.strip():
+                    actual_duration = float(duration_result.stdout.strip())
+                else:
+                    # Fallback to estimation
+                    actual_duration = max(len(text) * 0.08, 1.0)  # ~12.5 chars per second
+            except:
+                actual_duration = max(len(text) * 0.08, 1.0)
+            
+            # Start subtitle sync with actual duration
+            start_text_sync(actual_duration)
+            
+            # Now play the audio
+            play_cmd = f'''
             Add-Type -AssemblyName presentationCore
             $mediaPlayer = New-Object system.windows.media.mediaplayer
             $mediaPlayer.open([uri]"{tmp_path}")
@@ -216,9 +290,9 @@ async def speak_with_edge_tts(text, language_hint=None):
             $mediaPlayer.Close()
             '''
             
-            # Run PowerShell command hidden and track process
+            # Run PowerShell command to play audio
             tts_current_process = subprocess.Popen([
-                'powershell', '-WindowStyle', 'Hidden', '-Command', powershell_cmd
+                'powershell', '-WindowStyle', 'Hidden', '-Command', play_cmd
             ], creationflags=subprocess.CREATE_NO_WINDOW)
             
             # Poll for completion or stop request (more responsive)
@@ -271,16 +345,44 @@ async def speak_with_edge_tts(text, language_hint=None):
 
 def speak_with_edge_tts_sync(text, language_hint=None):
     """Synchronous wrapper for edge-tts"""
+    loop = None
     try:
         # Create new event loop for this thread
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        
+        # Set custom exception handler to suppress connection errors
+        loop.set_exception_handler(handle_asyncio_exception)
+        
         result = loop.run_until_complete(speak_with_edge_tts(text, language_hint))
-        loop.close()
         return result
-    except Exception as e:
-
+    except (ConnectionResetError, ConnectionAbortedError, OSError) as conn_error:
+        # Handle connection errors silently
         return False
+    except asyncio.CancelledError:
+        # Handle cancelled operations
+        return False
+    except Exception as e:
+        return False
+    finally:
+        # Properly close event loop with extra care for connection cleanup
+        if loop and not loop.is_closed():
+            try:
+                # Cancel all pending tasks
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+                # Give tasks a chance to cancel
+                if pending:
+                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                
+                # Small delay to allow connections to close gracefully
+                import time
+                time.sleep(0.1)
+                
+                loop.close()
+            except Exception:
+                pass  # Ignore cleanup errors
 
 def initialize_tts():
     """Initialize TTS engine"""
@@ -355,11 +457,13 @@ def stop_tts():
     tts_stop_requested = True
     tts_is_playing = False
     
+    # Stop subtitle synchronization
+    stop_text_sync()
+    
     # Kill current Edge-TTS process if exists
     if tts_current_process:
         try:
             tts_current_process.terminate()
-
         except:
             pass
         tts_current_process = None
@@ -415,8 +519,10 @@ def speak_text(text, language_hint=None):
             clean_text = clean_text_for_speech(text)
             
             if not clean_text.strip():
-
                 return
+            
+            # Prepare text for subtitle synchronization with original text mapping
+            prepare_text_for_sync(clean_text, text)  # clean_text for TTS, text for display
             
             # Check for stop request before starting
             if tts_stop_requested:
@@ -721,3 +827,32 @@ def set_voice_by_language(language):
 # Initialize TTS on module load
 if TTS_AVAILABLE:
     initialize_tts()
+
+# Subtitle Sync Functions
+def set_subtitle_callback(callback: Optional[Callable[[int, int], None]]):
+    """Set callback function for subtitle synchronization"""
+    global tts_subtitle_callback
+    tts_subtitle_callback = callback
+
+def get_subtitle_callback():
+    """Get current subtitle callback"""
+    return tts_subtitle_callback
+
+def prepare_text_for_sync(text: str, original_text: str = None):
+    """Prepare text for subtitle synchronization"""
+    global tts_current_text
+    tts_current_text = text
+    
+    if SUBTITLE_SYNC_AVAILABLE:
+        return prepare_subtitle_sync(text, original_text)
+    return []
+
+def start_text_sync(duration: float):
+    """Start subtitle synchronization for current text"""
+    if SUBTITLE_SYNC_AVAILABLE and tts_subtitle_callback and tts_current_text:
+        start_subtitle_sync(duration, tts_subtitle_callback)
+
+def stop_text_sync():
+    """Stop subtitle synchronization"""
+    if SUBTITLE_SYNC_AVAILABLE:
+        stop_subtitle_sync()
