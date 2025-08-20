@@ -344,7 +344,7 @@ def initialize_tts():
             # Test SAPI with simple text
             print("🧪 [TTS] Testing SAPI with simple text...")
             try:
-                tts_engine.Speak("TTS test successful", 1)  # Async speak
+                # tts_engine.Speak("TTS test successful", 1)
                 print("✅ [TTS] Windows SAPI engine initialized and tested")
                 return True
             except Exception as sapi_test_error:
