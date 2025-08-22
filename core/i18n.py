@@ -157,6 +157,7 @@ TRANSLATIONS = {
         "translation_failed": "Dịch thất bại",
         "no_text_selected": "Không có text được chọn",
         "replace_failed": "Không thể thay thế văn bản tự động. Vị trí dán không cho phép.",
+        "alternative_translations": "🌐 Bản dịch khó hiểu?. Hãy thử lại với API khác:",
         
         # Settings tab translations
         "language_description": "Ngôn ngữ đầu tiên sẽ được dịch tới ngôn ngữ thứ 2, ngôn ngữ thứ 2 sẽ được dịch tới ngôn ngữ thứ 3.",
@@ -720,6 +721,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "translation_failed": "Translation failed",
         "no_text_selected": "No text selected",
         "replace_failed": "Cannot automatically replace text. Paste location does not allow.",
+        "alternative_translations": "🌐 Translation is confusing?. Try again with another API:",
         
         # Settings tab translations
         "language_description": "First language will be translated to second language, second language will be translated to third language.",

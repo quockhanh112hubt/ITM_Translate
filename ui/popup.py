@@ -5,6 +5,7 @@ import math
 import os
 import json
 from core.api_key_manager import api_key_manager
+from core.i18n import _
 
 # Import TTS module
 try:
@@ -472,6 +473,17 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         tts_frame = tk.Frame(content_frame, bg='#f8f9fa')
         tts_frame.pack(fill='x', pady=(0, 5))
         
+        # Add info label at left side of TTS frame
+        info_label = tk.Label(
+            tts_frame,
+            text=f"ITM Translate v{get_app_version()} - Quick Translate",
+            bg='#f8f9fa',
+            fg='#495057',
+            font=('Segoe UI', 8, 'italic'),
+            anchor='w'
+        )
+        info_label.pack(side='left', padx=(10, 0), pady=5)
+        
         # Create TTS container at right side
         tts_container = tk.Frame(tts_frame, bg='#f8f9fa')
         tts_container.pack(side='right', padx=(0, 10))
@@ -810,6 +822,21 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             # Force update colors after packing (Windows theme override fix)
             content_frame.after(100, lambda: tts_btn_vn.configure(bg='#17a2b8'))
             content_frame.after(100, lambda: tts_btn_en.configure(bg='#28a745'))
+    else:
+        # Create info frame when TTS is not available
+        info_frame = tk.Frame(content_frame, bg='#f8f9fa')
+        info_frame.pack(fill='x', pady=(0, 5))
+        
+        # Add info label
+        info_label = tk.Label(
+            info_frame,
+            text=f"ITM Translate v{get_app_version()} - Quick Translate",
+            bg='#f8f9fa',
+            fg='#495057',
+            font=('Segoe UI', 8, 'italic'),
+            anchor='w'
+        )
+        info_label.pack(side='left', padx=(10, 0), pady=5)
 
     # ===== FOOTER SECTION =====
     # Add a subtle separator line above footer
@@ -817,7 +844,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     separator.pack(fill='x', side='bottom', padx=0, pady=0)
     
     # Create a footer frame at the bottom with distinct styling
-    footer_frame = tk.Frame(content_frame, bg='#dee2e6', relief='flat', bd=0, height=45)
+    footer_frame = tk.Frame(content_frame, bg='#dee2e6', relief='flat', bd=0, height=60)
     footer_frame.pack(fill='x', side='bottom', padx=0, pady=0)
     footer_frame.pack_propagate(False)  # Prevent frame from shrinking
     
@@ -829,21 +856,20 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     footer_content_frame.pack(fill='both', expand=True, padx=5, pady=2)
 
     if len(all_keys) > 1:  # Only show buttons if multiple providers available
-        # Left side: buttons, Right side: info text
-        # Buttons container (left side)
-        buttons_container = tk.Frame(footer_content_frame, bg='#dee2e6')
-        buttons_container.pack(side='left', fill='y')
-        
-        # Info text (right side)
-        info_label = tk.Label(
+        # Alternative Translations label (above buttons)
+        alt_label = tk.Label(
             footer_content_frame,
-            text=f"ITM Translate v{get_app_version()} - Quick Translate",
+            text=_("alternative_translations"),
             bg='#dee2e6',
             fg='#495057',
-            font=('Segoe UI', 8, 'italic'),
-            anchor='e'
+            font=('Segoe UI', 9, 'bold'),
+            anchor='w'
         )
-        info_label.pack(side='right', fill='y', pady=3)
+        alt_label.pack(anchor='w', padx=(0, 0), pady=(0, 2))
+        
+        # Left side: buttons container
+        buttons_container = tk.Frame(footer_content_frame, bg='#dee2e6')
+        buttons_container.pack(side='left', fill='y')
         
         # Store original text for comparison
         original_text_for_comparison = original_text if original_text is not None else text
@@ -958,7 +984,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                 font=('Segoe UI', 9),
                 relief='flat',
                 padx=12,
-                pady=4,
+                pady=8,
                 cursor='hand2'
             )
             
@@ -986,7 +1012,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
     req_height = text_widget.winfo_reqheight()
     
     # Add extra height for buttons and footer if they exist
-    extra_height = 80 if len(all_keys) > 1 else 25  # Footer always adds some height
+    extra_height = 100 if len(all_keys) > 1 else 25  # Footer always adds some height
     
     width = req_width + 20
     height = req_height + 25 + extra_height  # Moderate base height with footer
