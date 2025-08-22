@@ -41,6 +41,15 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ đọc bản dịc
 - **API key lỗi**: Kiểm tra key trong tab "Quản lý API KEY"
 - **Không có giọng đọc**: Cài đặt Windows Speech Platform
 
+## ❓ FAQ
+Q: Có thể sử dụng miễn phí không? A: Có, nhưng cần API keys từ các providers (một số có tier miễn phí)
+
+Q: Hỗ trợ offline translation? A: Không, cần internet để kết nối với AI providers
+
+Q: Có giới hạn độ dài text? A: Mỗi provider có giới hạn khác nhau (~4000-8000 ký tự)
+
+Q: Có mobile app? A: Chưa, hiện tại chỉ hỗ trợ Windows desktop
+
 ### Liên hệ:
 - **GitHub Issues**: [Báo lỗi tại đây](https://github.com/quockhanh112hubt/ITM_Translate/issues)
 - **Developer**: KhanhIT - ITM Semiconductor Vietnam
