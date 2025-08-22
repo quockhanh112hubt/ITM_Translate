@@ -1,24 +1,23 @@
 # ITM Translate
 
-**Phần mềm dịch thuật AI thông minh với Text-to-Speech**
+**Phần mềm dịch thuật thông minh với AI API**
 
-Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ đọc bản dịch bằng giọng nói tự nhiên.
+Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn ngữ một cách tự nhiên.
 
 ## ✨ Tính năng chính
 
 - 🔤 **Dịch nhanh**: Chọn văn bản và nhấn phím tắt để dịch tức thì
-- � **Text-to-Speech**: Đọc bản dịch bằng giọng nói tự nhiên (Tiếng Việt/English)
-- 🎯 **Subtitle Sync**: Highlight từng từ khi đọc (karaoke style)
-- 🤖 **Multi-AI**: Hỗ trợ Gemini, ChatGPT, Claude, DeepSeek với failover tự động
+- � **Text-to-Speech**: Đọc bản dịch bằng giọng nói
+- 🎯 **Subtitle Sync**: Highlight từng từ khi đọc
+- 🤖 **Multi-AI**: Hỗ trợ Gemini, ChatGPT, Claude, DeepSeek, Google Translate với failover tự động
 - 🌍 **Đa ngôn ngữ**: Tự động nhận diện và dịch sang nhiều ngôn ngữ
-- ⚡ **Hotkey**: Phím tắt tùy chỉnh (mặc định Ctrl+Q, Ctrl+D)
-- 🎨 **Giao diện đẹp**: Popup hiện đại với system tray
+- ⚡ **Hotkey**: Phím tắt tùy chỉnh (đề xuất Ctrl+Q, Ctrl+D hoặc Ctrl+1, Ctrl+2)
 
 ## 🚀 Cài đặt và sử dụng
 
 ### Tải về
 - Download file `.exe` từ [GitHub Releases](https://github.com/quockhanh112hubt/ITM_Translate/releases)
-- Chạy file và làm theo hướng dẫn
+- Chạy file và làm theo hướng dẫn ở Tab Nâng Cao > Hướng dẫn sử dụng
 
 ### Thiết lập API Key
 1. Mở chương trình → Tab "Quản lý API KEY"
@@ -31,7 +30,7 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ đọc bản dịc
 ### Cách dùng
 1. **Dịch popup**: Chọn văn bản → Nhấn `Ctrl+Q`
 2. **Dịch thay thế**: Chọn văn bản → Nhấn `Ctrl+D`
-3. **Text-to-Speech**: Click nút 🔊🇻🇳 (tiếng Việt) hoặc 🔊🇺🇸 (English) trong popup
+3. **Text-to-Speech**: Click nút 🔊 trong popup
 4. **Tùy chỉnh**: Tab "Cài Đặt" để thay đổi hotkey và ngôn ngữ
 
 ## ❓ Hỗ trợ
