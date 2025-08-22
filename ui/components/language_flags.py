@@ -28,9 +28,9 @@ class LanguageFlagButtons:
             vietnam_path = os.path.join(base_path, "Resource", "Vietnam.png")
             english_path = os.path.join(base_path, "Resource", "English.png")
             
-            print(f"🔍 Looking for flags at:")
-            print(f"  Vietnam: {vietnam_path}")
-            print(f"  English: {english_path}")
+            # print(f"🔍 Looking for flags at:")
+            # print(f"  Vietnam: {vietnam_path}")
+            # print(f"  English: {english_path}")
             
             # Load and resize images
             self.vietnam_img = None
