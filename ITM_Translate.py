@@ -2065,6 +2065,10 @@ def cleanup_on_exit():
         if listener:
             listener.stop()
         hide_floating_button()
+        
+        # Cleanup GUI components
+        if 'app' in globals() and hasattr(app, 'cleanup'):
+            app.cleanup()
     except:
         pass
 

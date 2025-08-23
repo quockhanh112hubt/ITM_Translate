@@ -11,6 +11,7 @@ import threading
 import subprocess
 from core.i18n import get_language_manager, _
 from ui.components.language_flags import LanguageFlagButtons
+from core.update_notifier import get_update_notifier, start_update_monitoring
 
 def get_app_version():
     """Đọc version từ file version.json"""
@@ -52,6 +53,13 @@ class MainGUI:
         
         # Initialize language flags
         self.language_flags = None
+        
+        # Initialize update notifier
+        self.update_notifier = get_update_notifier()
+        self.update_notifier.register_callback(self._on_update_notification)
+        
+        # Start update monitoring in background
+        start_update_monitoring()
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
     def set_hotkey_updater(self, updater):
@@ -781,11 +789,11 @@ del "%~f0"
                 language
             ).replace("v1.2.3", f"v{app_version}"))
             
-            # Update tab titles
+            # Update tab titles with update indicator
             current_tab_index = self.tab_control.index(self.tab_control.select())
             self.tab_control.tab(0, text=_("tab_settings", language))
             self.tab_control.tab(1, text=_("tab_api_keys", language))
-            self.tab_control.tab(2, text=_("tab_advanced", language))
+            self.tab_control.tab(2, text=self._get_advanced_tab_title(language))
             
             # Refresh all UI components by recreating them
             self._refresh_all_components(language)
@@ -828,3 +836,39 @@ del "%~f0"
                 self.cancel_button.configure(text=_("cancel", language))
         except Exception as e:
             print(f"❌ Error updating footer buttons: {e}")
+    
+    def _on_update_notification(self, has_update, new_version):
+        """Callback khi có update notification từ UpdateNotifier"""
+        try:
+            # Update advanced tab title
+            current_language = self.language_manager.get_current_language()
+            self.tab_control.tab(2, text=self._get_advanced_tab_title(current_language))
+            
+            if has_update:
+                print(f"🎉 Update available: {new_version}")
+            else:
+                print("✅ No updates available")
+                
+        except Exception as e:
+            print(f"❌ Error handling update notification: {e}")
+    
+    def _get_advanced_tab_title(self, language=None):
+        """Lấy title cho Advanced tab với update indicator nếu có"""
+        if language is None:
+            language = self.language_manager.get_current_language()
+        
+        base_title = _("tab_advanced", language)
+        return self.update_notifier.get_update_indicator_text(base_title)
+    
+    def cleanup(self):
+        """Cleanup khi đóng app"""
+        try:
+            # Cleanup advanced tab
+            if hasattr(self, 'advanced_tab_component') and hasattr(self.advanced_tab_component, 'cleanup'):
+                self.advanced_tab_component.cleanup()
+            
+            # Unregister update callback
+            if self.update_notifier:
+                self.update_notifier.unregister_callback(self._on_update_notification)
+        except Exception as e:
+            print(f"❌ Error cleaning up MainGUI: {e}")

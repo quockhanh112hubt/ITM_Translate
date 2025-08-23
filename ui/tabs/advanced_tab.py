@@ -11,6 +11,7 @@ from ttkbootstrap import SUCCESS, SECONDARY, INFO, DANGER, PRIMARY
 from core.i18n import get_language_manager, _
 from core.config_manager import config_manager
 from ui.tooltip import create_tooltip
+from core.update_notifier import get_update_notifier
 
 class AdvancedTab:
     """Component quản lý tab Advanced với các tùy chọn nâng cao"""
@@ -33,6 +34,13 @@ class AdvancedTab:
         self.startup_var = None
         self.show_on_startup_var = None
         self.floating_button_enabled = None
+        
+        # Update notifier integration
+        self.update_notifier = get_update_notifier()
+        self.update_notifier.register_callback(self._on_update_status_changed)
+        
+        # Reference to update button để có thể cập nhật text
+        self.update_btn = None
         
         self._create_advanced_tab_ui()
     
@@ -157,12 +165,12 @@ class AdvancedTab:
         about_btn.pack(fill='x', padx=20, pady=5)
         
         # Nút cập nhật chương trình
-        update_btn = tk.Button(
+        self.update_btn = tk.Button(
             self.frame, 
-            text=_('check_updates'), 
+            text=self._get_update_button_text(), 
             command=self._update_program
         )
-        update_btn.pack(fill='x', padx=20, pady=5)
+        self.update_btn.pack(fill='x', padx=20, pady=5)
     
     def on_startup_toggle(self):
         """Xử lý khi toggle startup setting"""
@@ -305,6 +313,52 @@ class AdvancedTab:
         """Delegate to main GUI's update_program method"""
         if hasattr(self.main_gui, 'update_program'):
             self.main_gui.update_program()
+    
+    def _on_update_status_changed(self, has_update, new_version):
+        """Callback khi update status thay đổi"""
+        try:
+            # Update button text
+            if self.update_btn:
+                # Schedule UI update on main thread
+                self.main_gui.root.after(0, self._update_ui_elements)
+            
+            # Thông báo cho main GUI để cập nhật tab title
+            if hasattr(self.main_gui, '_on_update_notification'):
+                self.main_gui.root.after(0, lambda: self.main_gui._on_update_notification(has_update, new_version))
+                
+        except Exception as e:
+            print(f"❌ Error updating UI for update notification: {e}")
+    
+    def _update_ui_elements(self):
+        """Cập nhật UI elements với update indicator"""
+        try:
+            if self.update_btn:
+                self.update_btn.config(text=self._get_update_button_text())
+        except Exception as e:
+            print(f"❌ Error updating UI elements: {e}")
+    
+    def _get_update_button_text(self):
+        """Lấy text cho update button với indicator nếu có"""
+        base_text = _('check_updates')
+        return self.update_notifier.get_update_indicator_text(base_text)
+    
+    def refresh_language(self):
+        """Refresh UI khi chuyển ngôn ngữ"""
+        try:
+            # Update button text với ngôn ngữ mới
+            if self.update_btn:
+                self.update_btn.config(text=self._get_update_button_text())
+        except Exception as e:
+            print(f"❌ Error refreshing language in advanced tab: {e}")
+    
+    def cleanup(self):
+        """Cleanup khi đóng tab"""
+        try:
+            # Unregister update callback
+            if self.update_notifier:
+                self.update_notifier.unregister_callback(self._on_update_status_changed)
+        except Exception as e:
+            print(f"❌ Error cleaning up advanced tab: {e}")
     
     def get_show_on_startup(self):
         """Trả về trạng thái show_on_startup"""
