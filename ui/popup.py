@@ -476,7 +476,7 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         # Add info label at left side of TTS frame
         info_label = tk.Label(
             tts_frame,
-            text=f"ITM Translate v{get_app_version()} - Quick Translate",
+            text=f"ITM Translate v{get_app_version()} - Smart translation with AI APIs",
             bg='#f8f9fa',
             fg='#495057',
             font=('Segoe UI', 8, 'italic'),
