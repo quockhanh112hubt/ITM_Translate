@@ -159,12 +159,19 @@ def main():
     
     print(f"Build thành công: {exe_path}")
     
-    # Copy SSL config file for corporate environments
-    if os.path.exists("config.json"):
-        import shutil
-        dist_config = os.path.join("dist", "config.json")
-        shutil.copy2("config.json", dist_config)
-        print(f"Đã copy config.json với SSL settings: {dist_config}")
+    # Copy essential files for runtime
+    files_to_copy = [
+        ("config.json", "config.json"),
+        ("version.json", "version.json"),
+        ("api_keys.json.example", "api_keys.json.example")
+    ]
+    
+    for src_file, dst_file in files_to_copy:
+        if os.path.exists(src_file):
+            import shutil
+            dst_path = os.path.join("dist", dst_file)
+            shutil.copy2(src_file, dst_path)
+            print(f"Đã copy {src_file} → {dst_path}")
     
     # Check SSL bypass status
     try:

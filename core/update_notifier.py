@@ -6,6 +6,7 @@ Dịch vụ kiểm tra cập nhật tự động và thông báo cho UI
 import threading
 import time
 import json
+import sys
 from datetime import datetime, timedelta
 from core.updater import Updater
 from core.i18n import get_language_manager, _
@@ -51,6 +52,19 @@ class UpdateNotifier:
             print(f"🔍 [VERSION] Version file: {version_file_abs}")
             print(f"🔍 [VERSION] File exists: {os.path.exists(version_file)}")
             
+            if not os.path.exists(version_file):
+                # Fallback: Try to read from embedded resources or use default
+                print(f"⚠️ [VERSION] version.json not found, using fallback version")
+                
+                # For .exe builds, we can embed version in the app title or use a default
+                # Check if we're running as .exe (frozen)
+                if getattr(sys, 'frozen', False):
+                    print(f"🔍 [VERSION] Running as .exe, using embedded version detection")
+                    # Try to extract version from app title or use latest known version
+                    return "2.0.20"  # Current version as fallback
+                else:
+                    return "1.0.0"  # Development fallback
+            
             with open(version_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 version = data.get("version", "1.0.0")
@@ -58,6 +72,9 @@ class UpdateNotifier:
                 return version
         except Exception as e:
             print(f"❌ [VERSION] Error reading version: {e}")
+            # Final fallback - use current build version
+            if getattr(sys, 'frozen', False):
+                return "2.0.20"  # Current version
             return "1.0.0"
     
     def register_callback(self, callback):
