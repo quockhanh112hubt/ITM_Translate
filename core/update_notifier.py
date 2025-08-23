@@ -41,10 +41,23 @@ class UpdateNotifier:
     def _get_current_version(self):
         """Lấy version hiện tại từ version.json"""
         try:
-            with open("version.json", "r", encoding="utf-8") as f:
+            # Debug: Check working directory and file paths
+            import os
+            current_dir = os.getcwd()
+            version_file = "version.json"
+            version_file_abs = os.path.abspath(version_file)
+            
+            print(f"🔍 [VERSION] Working dir: {current_dir}")
+            print(f"🔍 [VERSION] Version file: {version_file_abs}")
+            print(f"🔍 [VERSION] File exists: {os.path.exists(version_file)}")
+            
+            with open(version_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("version", "1.0.0")
-        except Exception:
+                version = data.get("version", "1.0.0")
+                print(f"🔍 [VERSION] Read version: {version}")
+                return version
+        except Exception as e:
+            print(f"❌ [VERSION] Error reading version: {e}")
             return "1.0.0"
     
     def register_callback(self, callback):
@@ -111,6 +124,11 @@ class UpdateNotifier:
             print(f"🔍 Checking for updates (silent) - Current: {self.current_version}")
             
             has_update, new_version, message = self.updater.check_for_updates()
+            
+            # Debug version comparison
+            print(f"🔍 [DEBUG] Current version: '{self.current_version}'")
+            print(f"🔍 [DEBUG] Latest version: '{new_version}'")
+            print(f"🔍 [DEBUG] Has update: {has_update}")
             
             # Update internal state
             old_has_update = self.has_update
