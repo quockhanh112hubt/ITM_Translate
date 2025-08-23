@@ -7,6 +7,7 @@ import threading
 import time
 import json
 import sys
+import os
 from datetime import datetime, timedelta
 from core.updater import Updater
 from core.i18n import get_language_manager, _
@@ -40,39 +41,51 @@ class UpdateNotifier:
         print(f"🔔 UpdateNotifier initialized - Current version: {self.current_version}")
     
     def _get_current_version(self):
-        """Lấy version hiện tại từ version.json"""
+        """Lấy version hiện tại từ version.json - sử dụng cùng logic với Updater"""
         try:
-            # Debug: Check working directory and file paths
             import os
+            
+            # Debug: Check working directory 
             current_dir = os.getcwd()
-            version_file = "version.json"
-            version_file_abs = os.path.abspath(version_file)
-            
             print(f"🔍 [VERSION] Working dir: {current_dir}")
-            print(f"🔍 [VERSION] Version file: {version_file_abs}")
-            print(f"🔍 [VERSION] File exists: {os.path.exists(version_file)}")
             
-            if not os.path.exists(version_file):
-                # Fallback: Try to read from embedded resources or use default
-                print(f"⚠️ [VERSION] version.json not found, using fallback version")
+            # Use same logic as Updater.get_current_version()
+            # Try multiple locations to find version.json
+            version_locations = [
+                # Location 1: Same as Updater - project root
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "version.json"),
+                # Location 2: Working directory (for .exe)
+                "version.json",
+                # Location 3: Same directory as executable (for .exe)
+                os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "version.json")
+            ]
+            
+            for version_file in version_locations:
+                version_file_abs = os.path.abspath(version_file)
+                print(f"🔍 [VERSION] Trying: {version_file_abs}")
+                print(f"🔍 [VERSION] Exists: {os.path.exists(version_file)}")
                 
-                # For .exe builds, we can embed version in the app title or use a default
-                # Check if we're running as .exe (frozen)
-                if getattr(sys, 'frozen', False):
-                    print(f"🔍 [VERSION] Running as .exe, using embedded version detection")
-                    # Try to extract version from app title or use latest known version
-                    return "2.0.20"  # Current version as fallback
-                else:
-                    return "1.0.0"  # Development fallback
+                if os.path.exists(version_file):
+                    with open(version_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        version = data.get("version", "1.0.0")
+                        print(f"✅ [VERSION] Found version: {version} from {version_file_abs}")
+                        return version
             
-            with open(version_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                version = data.get("version", "1.0.0")
-                print(f"🔍 [VERSION] Read version: {version}")
-                return version
+            # If no file found, use fallback logic
+            print(f"⚠️ [VERSION] No version.json found in any location")
+            
+            # Check if we're running as .exe (frozen)
+            if getattr(sys, 'frozen', False):
+                print(f"🔍 [VERSION] Running as .exe, using embedded version")
+                return "2.0.20"  # Current build version as fallback
+            else:
+                print(f"🔍 [VERSION] Running from source, using development fallback")
+                return "1.0.0"  # Development fallback
+                
         except Exception as e:
             print(f"❌ [VERSION] Error reading version: {e}")
-            # Final fallback - use current build version
+            # Final fallback - use current build version for .exe
             if getattr(sys, 'frozen', False):
                 return "2.0.20"  # Current version
             return "1.0.0"
