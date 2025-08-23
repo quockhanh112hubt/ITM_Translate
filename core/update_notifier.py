@@ -79,6 +79,9 @@ class UpdateNotifier:
         self.check_thread = threading.Thread(target=self._background_check_loop, daemon=True)
         self.check_thread.start()
         print("🚀 Background update checker started")
+        
+        # Force refresh UI ngay lập tức để đảm bảo UI sync với trạng thái thực tế
+        self._notify_callbacks()
     
     def stop_background_check(self):
         """Dừng background check"""
@@ -115,10 +118,11 @@ class UpdateNotifier:
             self.new_version = new_version if has_update else None
             self.last_check_time = datetime.now()
             
-            # Notify callbacks if status changed
-            if old_has_update != has_update:
+            # Notify callbacks if status changed OR on first check (để force refresh UI)
+            if old_has_update != has_update or not hasattr(self, '_first_check_done'):
                 print(f"📢 Update status changed: {has_update} (Version: {new_version})")
                 self._notify_callbacks()
+                self._first_check_done = True
             
             return has_update, new_version, message
             

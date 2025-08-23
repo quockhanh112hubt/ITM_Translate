@@ -840,6 +840,11 @@ del "%~f0"
     def _on_update_notification(self, has_update, new_version):
         """Callback khi có update notification từ UpdateNotifier"""
         try:
+            # Kiểm tra tab_control đã được khởi tạo chưa
+            if not hasattr(self, 'tab_control') or self.tab_control is None:
+                print("⚠️ Tab control not ready yet, skipping update notification")
+                return
+                
             # Update advanced tab title
             current_language = self.language_manager.get_current_language()
             self.tab_control.tab(2, text=self._get_advanced_tab_title(current_language))
