@@ -203,10 +203,12 @@ class UpdateNotifier:
             base_text: Text gốc (ví dụ: "Nâng cao", "Kiểm tra cập nhật")
         
         Returns:
-            str: Text với indicator nếu có update ("Nâng cao (1)", "Kiểm tra cập nhật (1)")
+            str: Text với indicator nếu có update với style đẹp (số trắng trên nền xanh)
         """
         if self.has_update:
-            return f"{base_text} (1)"
+            # Sử dụng ❶ - Số trắng trên nền đỏ (giống iOS notification badge)
+            # Style này đẹp và nổi bật, dễ nhận biết khi có update
+            return f"{base_text} ❶"
         return base_text
     
     def reset_update_status(self):
