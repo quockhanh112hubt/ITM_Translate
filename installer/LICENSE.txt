@@ -1,0 +1,65 @@
+ITM TRANSLATE - SOFTWARE LICENSE AGREEMENT
+
+Copyright © 2025 ITM Semiconductor Vietnam Company Limited. All rights reserved.
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. GRANT OF LICENSE
+ITM Semiconductor Vietnam Company Limited ("ITM") hereby grants you a non-exclusive, 
+non-transferable license to use ITM Translate software ("Software") subject to the 
+terms and conditions of this Agreement.
+
+2. PERMITTED USES
+You may:
+- Install and use the Software on any number of computers for personal or business use
+- Make backup copies of the Software for archival purposes
+- Use the Software to translate text using various AI providers
+
+3. RESTRICTIONS
+You may not:
+- Reverse engineer, decompile, or disassemble the Software
+- Remove or alter any copyright notices or other proprietary markings
+- Distribute, sell, or sublicense the Software without explicit permission
+- Use the Software for any illegal or unauthorized purpose
+
+4. AI PROVIDERS AND API KEYS
+- The Software integrates with third-party AI services (Google, OpenAI, Anthropic, etc.)
+- You are responsible for obtaining and managing your own API keys
+- Usage of AI services is subject to their respective terms and conditions
+- ITM is not responsible for costs incurred through AI service usage
+
+5. DATA AND PRIVACY
+- The Software may cache translations locally for performance
+- No personal data is transmitted to ITM servers
+- API communications are between your device and AI service providers directly
+
+6. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+IN NO EVENT SHALL ITM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+8. TERMINATION
+This license is effective until terminated. You may terminate it at any time by 
+destroying all copies of the Software. ITM may terminate this license if you fail 
+to comply with any terms and conditions.
+
+9. UPDATES AND SUPPORT
+- Software updates are provided at ITM's discretion
+- Technical support is provided through GitHub repository
+- No guarantee of ongoing updates or support
+
+10. GOVERNING LAW
+This Agreement shall be governed by the laws of Vietnam.
+
+By installing and using ITM Translate, you acknowledge that you have read this 
+Agreement, understand it, and agree to be bound by its terms and conditions.
+
+For questions or support, visit: https://github.com/quockhanh112hubt/ITM_Translate
+
+ITM Semiconductor Vietnam Company Limited
+KhanhIT ITM Team
