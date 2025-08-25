@@ -145,6 +145,53 @@ class ConfigManager:
     def set_model_switching_delay(self, seconds: int) -> bool:
         """Set model switching delay"""
         return self.set('timeouts.model_switching_delay', seconds) and self.save_config()
+    
+    # Translation Style Settings
+    def get_translation_style(self) -> str:
+        """Get current translation style preference"""
+        return self.get('translation_style.preferred_style', 'natural')
+    
+    def set_translation_style(self, style: str) -> bool:
+        """Set translation style preference"""
+        valid_styles = ['natural', 'accurate']
+        if style not in valid_styles:
+            print(f"❌ [CONFIG] Invalid translation style: {style}. Valid options: {valid_styles}")
+            return False
+        return self.set('translation_style.preferred_style', style) and self.save_config()
+    
+    def get_translation_style_info(self) -> Dict[str, Dict[str, str]]:
+        """Get all available translation styles with their descriptions"""
+        return self.get('translation_style.styles', {
+            'natural': {
+                'name': 'Sự tự nhiên, dễ hiểu',
+                'description': 'Ưu tiên ngôn ngữ tự nhiên, dễ đọc và phù hợp với văn hóa địa phương'
+            },
+            'accurate': {
+                'name': 'Sự chính xác, sát nghĩa gốc',
+                'description': 'Ưu tiên độ chính xác, giữ nguyên ý nghĩa và cấu trúc văn bản gốc'
+            }
+        })
+    
+    def get_translation_rules(self, style: Optional[str] = None) -> str:
+        """Get translation rules based on selected style"""
+        if style is None:
+            style = self.get_translation_style()
+        
+        if style == 'natural':
+            return """- Prioritize natural, easy-to-understand language that fits local culture.
+- Use common expressions and idioms in the target language.
+- Adapt tone and style to sound native and fluent.
+- Simplify complex structures when possible without losing meaning.
+- Do not translate proper nouns or brand names."""
+        elif style == 'accurate':
+            return """- Preserve the tone, style, and structure of the original text.
+- Maintain technical terms and specialized vocabulary precisely.
+- Keep the exact meaning and nuance of the source text.
+- Retain formal/informal register as in the original.
+- Do not translate proper nouns or brand names."""
+        else:
+            # Fallback to natural style
+            return self.get_translation_rules('natural')
 
 # Global instance
 config_manager = ConfigManager()

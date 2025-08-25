@@ -25,5 +25,18 @@
         "translation_retry_timeout": 10,
         "api_validation_timeout": 30,
         "model_switching_delay": 10
+    },
+    "translation_style": {
+        "preferred_style": "natural",
+        "styles": {
+            "natural": {
+                "name": "Sự tự nhiên, dễ hiểu",
+                "description": "Ưu tiên ngôn ngữ tự nhiên, dễ đọc và phù hợp với văn hóa địa phương"
+            },
+            "accurate": {
+                "name": "Sự chính xác, sát nghĩa gốc",
+                "description": "Ưu tiên độ chính xác, giữ nguyên ý nghĩa và cấu trúc văn bản gốc"
+            }
+        }
     }
 }

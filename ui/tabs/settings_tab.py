@@ -48,6 +48,9 @@ class SettingsTab:
         main_container = ttk.Frame(self.parent_frame)
         main_container.pack(fill='both', expand=True, padx=40, pady=(0, 20))
         
+        # Create translation style section (moved above hotkey section)
+        self.setup_translation_style_section(main_container)
+        
         # Create hotkey section
         self.setup_hotkey_section(main_container)
         
@@ -121,13 +124,13 @@ class SettingsTab:
                 toggle_btn.config(text=_('show_custom_options'))
                 self.group2_visible = False
                 # Điều chỉnh kích thước cửa sổ về nhỏ
-                self.main_app.root.geometry('1070x440')
+                self.main_app.root.geometry('1070x640')
             else:
                 group2.pack(padx=0, pady=(12, 18), fill='x', ipadx=10, ipady=10)
                 toggle_btn.config(text=_('hide_custom_options'))
                 self.group2_visible = True
                 # Điều chỉnh kích thước cửa sổ về lớn
-                self.main_app.root.geometry('1070x650')
+                self.main_app.root.geometry('1070x850')
             
             # Cập nhật trạng thái trong main app để on_tab_changed biết
             self.main_app.group2_visible = self.group2_visible
@@ -525,7 +528,193 @@ class SettingsTab:
             # Fallback restart method
             messagebox.showinfo(_('notification'), "Vui lòng khởi động lại ứng dụng thủ công để áp dụng thay đổi.")
     
+    def setup_translation_style_section(self, parent):
+        """Thiết lập phần cấu hình phong cách dịch"""
+        from core.config_manager import config_manager
+        
+        # Translation Style Group
+        style_group = ttk.LabelFrame(parent, text="Phong cách dịch ưu tiên", bootstyle='success')
+        style_group.pack(padx=0, pady=(16, 20), fill='x', ipadx=10, ipady=10)
+        
+        # Configure grid
+        style_group.columnconfigure(0, weight=1)
+        style_group.columnconfigure(1, weight=1)
+        
+        # Description
+        desc_label = ttk.Label(style_group, 
+                              text="Chọn phong cách dịch mà bạn ưu tiên. Điều này sẽ ảnh hưởng đến cách AI dịch văn bản.", 
+                              font=('Segoe UI', 9, 'italic'), 
+                              bootstyle='secondary')
+        desc_label.grid(row=0, column=0, columnspan=2, sticky='w', padx=8, pady=(10, 15))
+        
+        # Get current style and style info
+        current_style = config_manager.get_translation_style()
+        style_info = config_manager.get_translation_style_info()
+        
+        # Create radio buttons
+        self.translation_style_var = tk.StringVar(value=current_style)
+        
+        # Natural style option
+        natural_frame = ttk.Frame(style_group)
+        natural_frame.grid(row=1, column=0, sticky='ew', padx=8, pady=5)
+        
+        natural_radio = ttk.Radiobutton(
+            natural_frame,
+            text=style_info.get('natural', {}).get('name', 'Sự tự nhiên, dễ hiểu'),
+            variable=self.translation_style_var,
+            value='natural',
+            bootstyle='success',
+            command=self.on_translation_style_change
+        )
+        natural_radio.pack(anchor='w')
+        
+        natural_desc = ttk.Label(
+            natural_frame,
+            text=style_info.get('natural', {}).get('description', 'Ưu tiên ngôn ngữ tự nhiên'),
+            font=('Segoe UI', 8),
+            bootstyle='secondary',
+            wraplength=300
+        )
+        natural_desc.pack(anchor='w', padx=(20, 0), pady=(2, 0))
+        
+        # Accurate style option  
+        accurate_frame = ttk.Frame(style_group)
+        accurate_frame.grid(row=1, column=1, sticky='ew', padx=8, pady=5)
+        
+        accurate_radio = ttk.Radiobutton(
+            accurate_frame,
+            text=style_info.get('accurate', {}).get('name', 'Sự chính xác, sát nghĩa gốc'),
+            variable=self.translation_style_var,
+            value='accurate',
+            bootstyle='success',
+            command=self.on_translation_style_change
+        )
+        accurate_radio.pack(anchor='w')
+        
+        accurate_desc = ttk.Label(
+            accurate_frame,
+            text=style_info.get('accurate', {}).get('description', 'Ưu tiên độ chính xác'),
+            font=('Segoe UI', 8),
+            bootstyle='secondary',
+            wraplength=300
+        )
+        accurate_desc.pack(anchor='w', padx=(20, 0), pady=(2, 0))
+        
+        # Current style indicator
+        current_style_label = ttk.Label(
+            style_group,
+            text=f"Hiện tại: {style_info.get(current_style, {}).get('name', current_style)}",
+            font=('Segoe UI', 9, 'bold'),
+            bootstyle='info'
+        )
+        current_style_label.grid(row=2, column=0, columnspan=2, sticky='w', padx=8, pady=(10, 5))
+    
+    def on_translation_style_change(self):
+        """Xử lý khi thay đổi phong cách dịch"""
+        from core.config_manager import config_manager
+        
+        new_style = self.translation_style_var.get()
+        old_style = config_manager.get_translation_style()
+        
+        if new_style != old_style:
+            # Save new style
+            success = config_manager.set_translation_style(new_style)
+            
+            if success:
+                # Update current style indicator
+                style_info = config_manager.get_translation_style_info()
+                style_name = style_info.get(new_style, {}).get('name', new_style)
+                
+                # Show confirmation
+                messagebox.showinfo(
+                    "Thành công", 
+                    f"Đã thay đổi phong cách dịch thành: {style_name}\n\nThay đổi sẽ có hiệu lực cho các lần dịch tiếp theo."
+                )
+                
+                print(f"🎨 [SETTINGS] Translation style changed: {old_style} → {new_style}")
+            else:
+                # Revert selection on failure
+                self.translation_style_var.set(old_style)
+                messagebox.showerror("Lỗi", "Không thể lưu cài đặt phong cách dịch.")
+    
     def refresh_language(self):
         """Refresh UI text when language changes"""
         # Không cần rebuild vì GUI đã recreate tabs rồi
         pass
+    
+    def setup_translation_style_section(self, parent):
+        """Thiết lập phần cấu hình phong cách dịch"""
+        # Import config manager để lấy/set translation style
+        from core.config_manager import config_manager
+        
+        # Translation Style Group
+        style_group = ttk.LabelFrame(parent, text=_('translation_style_title'), bootstyle='success')
+        style_group.pack(padx=0, pady=(0, 20), fill='x', ipadx=10, ipady=10)
+        
+        # Description
+        desc_label = ttk.Label(style_group, text=_('translation_style_help'),
+                              font=('Segoe UI', 9, 'italic'), bootstyle='secondary')
+        desc_label.pack(anchor='w', padx=10, pady=(10, 15))
+        
+        # Radio button variable
+        self.translation_style_var = tk.StringVar(value=config_manager.get_translation_style())
+        
+        # Container for radio buttons
+        radio_container = ttk.Frame(style_group)
+        radio_container.pack(fill='x', padx=10, pady=(0, 10))
+        
+        # Natural style radio button
+        natural_frame = ttk.Frame(radio_container)
+        natural_frame.pack(fill='x', pady=(0, 10))
+        
+        natural_radio = ttk.Radiobutton(
+            natural_frame,
+            text=_('translation_style_natural'),
+            variable=self.translation_style_var,
+            value='natural',
+            command=self.on_translation_style_change,
+            bootstyle='success'
+        )
+        natural_radio.pack(anchor='w')
+        
+        natural_desc = ttk.Label(
+            natural_frame,
+            text=_('translation_style_natural_desc'),
+            font=('Segoe UI', 8),
+            bootstyle='secondary'
+        )
+        natural_desc.pack(anchor='w', padx=(25, 0), pady=(2, 0))
+        
+        # Accurate style radio button  
+        accurate_frame = ttk.Frame(radio_container)
+        accurate_frame.pack(fill='x')
+        
+        accurate_radio = ttk.Radiobutton(
+            accurate_frame,
+            text=_('translation_style_accurate'),
+            variable=self.translation_style_var,
+            value='accurate',
+            command=self.on_translation_style_change,
+            bootstyle='success'
+        )
+        accurate_radio.pack(anchor='w')
+        
+        accurate_desc = ttk.Label(
+            accurate_frame,
+            text=_('translation_style_accurate_desc'),
+            font=('Segoe UI', 8),
+            bootstyle='secondary'
+        )
+        accurate_desc.pack(anchor='w', padx=(25, 0), pady=(2, 0))
+    
+    def on_translation_style_change(self):
+        """Handle translation style change"""
+        from core.config_manager import config_manager
+        new_style = self.translation_style_var.get()
+        
+        # Save to config
+        success = config_manager.set_translation_style(new_style)
+        if success:
+            print(f"🎨 Translation style changed to: {new_style}")
+        else:
+            print(f"❌ Failed to save translation style: {new_style}")

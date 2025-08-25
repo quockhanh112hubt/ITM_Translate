@@ -571,6 +571,14 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "seconds_unit": "giây",
         "save_timeout_settings": "💾 Lưu cài đặt",
         "reset_timeout_settings": "🔄 Khôi phục mặc định",
+        
+        # Translation Style
+        "translation_style_title": "🎨 Phong cách dịch ưu tiên",
+        "translation_style_help": "Chọn phong cách dịch mà bạn ưa thích. Điều này sẽ ảnh hưởng đến cách AI dịch văn bản.",
+        "translation_style_natural": "Sự tự nhiên, dễ hiểu",
+        "translation_style_natural_desc": "Ưu tiên ngôn ngữ tự nhiên, dễ đọc và phù hợp với văn hóa địa phương",
+        "translation_style_accurate": "Sự chính xác, sát nghĩa gốc", 
+        "translation_style_accurate_desc": "Ưu tiên độ chính xác, giữ nguyên ý nghĩa và cấu trúc văn bản gốc",
     },
     
     "en": {
@@ -1140,6 +1148,14 @@ Custom group (Study/Projects):
         "seconds_unit": "seconds",
         "save_timeout_settings": "💾 Save Settings",
         "reset_timeout_settings": "🔄 Reset to Default",
+        
+        # Translation Style
+        "translation_style_title": "🎨 Preferred Translation Style",
+        "translation_style_help": "Choose your preferred translation style. This will affect how AI translates text.",
+        "translation_style_natural": "Natural & Easy to Understand",
+        "translation_style_natural_desc": "Prioritize natural, easy-to-read language that fits local culture",
+        "translation_style_accurate": "Accurate & Literal",
+        "translation_style_accurate_desc": "Prioritize accuracy, preserving original meaning and text structure",
     }
 }
 

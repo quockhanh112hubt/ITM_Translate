@@ -139,9 +139,9 @@ class MainGUI:
         if tab_index == 0:  # Settings tab
             # Tab Cài Đặt: kích thước mặc định hoặc mở rộng nếu có Group 2
             if hasattr(self, 'group2_visible') and self.group2_visible:
-                self.root.geometry('1070x650')
+                self.root.geometry('1070x850')
             else:
-                self.root.geometry('1070x440')
+                self.root.geometry('1070x640')
         elif tab_index == 1:  # API Keys tab
             # Tab API Key: cần không gian lớn hơn cho danh sách keys và controls
             self.root.geometry('1070x860')

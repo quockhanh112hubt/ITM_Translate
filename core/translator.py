@@ -130,7 +130,8 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     # SIMPLIFIED SMART TRANSLATION: Single AI call, no separate detection
                     print(f"🧠 [SIMPLIFIED MODE] Using single smart AI call")
                     
-                    # SIMPLIFIED SMART PROMPT: Direct translation using settings
+                    # SIMPLIFIED SMART PROMPT: Direct translation using settings with dynamic rules
+                    translation_rules = config_manager.get_translation_rules()
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
@@ -139,9 +140,7 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, prioritize natural.
-- Retain technical terms.
-- Do not translate proper nouns or brand names.
+{translation_rules}
 - Do not output any explanations — only return the translated text.
 
 text to translate:
@@ -213,8 +212,9 @@ text to translate:
                             translation_result['result'] = translated_text
                             
                     else:
-                        # AI PROVIDERS: Use smart prompt for detection + translation
+                        # AI PROVIDERS: Use smart prompt for detection + translation with dynamic rules
                         print(f"🧠 [SIMPLIFIED PROVIDER] {key_info.name} using single smart AI call")
+                        translation_rules = config_manager.get_translation_rules()
                         smart_prompt = f"""You are a professional translation model.
 
 Your task:
@@ -223,9 +223,7 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, prioritize natural.
-- Retain technical terms.
-- Do not translate proper nouns or brand names.
+{translation_rules}
 - Do not output any explanations — only return the translated text.
 
 text to translate:
@@ -531,6 +529,7 @@ def translate_with_specific_provider(text, provider_name):
                     if gemini_keys:
                         fallback_provider = create_ai_provider(gemini_keys[0])
                         if fallback_provider:
+                            translation_rules = config_manager.get_translation_rules()
                             smart_prompt = f"""You are a professional translation model.
 
 Your task:
@@ -539,9 +538,7 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, prioritize natural.
-- Retain technical terms.
-- Do not translate proper nouns or brand names.
+{translation_rules}
 - Do not output any explanations — only return the translated text.
 
 text to translate:
@@ -609,9 +606,10 @@ text to translate:
                 return (translated_text, detected_lang, target_lang)
                 
             else:
-                # AI PROVIDERS: Use smart prompt for detection + translation
+                # AI PROVIDERS: Use smart prompt for detection + translation with dynamic rules
                 print(f"🧠 [SPECIFIC] {provider_name} using smart prompt for AI translation")
                 
+                translation_rules = config_manager.get_translation_rules()
                 smart_prompt = f"""You are a professional translation model.
 
 Your task:
@@ -620,9 +618,7 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, prioritize natural.
-- Retain technical terms.
-- Do not translate proper nouns or brand names.
+{translation_rules}
 - Do not output any explanations — only return the translated text.
 
 text to translate:
@@ -647,6 +643,7 @@ text to translate:
             genai.configure(api_key=target_key.key)
             model = genai.GenerativeModel("gemini-1.5-flash")
             
+            translation_rules = config_manager.get_translation_rules()
             smart_prompt_fallback = f"""You are a professional translation model.
 
 Your task:
@@ -655,9 +652,7 @@ Your task:
 3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
 Translation rules:
-- Preserve the tone, style, prioritize natural.
-- Retain technical terms.
-- Do not translate proper nouns or brand names.
+{translation_rules}
 - Do not output any explanations — only return the translated text.
 
 text to translate:
