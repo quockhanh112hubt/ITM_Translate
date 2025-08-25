@@ -164,6 +164,9 @@ class UpdateNotifier:
             old_has_update = self.has_update
             self.has_update = has_update
             self.new_version = new_version if has_update else None
+            
+            # Import datetime explicitly để tránh conflict
+            from datetime import datetime
             self.last_check_time = datetime.now()
             
             # Notify callbacks if status changed OR on first check (để force refresh UI)

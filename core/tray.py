@@ -215,6 +215,12 @@ def create_tray_icon(root, app):
             icon.icon = new_image
             
             # Tạo menu mới với tất cả handlers (bao gồm cả hidden menu item cho left-click)
+            # Import i18n function locally để tránh conflict
+            try:
+                from core.i18n import _
+            except ImportError:
+                def _(text): return text  # Fallback function
+                
             new_menu = pystray.Menu(
                 # Hidden default item cho left-click compatibility
                 pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),
