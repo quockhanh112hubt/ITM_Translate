@@ -40,13 +40,36 @@ def resource_path(relative_path):
         base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
-def create_image(floating_button_enabled=False):
+def create_image(floating_button_enabled=False, has_update=False):
     # Chọn icon dựa trên trạng thái floating button
     icon_name = 'icon_ON.ico' if floating_button_enabled else 'icon_OFF.ico'
     icon_path = resource_path(os.path.join('Resource', icon_name))
     
     if os.path.exists(icon_path):
-        return Image.open(icon_path)
+        img = Image.open(icon_path)
+        
+        # Thêm chấm đỏ nếu có update
+        if has_update:
+            # Tạo một copy để không ảnh hưởng file gốc
+            img = img.copy()
+            draw = ImageDraw.Draw(img)
+            
+            # Vẽ chấm đỏ ở góc trên bên phải (giống Zalo notification)
+            # Chấm đỏ to vừa phải để thấy rõ trên taskbar
+            circle_size = 100  # Size vừa phải - to nhưng không quá to (160 → 100px)
+            x = img.width - circle_size - 1  # Dịch gần edge hơn
+            y = 1  # Sát edge trên
+            
+            print(f"🔴 Drawing red dot at ({x}, {y}) with size {circle_size} on image {img.width}x{img.height}")
+            
+            # Vẽ viền trắng vừa phải
+            draw.ellipse((x-6, y-6, x+circle_size+6, y+circle_size+6), 
+                        fill=(255, 255, 255, 255))
+            # Vẽ chấm đỏ
+            draw.ellipse((x, y, x+circle_size, y+circle_size), 
+                        fill=(255, 0, 0, 255))
+        
+        return img
     
     # Tạo icon mặc định dựa trên trạng thái
     img = Image.new('RGBA', (32, 32), (255, 255, 255, 0))
@@ -60,6 +83,21 @@ def create_image(floating_button_enabled=False):
         # Icon OFF: màu xám
         draw.ellipse((4, 4, 28, 28), fill=(128, 128, 128, 255))
         draw.text((10, 8), "T", fill=(255,255,255,255))
+    
+    # Thêm chấm đỏ nếu có update (cho icon mặc định)
+    if has_update:
+        circle_size = 100  # Size vừa phải - to nhưng không quá to (160 → 100px)
+        x = img.width - circle_size - 1  # Dịch gần edge hơn
+        y = 1  # Sát edge trên
+        
+        print(f"🔴 Drawing red dot on default icon at ({x}, {y}) with size {circle_size}")
+        
+        # Vẽ viền trắng vừa phải
+        draw.ellipse((x-6, y-6, x+circle_size+6, y+circle_size+6), 
+                    fill=(255, 255, 255, 255))
+        # Vẽ chấm đỏ
+        draw.ellipse((x, y, x+circle_size, y+circle_size), 
+                    fill=(255, 0, 0, 255))
     
     return img
 
@@ -154,15 +192,26 @@ def create_tray_icon(root, app):
         except Exception as e:
             print(f"❌ Error saving auto close popup state: {e}")
 
-    def update_tray_icon():
-        """Cập nhật icon của tray dựa trên trạng thái floating button và auto close popup"""
+    def update_tray_icon(has_update=None):
+        """Cập nhật icon của tray dựa trên trạng thái floating button và update status"""
         nonlocal icon, floating_button_enabled, auto_close_popup_enabled
         try:
+            # Nếu has_update không được truyền, tự động check từ UpdateNotifier
+            if has_update is None:
+                try:
+                    from core.update_notifier import get_update_notifier
+                    update_notifier = get_update_notifier()
+                    has_update, _, _ = update_notifier.get_update_status()
+                except Exception:
+                    has_update = False
+            
+            print(f"🔄 Updating tray icon with has_update={has_update}")
+            
             # Reload trạng thái mới nhất từ file (cho trường hợp GUI thay đổi)
             floating_button_enabled = load_floating_button_enabled()
             auto_close_popup_enabled = load_auto_close_popup_enabled()
             
-            new_image = create_image(floating_button_enabled)
+            new_image = create_image(floating_button_enabled, has_update)
             icon.icon = new_image
             
             # Tạo menu mới với tất cả handlers (bao gồm cả hidden menu item cho left-click)
@@ -303,7 +352,7 @@ def create_tray_icon(root, app):
     
     icon = pystray.Icon(
         f'ITM Translate v{app_version}', 
-        create_image(floating_button_enabled), 
+        create_image(floating_button_enabled, False),  # Ban đầu chưa có update 
         menu=pystray.Menu(
             # Hidden default item cho left-click compatibility
             pystray.MenuItem("Toggle Floating Button", on_left_click, default=True, visible=False),

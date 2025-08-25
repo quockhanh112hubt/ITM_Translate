@@ -60,6 +60,11 @@ class MainGUI:
         
         # Start update monitoring in background
         start_update_monitoring()
+        
+    def set_tray_reference(self, tray):
+        """Set tray reference để có thể update tray icon từ GUI"""
+        self.tray_reference = tray
+        
     def set_hotkey_manager(self, manager):
         self.hotkey_manager = manager
     def set_hotkey_updater(self, updater):
@@ -840,9 +845,16 @@ del "%~f0"
     def _on_update_notification(self, has_update, new_version):
         """Callback khi có update notification từ UpdateNotifier"""
         try:
-            # Kiểm tra tab_control đã được khởi tạo chưa
+            # Update tray icon với update status (luôn được thực hiện)
+            self._update_tray_icon_with_update_status(has_update)
+            
+            # Kiểm tra tab_control đã được khởi tạo chưa cho việc update tab title
             if not hasattr(self, 'tab_control') or self.tab_control is None:
-                print("⚠️ Tab control not ready yet, skipping update notification")
+                print("⚠️ Tab control not ready yet, skipping tab title update")
+                if has_update:
+                    print(f"🎉 Update available: {new_version} (tray icon updated)")
+                else:
+                    print("✅ No updates available (tray icon updated)")
                 return
                 
             # Update advanced tab title
@@ -856,6 +868,21 @@ del "%~f0"
                 
         except Exception as e:
             print(f"❌ Error handling update notification: {e}")
+    
+    def _update_tray_icon_with_update_status(self, has_update):
+        """Cập nhật tray icon với trạng thái update"""
+        try:
+            # Sử dụng tray reference được set từ main app
+            if hasattr(self, 'tray_reference') and self.tray_reference:
+                if hasattr(self.tray_reference, 'update_tray_icon'):
+                    self.tray_reference.update_tray_icon(has_update)
+                    print(f"🔔 Tray icon updated with update status: {has_update}")
+                else:
+                    print("⚠️ Tray doesn't have update_tray_icon method")
+            else:
+                print("⚠️ Tray reference not set")
+        except Exception as e:
+            print(f"❌ Error updating tray icon with update status: {e}")
     
     def _get_advanced_tab_title(self, language=None):
         """Lấy title cho Advanced tab với update indicator nếu có"""

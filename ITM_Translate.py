@@ -2035,13 +2035,24 @@ except Exception as e:
 
 tray = create_tray_icon(root, app)
 
+# Set tray reference vào GUI để có thể update tray icon
+app.set_tray_reference(tray)
+
 # Tạo callback để cập nhật tray icon từ GUI
 def update_tray_icon_from_gui():
     """Callback để cập nhật tray icon khi settings thay đổi từ GUI"""
     try:
         if tray and hasattr(tray, 'update_tray_icon'):
-            # Gọi function update_tray_icon của tray
-            tray.update_tray_icon()
+            # Lấy update status từ update notifier
+            try:
+                from core.update_notifier import get_update_notifier
+                update_notifier = get_update_notifier()
+                has_update, _, _ = update_notifier.get_update_status()
+            except Exception:
+                has_update = False
+            
+            # Gọi function update_tray_icon của tray với update status
+            tray.update_tray_icon(has_update)
         else:
             # Nếu không có method update_tray_icon, reload tray state
             import importlib
