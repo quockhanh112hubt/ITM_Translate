@@ -657,16 +657,27 @@ class GoogleTranslateProvider(BaseAIProvider):
         try:
             import requests
             
+            print(f"🔄 [GOOGLE] Starting translation: '{text[:50]}...' from {source_lang} to {target_lang}")
+            
+            # Validate inputs
+            if not text or text.strip() == "":
+                raise Exception("Input text is empty")
+            
+            if not self.api_key or self.api_key.strip() == "":
+                raise Exception("API key is missing")
+            
             # Handle 'auto' source language - detect first
             if source_lang == 'auto' or source_lang.lower() == 'auto':
                 detected_lang = self.detect_language(text)
-
                 google_source = self._convert_to_google_lang(detected_lang) if detected_lang else 'en'
+                print(f"🌐 [GOOGLE] Auto-detected source: {detected_lang} → {google_source}")
             else:
                 # Convert our internal language codes to Google format
                 google_source = self._convert_to_google_lang(source_lang)
+                print(f"🌐 [GOOGLE] Source language: {source_lang} → {google_source}")
             
             google_target = self._convert_to_google_lang(target_lang)
+            print(f"🎯 [GOOGLE] Target language: {target_lang} → {google_target}")
             
             # Prepare API call
             url = f"{self.base_url}"
@@ -678,11 +689,22 @@ class GoogleTranslateProvider(BaseAIProvider):
                 'format': 'text'
             }
             
+            print(f"🌍 [GOOGLE] Making API call to: {url}")
+            print(f"📡 [GOOGLE] Parameters: source={google_source}, target={google_target}")
+            
             # Perform translation
             response = requests.post(url, data=params, timeout=30)
+            
+            print(f"📊 [GOOGLE] Response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                print(f"❌ [GOOGLE] API Error Response: {response.text}")
+                raise Exception(f"HTTP {response.status_code}: {response.text}")
+            
             response.raise_for_status()
             
             result = response.json()
+            print(f"📄 [GOOGLE] Raw response: {str(result)[:200]}...")
             
             if 'data' in result and 'translations' in result['data']:
                 translated_text = result['data']['translations'][0]['translatedText']
@@ -691,12 +713,15 @@ class GoogleTranslateProvider(BaseAIProvider):
                 import html
                 translated_text = html.unescape(translated_text)
                 
+                print(f"✅ [GOOGLE] Translation successful: '{translated_text[:50]}...'")
                 return translated_text
             else:
-                raise Exception("No translation data in response")
+                raise Exception(f"No translation data in response: {result}")
             
         except Exception as e:
-            raise Exception(f"Google Translate API error: {str(e)}")
+            error_msg = f"Google Translate API error: {str(e)}"
+            print(f"❌ [GOOGLE] {error_msg}")
+            raise Exception(error_msg)
     
     def _convert_to_google_lang(self, lang: str) -> str:
         """Convert internal language code to Google Translate format"""
@@ -788,14 +813,21 @@ class GoogleTranslateProvider(BaseAIProvider):
             if not text_to_translate:
                 raise Exception("Could not extract text from translation prompt")
             
+            print(f"🔍 [GOOGLE] Extracted text: '{text_to_translate[:100]}...'")
+            
             # Set fallback values if parsing failed
             if not ngon_ngu_thu_2:
                 ngon_ngu_thu_2 = 'vietnamese'
             if not ngon_ngu_thu_3:
                 ngon_ngu_thu_3 = 'english'
             
-            print(f"🔍 [GOOGLE] Extracted text: '{text_to_translate[:100]}...'")
             print(f"🎯 [GOOGLE] Target languages: {ngon_ngu_thu_2} ↔ {ngon_ngu_thu_3}")
+            
+            # Validate API key first
+            if not self.api_key or self.api_key.strip() == "":
+                raise Exception("Google Translate API key is missing or empty")
+            
+            print(f"🔑 [GOOGLE] Using API key: {self.api_key[:20]}...")
             
             # Auto-detect source language
             detected_lang = self.detect_language(text_to_translate)

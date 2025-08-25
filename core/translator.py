@@ -186,8 +186,14 @@ text to translate:
                         
                         # Step 3: Direct translation (no prompt)
                         try:
-                            if hasattr(provider, 'translate_text'):
+                            # Check provider type explicitly for better exe compatibility
+                            provider_name = provider.get_provider_name() if hasattr(provider, 'get_provider_name') else str(type(provider).__name__)
+                            
+                            if "GoogleTranslate" in str(type(provider).__name__) or "Google Translate" in provider_name:
                                 # Google Translate uses translate_text method
+                                translated_text = provider.translate_text(text, "auto", target_lang)
+                            elif hasattr(provider, 'translate_text'):
+                                # Other providers with translate_text method
                                 translated_text = provider.translate_text(text, "auto", target_lang)
                             elif hasattr(provider, 'translate'):
                                 # Other direct translation providers
@@ -573,16 +579,31 @@ text to translate:
                 
                 # Step 3: Direct translation (no prompt)
                 try:
-                    if hasattr(provider, 'translate_text'):
+                    # Check provider type explicitly for better exe compatibility
+                    provider_class_name = str(type(provider).__name__)
+                    provider_name_attr = provider.get_provider_name() if hasattr(provider, 'get_provider_name') else provider_class_name
+                    
+                    print(f"🔍 [SPECIFIC] Provider type: {provider_class_name}, name: {provider_name_attr}")
+                    
+                    if "GoogleTranslate" in provider_class_name or "Google Translate" in provider_name_attr:
                         # Google Translate uses translate_text method
+                        print(f"🌍 [SPECIFIC] Using Google Translate direct method")
+                        translated_text = provider.translate_text(text, "auto", target_lang)
+                    elif hasattr(provider, 'translate_text'):
+                        # Other providers with translate_text method
+                        print(f"📝 [SPECIFIC] Using translate_text method")
                         translated_text = provider.translate_text(text, "auto", target_lang)
                     elif hasattr(provider, 'translate'):
                         # Other direct translation providers
+                        print(f"📝 [SPECIFIC] Using translate method")
                         translated_text = provider.translate(text, target_lang)
                     else:
+                        print(f"❌ [SPECIFIC] No translation method found for {provider_class_name}")
                         return f"❌ Provider {provider_name} doesn't support direct translation"
                 except Exception as e:
-                    return f"❌ Google Translate error: {str(e)}"
+                    error_msg = f"❌ {provider_name} error: {str(e)}"
+                    print(f"🚫 [SPECIFIC] {error_msg}")
+                    return error_msg
                 
                 print(f"✅ [SPECIFIC] {provider_name} translation: {translated_text[:50]}...")
                 return (translated_text, detected_lang, target_lang)
