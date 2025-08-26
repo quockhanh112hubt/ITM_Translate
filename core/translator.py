@@ -135,15 +135,15 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
                     smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input text.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Analyze the input text to determine the dominant language (the language with the highest proportion of content) then apply the rule accordingly.
+2. If input text is not {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.  
+3. If input text is {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
-Translation rules:
+Translation rules (follow strictly):
 {translation_rules}
 - Do not output any explanations — only return the translated text.
 
-text to translate:
+input text:
 {text}
 """
                     
@@ -218,15 +218,15 @@ text to translate:
                         smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input text.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Analyze the input text to determine the dominant language (the language with the highest proportion of content) then apply the rule accordingly.
+2. If input text is not {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.  
+3. If input text is {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
-Translation rules:
+Translation rules (follow strictly):
 {translation_rules}
 - Do not output any explanations — only return the translated text.
 
-text to translate:
+input text:
 {text}
 """
                         
@@ -533,15 +533,15 @@ def translate_with_specific_provider(text, provider_name):
                             smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input text.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Analyze the input text to determine the dominant language (the language with the highest proportion of content) then apply the rule accordingly.
+2. If input text is not {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.  
+3. If input text is {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
-Translation rules:
+Translation rules (follow strictly):
 {translation_rules}
 - Do not output any explanations — only return the translated text.
 
-text to translate:
+input text:
 {text}
 """
                             translated_text = fallback_provider.generate_text(smart_prompt)
@@ -613,15 +613,15 @@ text to translate:
                 smart_prompt = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input text.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Analyze the input text to determine the dominant language (the language with the highest proportion of content) then apply the rule accordingly.
+2. If input text is not {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.  
+3. If input text is {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
-Translation rules:
+Translation rules (follow strictly):
 {translation_rules}
 - Do not output any explanations — only return the translated text.
 
-text to translate:
+input text:
 {text}
 """
                 
@@ -647,15 +647,15 @@ text to translate:
             smart_prompt_fallback = f"""You are a professional translation model.
 
 Your task:
-1. Detect the language of the input text.
-2. If it is not in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.
-3. If it is already in {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
+1. Analyze the input text to determine the dominant language (the language with the highest proportion of content) then apply the rule accordingly.
+2. If input text is not {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_2}.  
+3. If input text is {Ngon_ngu_thu_2}, translate it to {Ngon_ngu_thu_3}.
 
-Translation rules:
+Translation rules (follow strictly):
 {translation_rules}
 - Do not output any explanations — only return the translated text.
 
-text to translate:
+input text:
 {text}
 """
             

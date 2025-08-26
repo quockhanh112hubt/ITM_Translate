@@ -178,17 +178,16 @@ class ConfigManager:
             style = self.get_translation_style()
         
         if style == 'natural':
-            return """- Prioritize natural, easy-to-understand language that fits local culture.
-- Use common expressions and idioms in the target language.
+            return """- Use natural, fluent, easy-to-understand language.
 - Adapt tone and style to sound native and fluent.
 - Simplify complex structures when possible without losing meaning.
-- Do not translate proper nouns, personal names or brand names."""
+- Keep timestamps and chat log format exactly as in the original."""
         elif style == 'accurate':
             return """- Preserve the tone, style, and structure of the original text.
 - Maintain technical terms and specialized vocabulary precisely.
 - Keep the exact meaning and nuance of the source text.
 - Retain formal/informal register as in the original.
-- Do not translate proper nouns, personal names or brand names."""
+- Keep timestamps and chat log format exactly as in the original."""
         else:
             # Fallback to natural style
             return self.get_translation_rules('natural')
