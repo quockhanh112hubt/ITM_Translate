@@ -999,23 +999,29 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
         # If only one provider, just show info text
         info_label = tk.Label(
             footer_content_frame,
-            text=f"ITM Translate v{get_app_version()}",
+            text=f"You are using only one provider, add more providers to enable switching.",
             bg='#dee2e6',
             fg='#495057',
-            font=('Segoe UI', 8, 'italic')
+            font=('Segoe UI', 10, 'bold')
         )
-        info_label.pack(pady=3)
+        info_label.pack(fill="x", padx=5, pady=5)
     
     win.update_idletasks()
     # Đặt width/height cố định dựa trên widget
     req_width = text_widget.winfo_reqwidth()
     req_height = text_widget.winfo_reqheight()
-    
-    # Add extra height for buttons and footer if they exist
-    extra_height = 100 if len(all_keys) > 1 else 25  # Footer always adds some height
-    
+
+    # Determine footer height dynamically so single-provider info is fully visible
+    try:
+        footer_req_h = footer_frame.winfo_reqheight()
+    except Exception:
+        footer_req_h = 25
+
+    # Add small padding to avoid clipping
+    padding = 100
+
     width = req_width + 20
-    height = req_height + 25 + extra_height  # Moderate base height with footer
+    height = req_height + footer_req_h + padding
     text_widget.config(state='disabled')
     
     # Combined click handler for both link opening and text selection
