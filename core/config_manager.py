@@ -182,13 +182,13 @@ class ConfigManager:
 - Use common expressions and idioms in the target language.
 - Adapt tone and style to sound native and fluent.
 - Simplify complex structures when possible without losing meaning.
-- Do not translate proper nouns or brand names."""
+- Do not translate proper nouns, personal names or brand names."""
         elif style == 'accurate':
             return """- Preserve the tone, style, and structure of the original text.
 - Maintain technical terms and specialized vocabulary precisely.
 - Keep the exact meaning and nuance of the source text.
 - Retain formal/informal register as in the original.
-- Do not translate proper nouns or brand names."""
+- Do not translate proper nouns, personal names or brand names."""
         else:
             # Fallback to natural style
             return self.get_translation_rules('natural')
