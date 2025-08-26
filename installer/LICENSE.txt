@@ -1,6 +1,6 @@
 ITM TRANSLATE - SOFTWARE LICENSE AGREEMENT
 
-Copyright © 2025 ITM Semiconductor Vietnam Company Limited. All rights reserved.
+Copyright (C) 2025 ITM Semiconductor Vietnam Company Limited. All rights reserved.
 
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 

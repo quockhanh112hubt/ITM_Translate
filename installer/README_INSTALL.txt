@@ -5,24 +5,24 @@ Thank you for installing ITM Translate - Professional AI Translation Tool.
 GETTING STARTED:
 1. Configure your AI provider API keys in the "API KEY Management" tab
 2. Set up your preferred hotkeys in the "Settings" tab
-3. Choose your translation style in "Settings" → "Preferred Translation Style"
+3. Choose your translation style in "Settings" -> "Preferred Translation Style"
 
 SUPPORTED AI PROVIDERS:
-✅ Google Gemini
-✅ ChatGPT (OpenAI)
-✅ Claude (Anthropic)
-✅ DeepSeek
-✅ Google Translate
-✅ GitHub Copilot
+- Google Gemini
+- ChatGPT (OpenAI)
+- Claude (Anthropic)
+- DeepSeek
+- Google Translate
+- GitHub Copilot
 
 FEATURES:
-🔥 Smart translation with auto language detection
-🎯 Customizable hotkeys for quick translation
-🎨 Multiple translation styles (Natural vs Accurate)
-🔄 Automatic provider failover
-📊 Translation history tracking
-🌐 Multi-language interface (Vietnamese/English)
-🔔 Automatic update notifications
+- Smart translation with auto language detection
+- Customizable hotkeys for quick translation
+- Multiple translation styles (Natural vs Accurate)
+- Automatic provider failover
+- Translation history tracking
+- Multi-language interface (Vietnamese/English)
+- Automatic update notifications
 
 CONFIGURATION:
 - Configuration files: Located in installation directory
@@ -38,4 +38,4 @@ SUPPORT:
 Developed by KhanhIT ITM Team
 ITM Semiconductor Vietnam Company Limited
 
-Enjoy translating! 🚀
+Enjoy translating!

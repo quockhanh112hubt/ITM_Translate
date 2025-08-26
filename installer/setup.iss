@@ -88,6 +88,7 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\ITM Translate"; Fi
 ; Application settings (stored in user registry)
 Root: HKCU; Subkey: "Software\ITM_Translate"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\ITM_Translate"; ValueType: string; ValueName: "Version"; ValueData: "2.0.25"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\ITM_Translate"; ValueType: string; ValueName: "UninstallString"; ValueData: "{uninstallexe}"; Flags: uninsdeletekey
 
 ; Run section (post-installation actions)
 [Run]
@@ -118,14 +119,117 @@ AdditionalIcons=Additional icons:
 
 ; Code section for custom functionality
 [Code]
+const
+  WM_CLOSE = $0010;
+
 var
   ProgressPage: TOutputProgressWizardPage;
+  MaintenancePage: TInputOptionWizardPage;
+
+// Function to check if ITM Translate is running
+function IsAppRunning(): Boolean;
+var
+  ResultCode: Integer;
+  TempFile: String;
+  Lines: TArrayOfString;
+  I: Integer;
+begin
+  Result := False;
+  try
+    TempFile := ExpandConstant('{tmp}\processes.txt');
+    
+    // Run tasklist and save output to temp file
+    if Exec('cmd', '/c tasklist /FI "IMAGENAME eq ITM_Translate.exe" > "' + TempFile + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+      // Read the temp file and check if ITM_Translate.exe is listed
+      if LoadStringsFromFile(TempFile, Lines) then begin
+        for I := 0 to GetArrayLength(Lines) - 1 do begin
+          if Pos('ITM_Translate.exe', Lines[I]) > 0 then begin
+            Result := True;
+            Break;
+          end;
+        end;
+      end;
+      DeleteFile(TempFile);
+    end;
+  except
+    Result := False;
+  end;
+end;
+
+// Function to check if ITM Translate is already installed
+function IsAppInstalled(): Boolean;
+var
+  InstallPath: String;
+begin
+  Result := False;
+  // Check registry for existing installation
+  if RegQueryStringValue(HKCU, 'Software\ITM_Translate', 'InstallPath', InstallPath) then begin
+    if (InstallPath <> '') and DirExists(InstallPath) and FileExists(InstallPath + '\ITM_Translate.exe') then begin
+      Result := True;
+    end else begin
+      // If registry exists but files don't exist, clean up registry
+      RegDeleteKeyIncludingSubkeys(HKCU, 'Software\ITM_Translate');
+      Result := False;
+    end;
+  end;
+end;
 
 procedure InitializeWizard;
+var
+  IsInstalled: Boolean;
 begin
   // Create custom progress page
   ProgressPage := CreateOutputProgressPage('Installing ITM Translate', 
     'Please wait while Setup installs ITM Translate on your computer.');
+    
+  // Check if app is installed (this will also clean up invalid registry entries)
+  IsInstalled := IsAppInstalled();
+    
+  // Create maintenance page for existing installations
+  if IsInstalled then begin
+    MaintenancePage := CreateInputOptionPage(wpWelcome,
+      'ITM Translate Setup', 'ITM Translate is already installed on this computer.',
+      'Please select how you would like to proceed:', True, False);
+    MaintenancePage.Add('&Repair ITM Translate');
+    MaintenancePage.Add('&Uninstall ITM Translate');
+    MaintenancePage.Add('&Update ITM Translate (recommended)');
+    MaintenancePage.Values[2] := True; // Default to Update
+  end else begin
+    MaintenancePage := nil; // Ensure it's nil for new installations
+  end;
+end;
+
+function InitializeSetup(): Boolean;
+var
+  Response: Integer;
+  ResultCode: Integer;
+begin
+  Result := True;
+  
+  // Only check for running process if it's actually running
+  if IsAppRunning() then begin
+    // Process found - ask user what to do
+    Response := MsgBox('ITM Translate is currently running.' + #13#10 + 
+                      'Setup needs to close the application to continue installation.' + #13#10 + #13#10 +
+                      'Click OK to close ITM Translate and continue, or Cancel to exit Setup.',
+                      mbConfirmation, MB_OKCANCEL);
+    
+    if Response = IDOK then begin
+      // Only terminate if user agrees
+      if not Exec('taskkill', '/F /IM ITM_Translate.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+        MsgBox('Failed to close ITM Translate. Please close the application manually and run Setup again.',
+               mbError, MB_OK);
+        Result := False;
+        Exit;
+      end;
+      Sleep(2000); // Wait for process to fully terminate
+    end else begin
+      // User cancelled - exit setup WITHOUT terminating process
+      Result := False;
+      Exit;
+    end;
+  end;
+  // If no process is running, continue normally
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -163,11 +267,71 @@ begin
   end;
 end;
 
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := False;
+  
+  // For new installations, only skip maintenance page
+  if (MaintenancePage = nil) then begin
+    // This is a new installation - show all normal pages (Welcome, License, etc.)
+    Result := False;
+  end else begin
+    // This is maintenance mode - skip maintenance page for new installs shouldn't happen
+    if (PageID = MaintenancePage.ID) and not IsAppInstalled() then begin
+      Result := True;
+    end;
+    
+    // If user chose uninstall, skip normal installation pages
+    if Assigned(MaintenancePage) and (MaintenancePage.Values[1] = True) then begin
+      if (PageID = wpSelectDir) or (PageID = wpSelectComponents) or 
+         (PageID = wpSelectProgramGroup) or (PageID = wpSelectTasks) then begin
+        Result := True;
+      end;
+    end;
+  end;
+end;
+
 function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  UninstallString: String;
+  ResultCode: Integer;
 begin
   Result := True;
   
-  // Custom validation can be added here
+  // Handle maintenance page selection
+  if Assigned(MaintenancePage) and (CurPageID = MaintenancePage.ID) then begin
+    if MaintenancePage.Values[1] = True then begin
+      // Uninstall selected
+      if RegQueryStringValue(HKCU, 'Software\ITM_Translate', 'UninstallString', UninstallString) then begin
+        if MsgBox('This will uninstall ITM Translate from your computer. Continue?', 
+                  mbConfirmation, MB_YESNO) = IDYES then begin
+          Exec(UninstallString, '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+          MsgBox('ITM Translate has been uninstalled successfully.', mbInformation, MB_OK);
+          // Exit setup completely after uninstall
+          PostMessage(WizardForm.Handle, WM_CLOSE, 0, 0);
+        end;
+      end else begin
+        MsgBox('Uninstall information not found. Please use Windows Add/Remove Programs.', 
+               mbError, MB_OK);
+      end;
+      Result := False; // Don't continue to next page
+      Exit;
+    end;
+    
+    if MaintenancePage.Values[0] = True then begin
+      // Repair selected - continue with normal installation
+      MsgBox('Setup will now repair your ITM Translate installation.', 
+             mbInformation, MB_OK);
+    end;
+    
+    if MaintenancePage.Values[2] = True then begin
+      // Update selected - continue with normal installation
+      MsgBox('Setup will now update ITM Translate to the latest version.', 
+             mbInformation, MB_OK);
+    end;
+  end;
+  
+  // Custom validation for directory selection
   if CurPageID = wpSelectDir then begin
     // Validate installation directory
     if not DirExists(ExpandConstant('{app}')) then begin
