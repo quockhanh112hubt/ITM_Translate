@@ -17,7 +17,7 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn 
 
 ### Tải về
 - Download file `.exe` từ [GitHub Releases](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe)
-- Chạy file và làm theo hướng dẫn ở Tab Nâng Cao > Hướng dẫn sử dụng
+- Sau khi cài đặt, khởi chạy chương trình và làm theo hướng dẫn ở Tab Nâng Cao > Hướng dẫn sử dụng
 
 ### Thiết lập API Key
 1. Mở chương trình → Tab "Quản lý API KEY"
