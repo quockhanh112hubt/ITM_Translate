@@ -10,11 +10,11 @@ Example using git-filter-repo to remove `api_keys.json` and `.env` from history:
 
 ```powershell
 # Install: pip install git-filter-repo
-git clone --mirror https://github.com/your-user/ITM_Translate.git
+git clone --mirror https://github.com/quockhanh112hubt/ITM_Translate.git
 cd ITM_Translate.git
 # Remove files from all history
 git filter-repo --invert-paths --paths api_keys.json --paths .env
-git push --force --mirror https://github.com/your-user/ITM_Translate.git
+git push --force --mirror https://github.com/quockhanh112hubt/ITM_Translate.git
 ```
 
 Notes:
