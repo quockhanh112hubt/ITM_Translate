@@ -7,6 +7,7 @@
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue?style=flat-square)
 
 **Phần mềm dịch thuật thông minh với AI API**
+
 Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn ngữ một cách tự nhiên.
 
 ## ✨ Tính năng chính
@@ -58,8 +59,7 @@ Q: Có giới hạn độ dài text? A: Mỗi provider có giới hạn khác nh
 
 Q: Có mobile app? A: Chưa, hiện tại chỉ hỗ trợ Windows desktop
 
-## 📦 Releases
-Mỗi release đi kèm file .exe và file SHA256 checksum. Kiểm tra checksum trước khi chạy.
+---
 
 ### Liên hệ:
 - **GitHub Issues**: [Báo lỗi tại đây](https://github.com/quockhanh112hubt/ITM_Translate/issues)
