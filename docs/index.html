@@ -3,181 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITM Translate - Smart Translation Tool</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        h1 {
-            color: #2c3e50;
-        }
-        .badges {
-            margin: 20px 0;
-        }
-        .badges img {
-            margin: 0 5px;
-        }
-        section {
-            margin-bottom: 30px;
-        }
-        h2 {
-            color: #3498db;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        .feature-icon {
-            margin-right: 10px;
-        }
-        .screenshot {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .screenshot img {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .download-btn {
-            display: inline-block;
-            background-color: #27ae60;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .download-btn:hover {
-            background-color: #219a52;
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #777;
-        }
-        .language-links {
-            margin: 20px 0;
-            padding: 10px;
-            background-color: #ecf0f1;
-            border-radius: 5px;
-        }
-    </style>
+    <title>ITM Translate - AI-Powered Translation Tool</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/icon.ico" type="image/x-icon">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>ITM Translate</h1>
-            <img src="images/banner.png" alt="ITM Translate Banner" style="max-width: 100%; height: auto;">
-            <div class="badges">
-                <img src="https://img.shields.io/github/v/release/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Release">
-                <img src="https://img.shields.io/github/license/quockhanh112hubt/ITM_Translate?style=flat-square" alt="License">
-                <img src="https://img.shields.io/badge/python-3.8%2B-blue?style=flat-square" alt="Python">
-                <img src="https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square" alt="Downloads">
-                <img src="https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Issues">
-            </div>
-            <div class="language-links">
-                🌐 <strong>Language:</strong> <a href="../README.en.md">English README</a> | <a href="../README.md">Tiếng Việt README</a>
-            </div>
-            <p><strong>Smart translation software with AI API</strong></p>
-            <p>Quickly translate text with hotkeys, supporting natural language translation.</p>
-        </header>
-
-        <section id="features">
-            <h2>✨ Key Features</h2>
-            <ul>
-                <li><span class="feature-icon">🔤</span><strong>Quick Translation:</strong> Select text and press hotkey for instant translation</li>
-                <li><span class="feature-icon">🔊</span><strong>Text-to-Speech:</strong> Read the translation aloud</li>
-                <li><span class="feature-icon">🎯</span><strong>Subtitle Sync:</strong> Highlight words as they are read</li>
-                <li><span class="feature-icon">🤖</span><strong>Multi-AI:</strong> Supports Gemini, ChatGPT, Claude, DeepSeek, and Google Translate with automatic failover</li>
-                <li><span class="feature-icon">🌍</span><strong>Multilingual:</strong> Automatically detects and translates to multiple languages</li>
-                <li><span class="feature-icon">⚡</span><strong>Hotkeys:</strong> Customizable shortcuts (suggested: Ctrl+Q, Ctrl+D or Ctrl+1, Ctrl+2)</li>
+    <header>
+        <nav class="container">
+            <div class="logo">ITM Translate</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#screenshots">Demo</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#api-providers">API</a></li>
             </ul>
-        </section>
+        </nav>
+    </header>
 
-        <section id="download">
-            <h2>🚀 Download & Installation</h2>
-            <p>Download the Windows installer (.exe) from <a href="https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe" class="download-btn">GitHub Releases</a></p>
-            <p>After installation, launch the program and follow the instructions in the Advanced Tab > User Guide</p>
-        </section>
-
-        <section id="screenshots">
-            <h2>🖼️ Screenshots / Demo</h2>
-            <div class="screenshot">
-                <img src="images/screenshot-1.png" alt="Screenshot 1">
-                <img src="images/screenshot-2.png" alt="Screenshot 2">
-                <img src="images/screenshot-3.png" alt="Screenshot 3">
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="fade-in-up">Revolutionize Your Translation Experience</h1>
+                <p class="fade-in-up">Smart AI-powered translation tool with instant hotkeys, text-to-speech, and multi-language support. Translate faster, smarter, and more naturally than ever before.</p>
+                <div class="language-switcher fade-in-up">
+                    🌐 <a href="../README.en.md" style="color: white; text-decoration: none;">English README</a> | <a href="../README.md" style="color: white; text-decoration: none;">Tiếng Việt README</a>
+                </div>
+                <div class="badges fade-in-up">
+                    <img src="https://img.shields.io/github/v/release/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Release">
+                    <img src="https://img.shields.io/github/license/quockhanh112hubt/ITM_Translate?style=flat-square" alt="License">
+                    <img src="https://img.shields.io/badge/python-3.8%2B-blue?style=flat-square" alt="Python">
+                    <img src="https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square" alt="Downloads">
+                    <img src="https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Issues">
+                </div>
+                <a href="https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe" class="cta-button fade-in-up">Download Now</a>
             </div>
         </section>
 
-        <section id="api-setup">
-            <h2>🚦 API Key Setup</h2>
-            <ol>
-                <li>Open the program → "API Key Management" Tab</li>
-                <li>Add API keys from one of the providers:
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Powerful Features for Modern Translation</h2>
+                <div class="features-grid">
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">🔤</span>
+                        <h3>Lightning-Fast Translation</h3>
+                        <p>Select any text and press a hotkey for instant translation. No more copying and pasting!</p>
+                    </div>
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">🔊</span>
+                        <h3>Crystal-Clear Text-to-Speech</h3>
+                        <p>Hear your translations with natural-sounding voices. Perfect for language learning.</p>
+                    </div>
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">🎯</span>
+                        <h3>Smart Subtitle Sync</h3>
+                        <p>Words highlight as they are spoken, making it easy to follow along and learn pronunciation.</p>
+                    </div>
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">🤖</span>
+                        <h3>Multi-AI Integration</h3>
+                        <p>Powered by Gemini, ChatGPT, Claude, DeepSeek, and Google Translate with automatic failover.</p>
+                    </div>
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">🌍</span>
+                        <h3>Universal Language Detection</h3>
+                        <p>Automatically detects source language and translates to your preferred target language.</p>
+                    </div>
+                    <div class="feature-card fade-in-up">
+                        <span class="feature-icon">⚡</span>
+                        <h3>Customizable Hotkeys</h3>
+                        <p>Set your own keyboard shortcuts for maximum productivity and comfort.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="screenshots" class="screenshots">
+            <div class="container">
+                <h2>See ITM Translate in Action</h2>
+                <div class="screenshot-grid">
+                    <div class="screenshot-item fade-in-up">
+                        <img src="images/screenshot-1.png" alt="Main Interface">
+                    </div>
+                    <div class="screenshot-item fade-in-up">
+                        <img src="images/screenshot-2.png" alt="Translation Popup">
+                    </div>
+                    <div class="screenshot-item fade-in-up">
+                        <img src="images/screenshot-3.png" alt="Settings Panel">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="how-it-works">
+            <div class="container">
+                <h2>How It Works</h2>
+                <div class="steps">
+                    <div class="step fade-in-up">
+                        <div class="step-number">1</div>
+                        <h3>Select Text</h3>
+                        <p>Highlight any text on your screen</p>
+                    </div>
+                    <div class="step fade-in-up">
+                        <div class="step-number">2</div>
+                        <h3>Press Hotkey</h3>
+                        <p>Use Ctrl+Q for popup or Ctrl+D to replace</p>
+                    </div>
+                    <div class="step fade-in-up">
+                        <div class="step-number">3</div>
+                        <h3>Get Translation</h3>
+                        <p>Instant AI-powered translation appears</p>
+                    </div>
+                    <div class="step fade-in-up">
+                        <div class="step-number">4</div>
+                        <h3>Listen & Learn</h3>
+                        <p>Click 🔊 to hear pronunciation with highlights</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="api-providers" class="api-providers">
+            <div class="container">
+                <h2>Powered by Leading AI Providers</h2>
+                <div class="providers-grid">
+                    <div class="provider fade-in-up">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Gemini">
+                        <h4>Gemini</h4>
+                        <p>Google's AI</p>
+                    </div>
+                    <div class="provider fade-in-up">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg" alt="ChatGPT">
+                        <h4>ChatGPT</h4>
+                        <p>OpenAI's model</p>
+                    </div>
+                    <div class="provider fade-in-up">
+                        <img src="https://assets-global.website-files.com/64e7b4a3b0a4b3c8b7e3c6a7/64e7b4a3b0a4b3c8b7e3c6b8_anthropic-logo.svg" alt="Claude" style="filter: brightness(0);">
+                        <h4>Claude</h4>
+                        <p>Anthropic's AI</p>
+                    </div>
+                    <div class="provider fade-in-up">
+                        <img src="https://p1.ssl.qhimg.com/t01a2c6e4e4e4e4e4e4.png" alt="DeepSeek" style="width: 60px; height: 60px; object-fit: contain;">
+                        <h4>DeepSeek</h4>
+                        <p>Advanced AI</p>
+                    </div>
+                    <div class="provider fade-in-up">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google Translate">
+                        <h4>Google Translate</h4>
+                        <p>Reliable fallback</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
                     <ul>
-                        <li><strong>Gemini</strong> (recommended): <a href="https://aistudio.google.com/">Google AI Studio</a></li>
-                        <li><strong>ChatGPT</strong>: <a href="https://platform.openai.com/api-keys">OpenAI API</a></li>
-                        <li><strong>Claude</strong>: <a href="https://console.anthropic.com/">Anthropic Console</a></li>
-                        <li><strong>DeepSeek</strong>: <a href="https://platform.deepseek.com/">DeepSeek Platform</a></li>
+                        <li><a href="https://github.com/quockhanh112hubt/ITM_Translate/releases">Download</a></li>
+                        <li><a href="../README.en.md">Documentation</a></li>
+                        <li><a href="https://github.com/quockhanh112hubt/ITM_Translate/issues">Support</a></li>
                     </ul>
-                </li>
-            </ol>
-            <p><em>Note: API keys are stored locally on your machine. If you lock/revoke the key, update it in the app to avoid errors.</em></p>
-        </section>
+                </div>
+                <div class="footer-section">
+                    <h3>API Setup</h3>
+                    <ul>
+                        <li><a href="https://aistudio.google.com/">Gemini API</a></li>
+                        <li><a href="https://platform.openai.com/api-keys">OpenAI API</a></li>
+                        <li><a href="https://console.anthropic.com/">Claude API</a></li>
+                        <li><a href="https://platform.deepseek.com/">DeepSeek API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><a href="https://github.com/quockhanh112hubt/ITM_Translate/issues">Report Issues</a></li>
+                        <li><a href="mailto:contact@itm.vn">Email Us</a></li>
+                        <li><a href="https://github.com/quockhanh112hubt">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ITM Semiconductor Vietnam Company Limited. Developed by KhanhIT.</p>
+            </div>
+        </div>
+    </footer>
 
-        <section id="how-to-use">
-            <h2>🧭 How to Use</h2>
-            <ol>
-                <li><strong>Popup Translation:</strong> Select text → Press <code>Ctrl+Q</code></li>
-                <li><strong>Replace Translation:</strong> Select text → Press <code>Ctrl+D</code></li>
-                <li><strong>Text-to-Speech:</strong> To hear the translation, click the 🔊 button in the popup</li>
-                <li><strong>Customization:</strong> "Settings" Tab to change hotkeys and languages</li>
-            </ol>
-        </section>
+    <script>
+        // Simple scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
-        <section id="support">
-            <h2>❓ Support & FAQ</h2>
-            <ul>
-                <li><strong>Hotkey not working:</strong> Try running the app as Administrator or check for conflicts with other hotkey software</li>
-                <li><strong>API key error:</strong> Check the key in the "API Key Management" Tab</li>
-                <li><strong>No voice:</strong> Install Windows Speech Platform / check voice packs</li>
-            </ul>
-            <p><strong>Q: Can it be used for free?</strong> A: Yes, but requires API keys from providers (some have free tiers)</p>
-            <p><strong>Q: Supports offline translation?</strong> A: No, requires internet to connect to AI providers</p>
-            <p><strong>Q: Text length limit?</strong> A: Each provider has different limits (~4000-8000 characters)</p>
-            <p><strong>Q: Mobile app?</strong> A: Not yet, currently only supports Windows desktop</p>
-        </section>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
 
-        <footer>
-            <p>📧 <strong>Contact:</strong> <a href="https://github.com/quockhanh112hubt/ITM_Translate/issues">Report bugs here</a></p>
-            <p>👨‍💻 <strong>Developer:</strong> KhanhIT - ITM Semiconductor Vietnam</p>
-            <p>&copy; 2025 ITM Semiconductor Vietnam Company Limited</p>
-        </footer>
-    </div>
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('.nav-links a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
