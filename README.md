@@ -8,6 +8,8 @@
 ![Downloads](https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square)
 
+> 🌐 **Ngôn ngữ:** [English Version](README.en.md)
+
 **Phần mềm dịch thuật thông minh với AI API**
 
 Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn ngữ một cách tự nhiên.

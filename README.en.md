@@ -8,6 +8,8 @@
 ![Downloads](https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square)
 ![Issues](https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square)
 
+> 🌐 **Language:** [Tiếng Việt Version](README.md)
+
 **Smart translation software with AI API**
 
 Quickly translate text with hotkeys, supporting natural language translation.
