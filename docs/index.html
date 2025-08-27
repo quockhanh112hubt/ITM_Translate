@@ -1,11 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+<hea        .logo-main {
+            font-family: 'Orbitron', 'Trebuchet MS', 'Lucida Grande', Arial, sans-serif;
+            font-size: 22.5px; /* 3/4 of logo height (30px) */
+            font-weight: 700;
+            color: #2c3e50;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-family: 'Roboto Condensed', 'Times New Roman', serif;
+            font-size: 11.25px; /* 1/2 of logo-main (22.5px) */
+            color: #7f8c8d;
+            font-weight: 300;
+            font-style: italic;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }rset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ITM Translate - AI-Powered Translation Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=1.1">
     <style>
+        /* Custom font loading */
+        @font-face {
+            font-family: 'Avaterra';
+            src: url('css/Avaterra.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         /* Force hover effect with high specificity */
         div.screenshot-item:hover {
             transform: scale(1.2) translateY(-20px) !important;
@@ -24,6 +51,32 @@
         div.screenshot-item:hover {
             opacity: 0.8 !important;
         }
+
+        /* Logo styling */
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .logo-main {
+            font-family: 'Avaterra', 'Orbitron', 'Trebuchet MS', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .logo-subtitle {
+            font-family: 'Berlin', 'Times New Roman', serif;
+            font-size: 9px;
+            color: #7f8c8d;
+            font-weight: 300;
+            font-style: italic;
+            margin-top: 1px;
+            letter-spacing: 0.5px;
+        }
     </style>
     <link rel="icon" href="images/icon.ico" type="image/x-icon">
 </head>
@@ -32,7 +85,10 @@
         <nav class="container">
             <div class="logo">
                 <img src="images/Logo.png" alt="ITM Translate Logo" style="height: 30px; margin-right: 10px; vertical-align: middle;">
-                ITM Translate
+                <div class="logo-text">
+                    <div class="logo-main">ITM TRANSLATE</div>
+                    <div class="logo-subtitle">Professional AI-powered translation tool for Windows</div>
+                </div>
             </div>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
