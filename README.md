@@ -5,6 +5,8 @@
 ![Release](https://img.shields.io/github/v/release/quockhanh112hubt/ITM_Translate?style=flat-square)
 ![License](https://img.shields.io/github/license/quockhanh112hubt/ITM_Translate?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue?style=flat-square)
+![Downloads](https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square)
+![Issues](https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square)
 
 **Phần mềm dịch thuật thông minh với AI API**
 
