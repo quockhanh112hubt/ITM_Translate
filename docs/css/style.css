@@ -204,11 +204,13 @@ nav {
     cursor: pointer;
     position: relative;
     z-index: 1;
+    /* Debug: Add background color to ensure hover works */
+    background-color: white;
 }
 
 .screenshot-item:hover {
-    transform: scale(1.08) translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    transform: scale(1.12) translateY(-12px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     z-index: 10;
 }
 
