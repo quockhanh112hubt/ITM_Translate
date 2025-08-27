@@ -1,0 +1,53 @@
+name: Build and Release (Windows)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run build_installer.ps1
+        shell: pwsh
+        run: |
+          ./build_installer.ps1 -NonInteractive
+
+      - name: Find generated exe
+        run: |
+          $files = Get-ChildItem -Path . -Filter "ITM_Translate_Setup_*.exe" -Recurse | Select-Object -First 1
+          if (-not $files) { throw "Installer not found" }
+          Write-Host "::set-output name=installer::${files.FullName}"
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: '**/ITM_Translate_Setup_*.exe'
+
+      - name: Create checksum
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -Path . -Filter "ITM_Translate_Setup_*.exe" -Recurse | Select-Object -First 1
+          if (-not $installer) { throw "Installer not found" }
+          Get-FileHash -Algorithm SHA256 $installer.FullName | ForEach-Object { "$($_.Hash)  $($installer.Name)" } | Out-File -FilePath checksum.sha256 -Encoding ascii
+
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: checksum
+          path: checksum.sha256
