@@ -42,6 +42,18 @@ nav {
     font-size: 1.5rem;
     font-weight: bold;
     color: #2c3e50;
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s;
+}
+
+.logo img:hover {
+    transform: scale(1.1);
 }
 
 .nav-links {
