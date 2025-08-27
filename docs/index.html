@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITM Translate - Smart Translation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .badges {
+            margin: 20px 0;
+        }
+        .badges img {
+            margin: 0 5px;
+        }
+        section {
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .feature-icon {
+            margin-right: 10px;
+        }
+        .screenshot {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .screenshot img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .download-btn:hover {
+            background-color: #219a52;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #777;
+        }
+        .language-links {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ITM Translate</h1>
+            <img src="images/banner.png" alt="ITM Translate Banner" style="max-width: 100%; height: auto;">
+            <div class="badges">
+                <img src="https://img.shields.io/github/v/release/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Release">
+                <img src="https://img.shields.io/github/license/quockhanh112hubt/ITM_Translate?style=flat-square" alt="License">
+                <img src="https://img.shields.io/badge/python-3.8%2B-blue?style=flat-square" alt="Python">
+                <img src="https://img.shields.io/github/downloads/quockhanh112hubt/ITM_Translate/total?style=flat-square" alt="Downloads">
+                <img src="https://img.shields.io/github/issues/quockhanh112hubt/ITM_Translate?style=flat-square" alt="Issues">
+            </div>
+            <div class="language-links">
+                🌐 <strong>Language:</strong> <a href="../README.en.md">English README</a> | <a href="../README.md">Tiếng Việt README</a>
+            </div>
+            <p><strong>Smart translation software with AI API</strong></p>
+            <p>Quickly translate text with hotkeys, supporting natural language translation.</p>
+        </header>
+
+        <section id="features">
+            <h2>✨ Key Features</h2>
+            <ul>
+                <li><span class="feature-icon">🔤</span><strong>Quick Translation:</strong> Select text and press hotkey for instant translation</li>
+                <li><span class="feature-icon">🔊</span><strong>Text-to-Speech:</strong> Read the translation aloud</li>
+                <li><span class="feature-icon">🎯</span><strong>Subtitle Sync:</strong> Highlight words as they are read</li>
+                <li><span class="feature-icon">🤖</span><strong>Multi-AI:</strong> Supports Gemini, ChatGPT, Claude, DeepSeek, and Google Translate with automatic failover</li>
+                <li><span class="feature-icon">🌍</span><strong>Multilingual:</strong> Automatically detects and translates to multiple languages</li>
+                <li><span class="feature-icon">⚡</span><strong>Hotkeys:</strong> Customizable shortcuts (suggested: Ctrl+Q, Ctrl+D or Ctrl+1, Ctrl+2)</li>
+            </ul>
+        </section>
+
+        <section id="download">
+            <h2>🚀 Download & Installation</h2>
+            <p>Download the Windows installer (.exe) from <a href="https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe" class="download-btn">GitHub Releases</a></p>
+            <p>After installation, launch the program and follow the instructions in the Advanced Tab > User Guide</p>
+        </section>
+
+        <section id="screenshots">
+            <h2>🖼️ Screenshots / Demo</h2>
+            <div class="screenshot">
+                <img src="images/screenshot-1.png" alt="Screenshot 1">
+                <img src="images/screenshot-2.png" alt="Screenshot 2">
+                <img src="images/screenshot-3.png" alt="Screenshot 3">
+            </div>
+        </section>
+
+        <section id="api-setup">
+            <h2>🚦 API Key Setup</h2>
+            <ol>
+                <li>Open the program → "API Key Management" Tab</li>
+                <li>Add API keys from one of the providers:
+                    <ul>
+                        <li><strong>Gemini</strong> (recommended): <a href="https://aistudio.google.com/">Google AI Studio</a></li>
+                        <li><strong>ChatGPT</strong>: <a href="https://platform.openai.com/api-keys">OpenAI API</a></li>
+                        <li><strong>Claude</strong>: <a href="https://console.anthropic.com/">Anthropic Console</a></li>
+                        <li><strong>DeepSeek</strong>: <a href="https://platform.deepseek.com/">DeepSeek Platform</a></li>
+                    </ul>
+                </li>
+            </ol>
+            <p><em>Note: API keys are stored locally on your machine. If you lock/revoke the key, update it in the app to avoid errors.</em></p>
+        </section>
+
+        <section id="how-to-use">
+            <h2>🧭 How to Use</h2>
+            <ol>
+                <li><strong>Popup Translation:</strong> Select text → Press <code>Ctrl+Q</code></li>
+                <li><strong>Replace Translation:</strong> Select text → Press <code>Ctrl+D</code></li>
+                <li><strong>Text-to-Speech:</strong> To hear the translation, click the 🔊 button in the popup</li>
+                <li><strong>Customization:</strong> "Settings" Tab to change hotkeys and languages</li>
+            </ol>
+        </section>
+
+        <section id="support">
+            <h2>❓ Support & FAQ</h2>
+            <ul>
+                <li><strong>Hotkey not working:</strong> Try running the app as Administrator or check for conflicts with other hotkey software</li>
+                <li><strong>API key error:</strong> Check the key in the "API Key Management" Tab</li>
+                <li><strong>No voice:</strong> Install Windows Speech Platform / check voice packs</li>
+            </ul>
+            <p><strong>Q: Can it be used for free?</strong> A: Yes, but requires API keys from providers (some have free tiers)</p>
+            <p><strong>Q: Supports offline translation?</strong> A: No, requires internet to connect to AI providers</p>
+            <p><strong>Q: Text length limit?</strong> A: Each provider has different limits (~4000-8000 characters)</p>
+            <p><strong>Q: Mobile app?</strong> A: Not yet, currently only supports Windows desktop</p>
+        </section>
+
+        <footer>
+            <p>📧 <strong>Contact:</strong> <a href="https://github.com/quockhanh112hubt/ITM_Translate/issues">Report bugs here</a></p>
+            <p>👨‍💻 <strong>Developer:</strong> KhanhIT - ITM Semiconductor Vietnam</p>
+            <p>&copy; 2025 ITM Semiconductor Vietnam Company Limited</p>
+        </footer>
+    </div>
+</body>
+</html>
