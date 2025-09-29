@@ -6,10 +6,10 @@ Provider Models Configuration - Định nghĩa các model có sẵn cho từng A
 PROVIDER_MODELS = {
     'gemini': [
         'auto',
-        'gemini-2.5-flash',
-        'gemini-2.5-pro',
         'gemini-2.0-flash',
         'gemini-2.0-flash-exp',
+        'gemini-2.5-flash',
+        'gemini-2.5-pro',
         'gemini-flash-latest',
         'gemini-pro-latest'
     ],
@@ -51,10 +51,10 @@ MODEL_DESCRIPTIONS = {
     'auto': 'Select model for provider',
     
     # Gemini models - Updated với models được hỗ trợ thực tế
-    'gemini-2.5-flash': 'Gemini 2.5 Flash - Model mới nhất, siêu nhanh (Khuyến nghị)',
-    'gemini-2.5-pro': 'Gemini 2.5 Pro - Chất lượng cao nhất, phù hợp tác vụ phức tạp',
-    'gemini-2.0-flash': 'Gemini 2.0 Flash - Cân bằng tốc độ và chất lượng',
-    'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Phiên bản thử nghiệm',
+    'gemini-2.0-flash': 'Gemini 2.0 Flash - Nhanh nhất và ổn định (Khuyến nghị) - 2.7s avg',
+    'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Phiên bản thử nghiệm - 3.0s avg',
+    'gemini-2.5-flash': 'Gemini 2.5 Flash - Model mới nhất (có thể bị safety block)',
+    'gemini-2.5-pro': 'Gemini 2.5 Pro - Chất lượng cao nhất (có thể bị safety block)',
     'gemini-flash-latest': 'Gemini Flash Latest - Luôn sử dụng phiên bản Flash mới nhất',
     'gemini-pro-latest': 'Gemini Pro Latest - Luôn sử dụng phiên bản Pro mới nhất',
     
