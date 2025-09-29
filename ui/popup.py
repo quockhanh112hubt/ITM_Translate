@@ -39,6 +39,60 @@ except ImportError:
     LANGUAGE_CONFIG_AVAILABLE = False
     print("Warning: Language config module not available, using fallback")
 
+def copy_text_to_clipboard(text, button_widget=None):
+    """Copy text to clipboard using tkinter with visual feedback"""
+    try:
+        # Create a temporary root window to access clipboard
+        temp_root = tk.Tk()
+        temp_root.withdraw()  # Hide the window
+        
+        # Clear clipboard and add text
+        temp_root.clipboard_clear()
+        temp_root.clipboard_append(text.strip())
+        temp_root.update()  # Ensure clipboard is updated
+        
+        # Clean up
+        temp_root.destroy()
+        
+        # Visual feedback on button if provided
+        if button_widget:
+            original_text = button_widget.cget('text')
+            original_bg = button_widget.cget('bg')
+            
+            # Show success feedback
+            button_widget.config(text="✅", bg='#28a745')
+            
+            # Restore original appearance after 1 second
+            def restore_button():
+                try:
+                    button_widget.config(text=original_text, bg=original_bg)
+                except:
+                    pass  # Button might be destroyed
+            
+            button_widget.after(1000, restore_button)
+        
+        print("✅ Text copied to clipboard successfully")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to copy text to clipboard: {e}")
+        
+        # Show error feedback on button if provided
+        if button_widget:
+            original_text = button_widget.cget('text')
+            original_bg = button_widget.cget('bg')
+            
+            button_widget.config(text="❌", bg='#dc3545')
+            
+            def restore_button():
+                try:
+                    button_widget.config(text=original_text, bg=original_bg)
+                except:
+                    pass
+            
+            button_widget.after(1500, restore_button)
+        
+        return False
+
 def get_app_version():
     """Đọc version từ file version.json"""
     try:
@@ -796,9 +850,34 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
                 widget.bind('<Enter>', on_enter)
                 widget.bind('<Leave>', on_leave)
             
+            # Create COPY button 
+            copy_btn = tk.Button(
+                tts_container,
+                text="📋",  # Clipboard emoji
+                bg='#6c757d',  # Gray color
+                fg='white',
+                font=('Segoe UI', 10),
+                relief='flat',
+                padx=6,
+                pady=3,
+                cursor='hand2',
+                width=4,
+                height=1,
+                activebackground='#6c757d',
+                activeforeground='white',
+                highlightthickness=0
+            )
+            # Set command after button creation to pass button reference
+            copy_btn.config(command=lambda: copy_text_to_clipboard(text, copy_btn))
+            copy_btn.pack(side='right', padx=(0, 5))
+            
+            # Force update color
+            content_frame.after(100, lambda: copy_btn.configure(bg='#6c757d'))
+            
             # Add tooltips
             create_tooltip(tts_btn2, f"Speak in {lang2_name}")
             create_tooltip(tts_btn3, f"Speak in {lang3_name}")
+            create_tooltip(copy_btn, "Copy text to clipboard")
             
         except Exception as lang_error:
 
@@ -819,9 +898,31 @@ def show_popup(text, master=None, source_lang=None, target_lang=None, version=No
             )
             tts_btn_en.pack(side='right', padx=(0, 0))
             
+            # Create COPY button (fallback)
+            copy_btn_fallback = tk.Button(
+                tts_container,
+                text="📋",  # Clipboard emoji
+                bg='#6c757d',  # Gray color
+                fg='white',
+                font=('Segoe UI', 10),
+                relief='flat',
+                padx=6,
+                pady=3,
+                cursor='hand2',
+                width=4,
+                height=1,
+                activebackground='#6c757d',
+                activeforeground='white',
+                highlightthickness=0
+            )
+            # Set command after button creation to pass button reference
+            copy_btn_fallback.config(command=lambda: copy_text_to_clipboard(text, copy_btn_fallback))
+            copy_btn_fallback.pack(side='right', padx=(0, 5))
+            
             # Force update colors after packing (Windows theme override fix)
             content_frame.after(100, lambda: tts_btn_vn.configure(bg='#17a2b8'))
             content_frame.after(100, lambda: tts_btn_en.configure(bg='#28a745'))
+            content_frame.after(100, lambda: copy_btn_fallback.configure(bg='#6c757d'))
     else:
         # Create info frame when TTS is not available
         info_frame = tk.Frame(content_frame, bg='#f8f9fa')
