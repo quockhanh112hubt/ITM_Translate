@@ -62,7 +62,7 @@ class GeminiProvider(BaseAIProvider):
     """Google Gemini AI Provider"""
     
     def get_default_model(self) -> str:
-        return "gemini-1.5-flash"  # Changed from gemini-2.0-flash-exp to stable version
+        return "gemini-2.5-flash"  # Updated to supported model (fastest and recommended)
     
     def get_provider_name(self) -> str:
         return "Gemini"

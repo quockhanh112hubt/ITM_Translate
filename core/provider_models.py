@@ -6,24 +6,20 @@ Provider Models Configuration - Định nghĩa các model có sẵn cho từng A
 PROVIDER_MODELS = {
     'gemini': [
         'auto',
-        'gemini-2.5-pro',
         'gemini-2.5-flash',
+        'gemini-2.5-pro',
+        'gemini-2.0-flash',
         'gemini-2.0-flash-exp',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-1.5-flash-8b',
-        'gemini-1.0-pro',
-        'gemini-1.5-flash-002',
-        'gemini-1.5-pro-002'
+        'gemini-flash-latest',
+        'gemini-pro-latest'
     ],
     'chatgpt': [
         'auto',
-        'gpt-4.1-mini',
         'gpt-4o-mini',
-        'gpt-3.5-turbo',
-        'gpt-4',
+        'gpt-4o',
         'gpt-4-turbo',
-        'gpt-4o'
+        'gpt-4',
+        'gpt-3.5-turbo'
     ],
     'deepseek': [
         'auto',
@@ -54,24 +50,20 @@ PROVIDER_MODELS = {
 MODEL_DESCRIPTIONS = {
     'auto': 'Select model for provider',
     
-    # Gemini models
-    'gemini-2.5-pro': 'Gemini 2.5 Pro - Phiên bản mới nhất, hiệu suất cao',
-    'gemini-2.5-flash': 'Gemini 2.5 Flash - Phiên bản mới, siêu nhanh',
-    'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Model mới nhất, hiệu suất cao',
-    'gemini-1.5-flash': 'Gemini 1.5 Flash - Nhanh, hiệu quả (Khuyến nghị)',
-    'gemini-1.5-pro': 'Gemini 1.5 Pro - Chất lượng cao, chậm hơn',
-    'gemini-1.5-flash-8b': 'Gemini 1.5 Flash 8B - Model nhỏ gọn, siêu nhanh',
-    'gemini-1.0-pro': 'Gemini 1.0 Pro - Phiên bản cũ',
-    'gemini-1.5-flash-002': 'Gemini 1.5 Flash v002 - Phiên bản cập nhật',
-    'gemini-1.5-pro-002': 'Gemini 1.5 Pro v002 - Phiên bản cập nhật',
+    # Gemini models - Updated với models được hỗ trợ thực tế
+    'gemini-2.5-flash': 'Gemini 2.5 Flash - Model mới nhất, siêu nhanh (Khuyến nghị)',
+    'gemini-2.5-pro': 'Gemini 2.5 Pro - Chất lượng cao nhất, phù hợp tác vụ phức tạp',
+    'gemini-2.0-flash': 'Gemini 2.0 Flash - Cân bằng tốc độ và chất lượng',
+    'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Phiên bản thử nghiệm',
+    'gemini-flash-latest': 'Gemini Flash Latest - Luôn sử dụng phiên bản Flash mới nhất',
+    'gemini-pro-latest': 'Gemini Pro Latest - Luôn sử dụng phiên bản Pro mới nhất',
     
     # ChatGPT models
-    'gpt-4.1-mini': 'GPT-4.1 Mini - Model mới nhất, siêu nhanh và hiệu quả',
-    'gpt-3.5-turbo': 'GPT-3.5 Turbo - Nhanh, giá rẻ (Khuyến nghị)',
-    'gpt-4': 'GPT-4 - Chất lượng cao, giá đắt',
-    'gpt-4-turbo': 'GPT-4 Turbo - Cân bằng tốc độ và chất lượng',
+    'gpt-4o-mini': 'GPT-4o Mini - Model mới nhất, siêu nhanh và hiệu quả (Khuyến nghị)',
     'gpt-4o': 'GPT-4o - Phiên bản tối ưu mới nhất',
-    'gpt-4o-mini': 'GPT-4o Mini - Nhỏ gọn, nhanh',
+    'gpt-4-turbo': 'GPT-4 Turbo - Cân bằng tốc độ và chất lượng',
+    'gpt-4': 'GPT-4 - Chất lượng cao, giá đắt',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo - Nhanh, giá rẻ',
     
     # DeepSeek models
     'deepseek-chat': 'DeepSeek Chat - Model chính (Khuyến nghị)',
