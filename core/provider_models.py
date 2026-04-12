@@ -6,6 +6,7 @@ Provider Models Configuration - Định nghĩa các model có sẵn cho từng A
 PROVIDER_MODELS = {
     'gemini': [
         'auto',
+        'gemini-3-pro-preview',
         'gemini-2.0-flash',
         'gemini-2.0-flash-exp',
         'gemini-2.5-flash',
@@ -51,6 +52,7 @@ MODEL_DESCRIPTIONS = {
     'auto': 'Select model for provider',
     
     # Gemini models - Updated với models được hỗ trợ thực tế
+    'gemini-3-pro-preview': 'Gemini 3 Pro Preview - Phiên bản xem trước của Gemini 3 Pro',
     'gemini-2.0-flash': 'Gemini 2.0 Flash - Nhanh nhất và ổn định (Khuyến nghị) - 2.7s avg',
     'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Phiên bản thử nghiệm - 3.0s avg',
     'gemini-2.5-flash': 'Gemini 2.5 Flash - Model mới nhất (có thể bị safety block)',
