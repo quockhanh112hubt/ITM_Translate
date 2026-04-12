@@ -50,8 +50,8 @@ class APIKeyValidator:
         elif provider == 'deepseek':
             if not api_key.startswith('sk-'):
                 return False, _('deepseek_key_format')
-            if len(api_key) < 40:
-                return False, _('deepseek_key_short')
+            # if len(api_key) < 40:
+            #     return False, _('deepseek_key_short')
             if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('deepseek_key_invalid_chars')
                 
