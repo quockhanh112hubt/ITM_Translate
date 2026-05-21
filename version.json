@@ -1,6 +1,6 @@
 {
-    "version": "2.0.31",
-    "build": "202604142235",
-    "release_date": "2026-04-14",
+    "version": "2.0.33",
+    "build": "202605220038",
+    "release_date": "2026-05-22",
     "description": "Auto build release"
 }
