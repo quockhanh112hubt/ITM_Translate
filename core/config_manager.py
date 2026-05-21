@@ -178,12 +178,14 @@ class ConfigManager:
             style = self.get_translation_style()
         
         if style == 'natural':
-            return """- Use natural, fluent, easy-to-understand language.
+            return """
+- Use natural, fluent, easy-to-understand language.
 - Adapt tone and style to sound native and fluent.
 - Simplify complex structures when possible without losing meaning.
 - Keep timestamps and chat log format exactly as in the original."""
         elif style == 'accurate':
-            return """- Preserve the tone, style, and structure of the original text.
+            return """
+- Preserve the tone, style, and structure of the original text.
 - Maintain technical terms and specialized vocabulary precisely.
 - Keep the exact meaning and nuance of the source text.
 - Retain formal/informal register as in the original.

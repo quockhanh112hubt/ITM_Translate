@@ -8,7 +8,7 @@ import threading
 import time
 from pynput import keyboard, mouse
 from pynput.keyboard import Controller as KeyboardController, Key
-from core.translator import translate_text
+from core.translator import translate_text, translate_text_replace
 from ui.popup import show_popup, show_loading_popup
 import tkinter as tk
 from ui.gui import MainGUI
@@ -1189,7 +1189,7 @@ def _on_activate_replace():
                     # Optimized for replace: No language detection needed, direct translation
                     print(f"🔄 [REPLACE] Calling translate_text with return_language_info=False")
                     start_time = time.time()
-                    translated = translate_text(
+                    translated = translate_text_replace(
                         selected_text, 
                         global_language_settings['Ngon_ngu_dau_tien'], 
                         global_language_settings['Ngon_ngu_thu_2'], 
@@ -1473,7 +1473,7 @@ def _on_activate_replace_group2():
                     # Optimized for replace: No language detection needed, direct translation  
                     print(f"🔄 [GROUP 2 REPLACE] Calling translate_text with return_language_info=False")
                     start_time = time.time()
-                    translated = translate_text(
+                    translated = translate_text_replace(
                         selected_text, 
                         global_language_settings['Nhom2_Ngon_ngu_dau_tien'], 
                         global_language_settings['Nhom2_Ngon_ngu_thu_2'], 
@@ -1601,7 +1601,7 @@ STARTUP_FILE = "startup.json"
 
 global_language_settings = {
     'Ngon_ngu_dau_tien': 'Any Language',
-    'Ngon_ngu_thu_2': 'Tiếng Việt',
+    'Ngon_ngu_thu_2': 'Vietnamese',
     'Ngon_ngu_thu_3': 'English',
     'Nhom2_Ngon_ngu_dau_tien': '',
     'Nhom2_Ngon_ngu_thu_2': '',

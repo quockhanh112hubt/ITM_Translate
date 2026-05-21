@@ -539,7 +539,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         
         # Language names
         "any_language": "Any Language",
-        "vietnamese": "Tiếng Việt", 
+        "vietnamese": "Vietnamese", 
         "english": "English",
         "japanese": "日本語",
         "korean": "한국어",
