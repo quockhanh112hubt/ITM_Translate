@@ -42,6 +42,9 @@ def run_command(cmd, check=True):
             return False, "", str(e)
 
 def main():
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(project_root)
+
     print("=" * 50)
     print("  ITM Translate - Auto Build & Release")
     print("=" * 50)
@@ -99,6 +102,26 @@ def main():
     print("  Bắt đầu build executable...")
     print("=" * 50)
     
+    # Use the project virtual environment so PyInstaller sees the same
+    # dependencies as the application, especially google-genai.
+    venv_python = os.path.join(project_root, ".venv", "Scripts", "python.exe")
+    build_python = venv_python if os.path.isfile(venv_python) else sys.executable
+    print(f"Python dùng để build: {build_python}")
+
+    # Fail before removing existing build artifacts if dependencies are missing.
+    preflight = subprocess.run(
+        [build_python, "-c", "import google.genai, PyInstaller"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+    )
+    if preflight.returncode != 0:
+        print("ERROR: Môi trường Python dùng để build thiếu google-genai hoặc PyInstaller.")
+        print(preflight.stderr)
+        print("Cài dependencies bằng interpreter của .venv rồi chạy lại build_release.py.")
+        sys.exit(1)
+
     # Xóa thư mục cũ
     if os.path.exists('dist'):
         import shutil
@@ -111,10 +134,17 @@ def main():
     use_spec_file = os.path.exists("ITM_Translate.spec")
     
     if use_spec_file:
-        build_cmd_str = "python -m PyInstaller ITM_Translate.spec"
+        build_cmd = [build_python, "-m", "PyInstaller", "ITM_Translate.spec"]
+        build_cmd_str = subprocess.list2cmdline(build_cmd)
         print("Sử dụng spec file để build...")
     else:
-        build_cmd_str = 'python -m PyInstaller --onefile --windowed --hidden-import=ttkbootstrap --icon="Resource/icon.ico" --add-data "Resource/icon.ico;Resource" --name="ITM_Translate" ITM_Translate.py'
+        build_cmd = [
+            build_python, "-m", "PyInstaller", "--onefile", "--windowed",
+            "--hidden-import=ttkbootstrap", "--icon=Resource/icon.ico",
+            "--add-data", "Resource/icon.ico;Resource",
+            "--name=ITM_Translate", "ITM_Translate.py",
+        ]
+        build_cmd_str = subprocess.list2cmdline(build_cmd)
         print("Sử dụng command line để build...")
     
     print(f"Running: {build_cmd_str}")
@@ -127,8 +157,8 @@ def main():
     # Run PyInstaller with custom environment
     try:
         result = subprocess.run(
-            build_cmd_str,
-            shell=True,
+            build_cmd,
+            cwd=project_root,
             env=build_env,
             capture_output=True,
             text=True,
