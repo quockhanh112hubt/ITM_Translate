@@ -40,6 +40,14 @@ _os._exit = safe_exit
 
 kb = KeyboardController()
 
+def format_translation_error(error):
+    """Turn known provider outages into a clear, actionable popup message."""
+    error_text = str(error)
+    normalized_error = error_text.upper()
+    if "GEMINI" in normalized_error and ("503" in normalized_error or "UNAVAILABLE" in normalized_error):
+        return _('gemini_model_overloaded')
+    return error_text
+
 def set_system_cursor_wait():
     # Chỉ hỗ trợ Windows
     if sys.platform.startswith("win"):
@@ -1077,6 +1085,7 @@ def _on_activate_translate():
                 translation_completed.set()
             else:
                 # No text selected
+                translation_result['error'] = _('no_text_selected')
                 translation_completed.set()
         except Exception as e:
             print(f"❌ [GROUP 1] Unexpected error: {e}")
@@ -1101,7 +1110,7 @@ def _on_activate_translate():
                 if translation_result['error']:
                     from ui.popup import get_app_version
                     version = get_app_version()
-                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    error_msg = f"❌ Lỗi dịch thuật: {format_translation_error(translation_result['error'])}"
                     show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     return
                 
@@ -1216,6 +1225,7 @@ def _on_activate_replace():
                 translation_completed.set()
             else:
                 # No text selected
+                translation_result['error'] = _('no_text_selected')
                 translation_completed.set()
         except Exception as e:
             print(f"❌ [GROUP 1 REPLACE] Unexpected error: {e}")
@@ -1240,7 +1250,7 @@ def _on_activate_replace():
                 if translation_result['error']:
                     from ui.popup import get_app_version
                     version = get_app_version()
-                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    error_msg = f"❌ Lỗi dịch thuật: {format_translation_error(translation_result['error'])}"
                     show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     return
                 
@@ -1362,6 +1372,7 @@ def _on_activate_translate_group2():
                 translation_completed.set()
             else:
                 # No text selected
+                translation_result['error'] = _('no_text_selected')
                 translation_completed.set()
         except Exception as e:
             print(f"❌ [GROUP 2] Unexpected error: {e}")
@@ -1386,7 +1397,7 @@ def _on_activate_translate_group2():
                 if translation_result['error']:
                     from ui.popup import get_app_version
                     version = get_app_version()
-                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    error_msg = f"❌ Lỗi dịch thuật: {format_translation_error(translation_result['error'])}"
                     show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     return
                 
@@ -1500,6 +1511,7 @@ def _on_activate_replace_group2():
                 translation_completed.set()
             else:
                 # No text selected
+                translation_result['error'] = _('no_text_selected')
                 translation_completed.set()
         except Exception as e:
             print(f"❌ [GROUP 2 REPLACE] Unexpected error: {e}")
@@ -1524,7 +1536,7 @@ def _on_activate_replace_group2():
                 if translation_result['error']:
                     from ui.popup import get_app_version
                     version = get_app_version()
-                    error_msg = f"❌ Lỗi dịch thuật: {translation_result['error']}"
+                    error_msg = f"❌ Lỗi dịch thuật: {format_translation_error(translation_result['error'])}"
                     show_popup(error_msg, master=root, version=version, auto_close_enabled=load_auto_close_popup())
                     return
                 

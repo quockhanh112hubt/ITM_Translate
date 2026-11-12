@@ -92,7 +92,7 @@ class ApiKeyTab:
         ttk.Label(provider_col, text=_('provider'), font=('Segoe UI', 9)).pack(anchor='w')
         self.provider_var = tk.StringVar(value='gemini')
         provider_combo = ttk.Combobox(provider_col, textvariable=self.provider_var, 
-                                    values=['gemini', 'chatgpt', 'google_translate', 'copilot', 'deepseek', 'claude'],
+                                    values=['gemini', 'chatgpt', 'groq', 'google_translate'],
                                     state='readonly', width=18, font=('Segoe UI', 9))
         provider_combo.pack(fill='x')
         
@@ -548,7 +548,7 @@ class ApiKeyTab:
             ttk.Label(main_frame, text=_('provider'), font=('Segoe UI', 9, 'bold')).pack(anchor='w', pady=(5, 2))
             provider_var = tk.StringVar(value=key_info.provider.value)
             provider_combo = ttk.Combobox(main_frame, textvariable=provider_var, 
-                                        values=['gemini', 'chatgpt', 'google_translate', 'copilot', 'deepseek', 'claude'],
+                                        values=['gemini', 'chatgpt', 'groq', 'google_translate'],
                                         state='readonly', width=50)
             provider_combo.pack(fill='x', pady=(0, 10))
             

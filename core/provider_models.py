@@ -6,21 +6,33 @@ Provider Models Configuration - Định nghĩa các model có sẵn cho từng A
 PROVIDER_MODELS = {
     'gemini': [
         'auto',
-        'gemini-3-pro-preview',
-        'gemini-2.0-flash',
-        'gemini-2.0-flash-exp',
+        'gemini-3.8-flash',
+        'gemini-3.7-flash',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-3.5-flash-lite',
         'gemini-2.5-flash',
         'gemini-2.5-pro',
+        'gemini-2.5-flash-lite',
         'gemini-flash-latest',
         'gemini-pro-latest'
     ],
     'chatgpt': [
         'auto',
+        'gpt-4.1-mini',
+        'gpt-4.1-nano',
+        'gpt-4.1',
         'gpt-4o-mini',
         'gpt-4o',
         'gpt-4-turbo',
         'gpt-4',
         'gpt-3.5-turbo'
+    ],
+    'groq': [
+        'auto',
+        'openai/gpt-oss-20b',
+        'openai/gpt-oss-120b',
+        'qwen/qwen3.8-27b'
     ],
     'deepseek': [
         'auto',
@@ -51,21 +63,30 @@ PROVIDER_MODELS = {
 MODEL_DESCRIPTIONS = {
     'auto': 'Select model for provider',
     
-    # Gemini models - Updated với models được hỗ trợ thực tế
-    'gemini-3-pro-preview': 'Gemini 3 Pro Preview - Phiên bản xem trước của Gemini 3 Pro',
-    'gemini-2.0-flash': 'Gemini 2.0 Flash - Nhanh nhất và ổn định (Khuyến nghị) - 2.7s avg',
-    'gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental) - Phiên bản thử nghiệm - 3.0s avg',
+    # Gemini models
+    'gemini-3.8-flash': 'Gemini 3.8 Flash - Recommended default model',
+    'gemini-3.7-flash': 'Gemini 3.7 Flash',
+    'gemini-3.6-flash': 'Gemini 3.6 Flash',
+    'gemini-3.5-flash': 'Gemini 3.5 Flash',
+    'gemini-3.5-flash-lite': 'Gemini 3.5 Flash-Lite - Fast, cost-efficient model',
     'gemini-2.5-flash': 'Gemini 2.5 Flash - Model mới nhất (có thể bị safety block)',
     'gemini-2.5-pro': 'Gemini 2.5 Pro - Chất lượng cao nhất (có thể bị safety block)',
+    'gemini-2.5-flash-lite': 'Gemini 2.5 Flash-Lite - Fast, cost-efficient model',
     'gemini-flash-latest': 'Gemini Flash Latest - Luôn sử dụng phiên bản Flash mới nhất',
     'gemini-pro-latest': 'Gemini Pro Latest - Luôn sử dụng phiên bản Pro mới nhất',
     
     # ChatGPT models
+    'gpt-4.1-mini': 'GPT-4.1 mini - Recommended fast ChatGPT model',
+    'gpt-4.1-nano': 'GPT-4.1 nano - Small, fast model',
+    'gpt-4.1': 'GPT-4.1 - Higher capability model',
     'gpt-4o-mini': 'GPT-4o Mini - Model mới nhất, siêu nhanh và hiệu quả (Khuyến nghị)',
     'gpt-4o': 'GPT-4o - Phiên bản tối ưu mới nhất',
     'gpt-4-turbo': 'GPT-4 Turbo - Cân bằng tốc độ và chất lượng',
     'gpt-4': 'GPT-4 - Chất lượng cao, giá đắt',
     'gpt-3.5-turbo': 'GPT-3.5 Turbo - Nhanh, giá rẻ',
+    'openai/gpt-oss-20b': 'GPT OSS 20B on Groq - Fast default model',
+    'openai/gpt-oss-120b': 'GPT OSS 120B on Groq - Higher capability',
+    'qwen/qwen3.8-27b': 'Qwen 3.8 27B on Groq',
     
     # DeepSeek models
     'deepseek-chat': 'DeepSeek Chat - Model chính (Khuyến nghị)',

@@ -32,20 +32,27 @@ class APIKeyValidator:
         
         # Format validation cho từng provider
         if provider == 'gemini':
-            if not api_key.startswith('AIza'):
-                return False, _('gemini_key_format')
-            if len(api_key) < 30:
-                return False, _('gemini_key_short')
-            if not re.match(r'^[A-Za-z0-9_-]+$', api_key):
-                return False, _('gemini_key_invalid_chars')
+            return True, _('api_key_format_valid')  # Không kiểm tra format cụ thể, chỉ kiểm tra non-empty
+            # if not api_key.startswith('AIza'):
+            #     return False, _('gemini_key_format')
+            # if len(api_key) < 30:
+            #     return False, _('gemini_key_short')
+            # if not re.match(r'^[A-Za-z0-9_-]+$', api_key):
+            #     return False, _('gemini_key_invalid_chars')
                 
         elif provider == 'chatgpt':
-            if not api_key.startswith('sk-'):
-                return False, _('openai_key_format')
-            if len(api_key) < 40:
-                return False, _('openai_key_short')
+            # if not api_key.startswith('sk-'):
+            #     return False, _('openai_key_format')
+            # if len(api_key) < 40:
+            #     return False, _('openai_key_short')
             if not re.match(r'^sk-[A-Za-z0-9_-]+$', api_key):
                 return False, _('openai_key_invalid_chars')
+
+        elif provider == 'groq':
+            if not api_key.startswith('gsk_'):
+                return False, _('groq_key_format')
+            if not re.match(r'^gsk_[A-Za-z0-9_-]+$', api_key):
+                return False, _('groq_key_invalid_chars')
                 
         elif provider == 'deepseek':
             if not api_key.startswith('sk-'):
@@ -86,56 +93,39 @@ class APIKeyValidator:
     
     @staticmethod
     def test_gemini_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
-        """Test Gemini API key"""
+        """Test Gemini through the supported Google GenAI SDK."""
         try:
-            import google.generativeai as genai
-            
-            # Configure với test key
-            genai.configure(api_key=api_key)
-            
-            # Chọn model
-            if model == "auto":
-                model_name = "gemini-2.0-flash"
-            else:
-                model_name = model
-            
-            # Test với request nhỏ
-            test_model = genai.GenerativeModel(model_name)
-            response = test_model.generate_content(
-                "Test", 
-                generation_config=genai.types.GenerationConfig(
-                    max_output_tokens=10,
-                    temperature=0
-                )
-            )
-            
-            if response and response.text:
-                return ValidationResult.SUCCESS, _('gemini_working').format(model=model_name)
-            else:
-                return ValidationResult.PROVIDER_ERROR, _('gemini_empty_response')
-                
+            from core.gemini_client import get_gemini_model_info, resolve_gemini_model
+
+            model_name = resolve_gemini_model(model)
+            get_gemini_model_info(api_key, model_name)
+            return ValidationResult.SUCCESS, _('gemini_working').format(model=model_name)
         except ImportError:
             return ValidationResult.PROVIDER_ERROR, _('gemini_missing_library')
         except Exception as e:
             error_str = str(e).lower()
-            if "api key not valid" in error_str or "invalid api key" in error_str:
+            if "api key not valid" in error_str or "invalid api key" in error_str or "401" in error_str:
                 return ValidationResult.INVALID_KEY, _('gemini_invalid_key')
-            elif "quota" in error_str or "429" in error_str:
+            elif "quota" in error_str or "429" in error_str or "resource_exhausted" in error_str:
                 return ValidationResult.QUOTA_EXCEEDED, _('gemini_quota_exceeded')
+            elif any(marker in error_str for marker in ("503", "502", "504", "500", "unavailable", "high demand", "overloaded", "temporarily")):
+                return ValidationResult.NETWORK_ERROR, _('gemini_temporarily_unavailable')
+            elif "403" in error_str or "permission_denied" in error_str:
+                return ValidationResult.PROVIDER_ERROR, _('gemini_access_denied').format(error=str(e))
             elif "timeout" in error_str:
                 return ValidationResult.TIMEOUT, _('gemini_timeout')
             elif "network" in error_str or "connection" in error_str:
                 return ValidationResult.NETWORK_ERROR, _('network_error')
             else:
                 return ValidationResult.PROVIDER_ERROR, _('gemini_error').format(error=str(e))
-    
+
     @staticmethod
     def test_openai_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
         """Test OpenAI API key"""
         try:
             # Chọn model
             if model == "auto":
-                model_name = "gpt-3.5-turbo"
+                model_name = "gpt-4.1-mini"
             else:
                 model_name = model
             
@@ -147,8 +137,8 @@ class APIKeyValidator:
             payload = {
                 "model": model_name,
                 "messages": [{"role": "user", "content": "Test"}],
-                "max_tokens": 5,
-                "temperature": 0
+                "max_completion_tokens": 5,
+                "temperature": 0.1
             }
             
             response = requests.post(
@@ -177,6 +167,35 @@ class APIKeyValidator:
             return ValidationResult.NETWORK_ERROR, _('network_error')
         except Exception as e:
             return ValidationResult.PROVIDER_ERROR, _('openai_error').format(status="", error=str(e))
+
+    @staticmethod
+    def test_groq_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
+        """Test a Groq API key using the OpenAI-compatible chat endpoint."""
+        model_name = "openai/gpt-oss-20b" if model == "auto" else model
+        try:
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={"model": model_name, "messages": [{"role": "user", "content": "Reply with OK."}], "max_completion_tokens": 5, "temperature": 0.1},
+                timeout=15,
+            )
+            if response.status_code == 200:
+                return ValidationResult.SUCCESS, _('groq_working').format(model=model_name)
+            if response.status_code == 401:
+                return ValidationResult.INVALID_KEY, _('groq_invalid_key')
+            if response.status_code == 429:
+                return ValidationResult.QUOTA_EXCEEDED, _('groq_rate_limit')
+            if response.status_code in (400, 404):
+                try:
+                    detail = response.json().get('error', {}).get('message', response.text)
+                except ValueError:
+                    detail = response.text
+                return ValidationResult.PROVIDER_ERROR, _('groq_model_error').format(error=detail)
+            return ValidationResult.PROVIDER_ERROR, _('groq_error').format(status=response.status_code, error=response.text[:300])
+        except requests.exceptions.Timeout:
+            return ValidationResult.TIMEOUT, _('groq_timeout')
+        except requests.exceptions.RequestException:
+            return ValidationResult.NETWORK_ERROR, _('network_error')
     
     @staticmethod
     def test_deepseek_key(api_key: str, model: str = "auto") -> Tuple[ValidationResult, str]:
@@ -411,6 +430,7 @@ class APIKeyValidator:
         test_functions = {
             'gemini': cls.test_gemini_key,
             'chatgpt': cls.test_openai_key,
+            'groq': cls.test_groq_key,
             'deepseek': cls.test_deepseek_key,
             'claude': cls.test_claude_key,
             'copilot': cls.test_copilot_key,

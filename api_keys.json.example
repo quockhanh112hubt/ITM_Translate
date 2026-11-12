@@ -12,7 +12,7 @@
     {
       "key": "YOUR_SECOND_API_KEY_HERE",
       "provider": "gemini",
-      "model": "auto", 
+      "model": "auto",
       "name": "Gemini Key 2",
       "is_active": true,
       "failed_count": 0,
@@ -23,6 +23,7 @@
   "provider_priority": [
     "gemini",
     "chatgpt",
+    "groq",
     "copilot",
     "deepseek",
     "claude"

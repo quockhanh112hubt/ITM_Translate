@@ -213,7 +213,7 @@ TRANSLATIONS = {
         "information": "💡 Thông tin:",
         "checking": "🔄 Đang kiểm tra...",
         "edit_api_key": "🔧 Chỉnh sửa API Key",
-        "info_text": "• Hỗ trợ 5 Providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude\n• Khi gặp lỗi, hệ thống sẽ tự động chuyển sang key OK tiếp theo\n• Model 'auto' = Model mặc định chương trình tự động nhận diện\n• Thứ tự ưu tiên từ trên xuống, quyết định Provider nào sẽ được sử dụng trước",
+        "info_text": "• Hỗ trợ 4 Providers: Google_Translate,Gemini, ChatGPT, Groq\n• Khi gặp lỗi, hệ thống sẽ tự động chuyển sang key OK tiếp theo\n• Model 'auto' = Model mặc định chương trình tự động nhận diện\n• Thứ tự ưu tiên từ trên xuống, quyết định Provider nào sẽ được sử dụng trước",
         "active_status": "Hoạt động",
         "status_disabled": "❌ Vô hiệu",
         "status_active": "✅ Hoạt động",
@@ -225,6 +225,7 @@ TRANSLATIONS = {
         "success": "Thành công",
         "confirm": "Xác nhận",
         "please_enter_api_key": "Vui lòng nhập API key!",
+        "no_text_selected": "Không lấy được văn bản đã chọn. Hãy bôi đen văn bản rồi thử lại.",
         "confirm_save_api_key": "Bạn có muốn lưu API key này không?",
         "confirm_save_still": "Bạn vẫn muốn lưu API key này không?",
         "cannot_check_api_key": "Không thể kiểm tra API key:",
@@ -354,7 +355,7 @@ Bước 2: Tạo API Key cho Translation API
 🧠 3. OPENAI CHATGPT (TRẢ PHÍ):
 - Vào: https://platform.openai.com/api-keys
 - Tạo API key mới
-- Models: gpt-4o, gpt-4, gpt-3.5-turbo
+- Models: gpt-4.1-mini (recommended), gpt-4.1, gpt-4o
 • Chi phí: ~$0.01-0.06 per 1000 tokens
 
 🎭 4. ANTHROPIC CLAUDE (TRẢ PHÍ):
@@ -461,6 +462,14 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         
         # API Key Validator messages
         "api_key_empty": "API key không được để trống",
+        "groq_key_format": "Groq API key phai bat dau bang gsk_",
+        "groq_key_invalid_chars": "Groq API key chua ky tu khong hop le",
+        "groq_working": "[OK] Groq API key hoat dong tot (model: {model})",
+        "groq_invalid_key": "[LOI] Groq API key khong hop le",
+        "groq_rate_limit": "[LOI] Groq API vuot gioi han hoac quota",
+        "groq_timeout": "[LOI] Groq API qua thoi gian cho",
+        "groq_model_error": "[LOI] Groq model hoac request khong hop le: {error}",
+        "groq_error": "[LOI] Groq API error ({status}): {error}",
         "gemini_key_format": "Gemini API key phải bắt đầu bằng 'AIza'",
         "gemini_key_short": "Gemini API key quá ngắn (phải >= 30 ký tự)",
         "gemini_key_invalid_chars": "Gemini API key chứa ký tự không hợp lệ",
@@ -478,11 +487,14 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "api_key_format_valid": "Định dạng API key hợp lệ",
         "gemini_working": "✅ Gemini API key hoạt động tốt (model: {model})",
         "gemini_empty_response": "❌ Gemini API trả về response rỗng",
-        "gemini_missing_library": "❌ Thiếu thư viện google-generativeai",
+        "gemini_missing_library": "❌ Thiếu thư viện google-genai",
         "gemini_invalid_key": "❌ Gemini API key không hợp lệ",
+        "gemini_temporarily_unavailable": "Gemini API tạm thời không khả dụng khi kiểm tra model. Lỗi này chưa chứng minh API key sai; bạn có thể lưu key và thử lại sau.",
+        "gemini_access_denied": "Gemini từ chối quyền truy cập API hoặc model: {error}",
         "gemini_quota_exceeded": "❌ Gemini API: Vượt quá quota/rate limit",
         "gemini_timeout": "❌ Gemini API: Timeout - thử lại sau",
         "network_error": "❌ Lỗi kết nối mạng",
+        "gemini_model_overloaded": "M\u00f4 h\u00ecnh Gemini t\u1ea1m th\u1eddi qu\u00e1 t\u1ea3i (503 UNAVAILABLE). H\u00e3y th\u1eed l\u1ea1i sau ho\u1eb7c ch\u1ecdn model AI kh\u00e1c.\n\n",
         "gemini_error": "❌ Gemini API error: {error}",
         "openai_working": "✅ OpenAI API key hoạt động tốt (model: {model})",
         "openai_invalid_key": "❌ OpenAI API key không hợp lệ",
@@ -785,7 +797,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "information": "💡 Information:",
         "checking": "🔄 Checking...",
         "edit_api_key": "🔧 Edit API Key",
-        "info_text": "• Supports 5 Providers: Gemini, ChatGPT, Copilot, DeepSeek, Claude\n• When errors occur, system will automatically switch to next OK key\n• Model 'auto' = Default model automatically recognized by program\n• Priority order from top to bottom, determines which Provider will be used first",
+        "info_text": "• Supports 4 Providers: Google_Translate, Gemini, ChatGPT, Groq\n• When errors occur, system will automatically switch to next OK key\n• Model 'auto' = Default model automatically recognized by program\n• Priority order from top to bottom, determines which Provider will be used first",
         "active_status": "Active",
         "status_disabled": "❌ Disabled",
         "status_active": "✅ Active",
@@ -797,6 +809,7 @@ Nhóm tùy chỉnh (Học tập/Dự án):
         "success": "Success",
         "confirm": "Confirm",
         "please_enter_api_key": "Please enter API key!",
+        "no_text_selected": "No selected text was copied. Select text and try again.",
         "confirm_save_api_key": "Do you want to save this API key?",
         "confirm_save_still": "Do you still want to save this API key?",
         "cannot_check_api_key": "Cannot check API key:",
@@ -926,7 +939,7 @@ Step 2: Create API Key for Translation API
 🧠 3. OPENAI CHATGPT (PAID):
 - Go to: https://platform.openai.com/api-keys
 - Create new API key
-- Models: gpt-4o, gpt-4, gpt-3.5-turbo
+- Models: gpt-4.1-mini (recommended), gpt-4.1, gpt-4o
 • Cost: ~$0.01-0.06 per 1000 tokens
 
 🎭 4. ANTHROPIC CLAUDE (PAID):
@@ -1038,6 +1051,14 @@ Custom group (Study/Projects):
         
         # API Key Validator messages
         "api_key_empty": "API key cannot be empty",
+        "groq_key_format": "Groq API key must start with gsk_",
+        "groq_key_invalid_chars": "Groq API key contains invalid characters",
+        "groq_working": "[OK] Groq API key working (model: {model})",
+        "groq_invalid_key": "Invalid Groq API key",
+        "groq_rate_limit": "Groq API rate limit or quota exceeded",
+        "groq_timeout": "Groq API request timed out",
+        "groq_model_error": "Invalid Groq model or request: {error}",
+        "groq_error": "Groq API error ({status}): {error}",
         "gemini_key_format": "Gemini API key must start with 'AIza'",
         "gemini_key_short": "Gemini API key too short (must be >= 30 characters)",
         "gemini_key_invalid_chars": "Gemini API key contains invalid characters",
@@ -1055,11 +1076,14 @@ Custom group (Study/Projects):
         "api_key_format_valid": "API key format is valid",
         "gemini_working": "✅ Gemini API key working well (model: {model})",
         "gemini_empty_response": "❌ Gemini API returned empty response",
-        "gemini_missing_library": "❌ Missing google-generativeai library",
+        "gemini_missing_library": "❌ Missing google-genai library",
         "gemini_invalid_key": "❌ Gemini API key is invalid",
+        "gemini_temporarily_unavailable": "Gemini API is temporarily unavailable while checking the model. This does not prove the API key is invalid; you can save it and retry later.",
+        "gemini_access_denied": "Gemini denied access to the API or model: {error}",
         "gemini_quota_exceeded": "❌ Gemini API: Quota/rate limit exceeded",
         "gemini_timeout": "❌ Gemini API: Timeout - try again later",
         "network_error": "❌ Network connection error",
+        "gemini_model_overloaded": "The Gemini model is temporarily overloaded (503 UNAVAILABLE). Please try again later or choose another AI model.\n\n",
         "gemini_error": "❌ Gemini API error: {error}",
         "openai_working": "✅ OpenAI API key working well (model: {model})",
         "openai_invalid_key": "❌ OpenAI API key is invalid",

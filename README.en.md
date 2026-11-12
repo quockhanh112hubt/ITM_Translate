@@ -19,7 +19,7 @@ Quickly translate text with hotkeys, supporting natural language translation.
 - 🔤 **Quick Translation**: Select text and press hotkey for instant translation
 - 🔊 **Text-to-Speech**: Read the translation aloud
 - 🎯 **Subtitle Sync**: Highlight words as they are read
-- 🤖 **Multi-AI**: Supports Gemini, ChatGPT, Claude, DeepSeek, and Google Translate with automatic failover
+- 🤖 **Multi-AI**: Supports Gemini, ChatGPT, Groq, Claude, DeepSeek, and Google Translate with automatic failover
 - 🌍 **Multilingual**: Automatically detects and translates to multiple languages
 - ⚡ **Hotkeys**: Customizable shortcuts (suggested: Ctrl+Q, Ctrl+D or Ctrl+1, Ctrl+2)
 
@@ -41,6 +41,7 @@ Quickly translate text with hotkeys, supporting natural language translation.
    - **ChatGPT**: [OpenAI API](https://platform.openai.com/api-keys)
    - **Claude**: [Anthropic Console](https://console.anthropic.com/)
    - **DeepSeek**: [DeepSeek Platform](https://platform.deepseek.com/)
+   - **Groq**: Get an API key at [Groq Console](https://console.groq.com/keys), then select Groq and a model in API Key Management.
 
 Note: API keys are stored locally on your machine. If you lock/revoke the key, update it in the app to avoid errors.
 

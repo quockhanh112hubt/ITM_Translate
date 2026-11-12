@@ -1,12 +1,12 @@
 """
 AI Providers - Hỗ trợ multiple AI APIs
 """
-import google.generativeai as genai
 import requests
 import json
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 from .api_key_manager import AIProvider, APIKeyInfo
+from .gemini_client import DEFAULT_GEMINI_MODEL, generate_gemini_text, resolve_gemini_model
 
 # Optional imports with fallbacks
 try:
@@ -60,9 +60,13 @@ class BaseAIProvider(ABC):
 
 class GeminiProvider(BaseAIProvider):
     """Google Gemini AI Provider"""
+
+    def __init__(self, key_info: APIKeyInfo):
+        super().__init__(key_info)
+        self.model = resolve_gemini_model(self.model)
     
     def get_default_model(self) -> str:
-        return "gemini-2.0-flash"  # Updated to fastest stable model (2.72s avg response)
+        return DEFAULT_GEMINI_MODEL
     
     def get_provider_name(self) -> str:
         return "Gemini"
@@ -70,31 +74,10 @@ class GeminiProvider(BaseAIProvider):
     def detect_language(self, text: str) -> Optional[str]:
         """Detect language using Gemini - Optimized for speed"""
         try:
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(self.model)
-            
-            # Simplified prompt for faster processing
-            prompt = f"Language of text: {text[:100]}"  # Limit text length
-            
-            # Speed-optimized config for language detection
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=10,  # Very small for language detection
-                temperature=0,         # Deterministic for consistency
-                top_p=0.5,            # Reduced sampling
-                top_k=10              # Limited vocabulary
+            detected_lang = generate_gemini_text(
+                self.api_key, self.model, f"Language of text: {text[:100]}",
+                max_output_tokens=20,
             )
-            
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config,
-                safety_settings={
-                    genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE
-                }
-            )
-            detected_lang = response.text.strip()
             detected_lang = detected_lang.replace('"', '').replace("'", "").strip()
             return detected_lang
         except Exception as e:
@@ -103,65 +86,25 @@ class GeminiProvider(BaseAIProvider):
     
     def translate_text(self, text: str, source_lang: str, target_lang: str) -> str:
         """Translate text using Gemini - Optimized for speed"""
+        if source_lang and source_lang.lower() == "mixed":
+            prompt = f"Translate to {target_lang}. Return only the translation:\n{text}"
+        else:
+            prompt = f"Translate from {source_lang} to {target_lang}. Return only the translation:\n{text}"
         try:
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(self.model)
-            
-            # Optimized prompt - shorter and more direct
-            if source_lang and source_lang.lower() == "mixed":
-                prompt = f"Translate to {target_lang}: {text}"
-            else:
-                prompt = f"Translate from {source_lang} to {target_lang}: {text}"
-            
-            # Speed-optimized generation config
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=min(int(len(text) * 2), 1000),  # Fix: cast to int
-                temperature=0.1,  # Lower temperature for faster response
-                top_p=0.8,        # Reduce sampling diversity for speed
-                top_k=20          # Limit top-k for faster generation
+            return generate_gemini_text(
+                self.api_key, self.model, prompt,
+                max_output_tokens=min(max(len(text) * 2, 64), 8192),
             )
-            
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config,
-                safety_settings={
-                    genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE
-                }  # Disable safety checks for speed
-            )
-            return response.text.strip()
-            
         except Exception as e:
             raise Exception(f"Gemini translation error: {e}")
     
     def generate_text(self, prompt: str) -> str:
         """Generate text using Gemini for unified smart translation - Optimized for speed"""
         try:
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(self.model)
-            
-            # Speed-optimized generation config
-            generation_config = genai.types.GenerationConfig(
-                max_output_tokens=min(int(len(prompt) * 1.5), 1000),  # Fix: cast to int
-                temperature=0.1,  # Lower temperature for consistency and speed
-                top_p=0.8,        # Reduce sampling diversity
-                top_k=20          # Limit vocabulary for faster generation
+            return generate_gemini_text(
+                self.api_key, self.model, prompt,
+                max_output_tokens=min(max(int(len(prompt) * 1.5), 64), 8192),
             )
-            
-            response = model.generate_content(
-                prompt,
-                generation_config=generation_config,
-                safety_settings={
-                    genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
-                    genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE
-                }  # Disable safety filtering for speed
-            )
-            return response.text.strip()
-            
         except Exception as e:
             raise Exception(f"Gemini text generation error: {e}")
 
@@ -173,12 +116,10 @@ class ChatGPTProvider(BaseAIProvider):
         if not OPENAI_AVAILABLE:
             raise Exception("OpenAI library not available")
         
-        # Use OpenAI v1.x client with optimized timeout and SSL bypass for corporate networks
-        import httpx
+        # Let the SDK manage its own compatible HTTP client.
         self.client = openai.OpenAI(
             api_key=self.api_key,
             timeout=15.0,  # Reduced timeout for faster response
-            http_client=httpx.Client(verify=False)  # Disable SSL verification for corporate networks
         )
     
     def get_default_model(self) -> str:
@@ -196,7 +137,7 @@ class ChatGPTProvider(BaseAIProvider):
                     {"role": "system", "content": "Detect language. Reply with language name only."},
                     {"role": "user", "content": f"Language: {text[:200]}"}  # Limit text length
                 ],
-                max_tokens=10,  # Very small for language detection
+                max_completion_tokens=10,  # Very small for language detection
                 temperature=0
             )
             
@@ -230,7 +171,7 @@ class ChatGPTProvider(BaseAIProvider):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": text}
                 ],
-                max_tokens=estimated_tokens,
+                max_completion_tokens=estimated_tokens,
                 temperature=0.1  # Reduced for faster, more consistent response
             )
             
@@ -245,7 +186,7 @@ class ChatGPTProvider(BaseAIProvider):
             else:
                 raise Exception("429_QUOTA_EXCEEDED")
         except openai.BadRequestError as e:
-            raise Exception("400_INVALID_KEY")
+            raise Exception(f"ChatGPT rejected the request: {e}")
         except openai.APIConnectionError as e:
             raise Exception(f"Connection error: {e}")
         except Exception as e:
@@ -262,7 +203,7 @@ class ChatGPTProvider(BaseAIProvider):
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=int(estimated_tokens),
+                max_completion_tokens=int(estimated_tokens),
                 temperature=0.1  # Lower temperature for faster response
             )
             
@@ -277,11 +218,75 @@ class ChatGPTProvider(BaseAIProvider):
             else:
                 raise Exception("429_QUOTA_EXCEEDED")
         except openai.BadRequestError as e:
-            raise Exception("400_INVALID_KEY")
+            raise Exception(f"ChatGPT rejected the request: {e}")
         except openai.APIConnectionError as e:
             raise Exception(f"Connection error: {e}")
         except Exception as e:
             raise Exception(f"ChatGPT text generation error: {e}")
+
+class GroqProvider(BaseAIProvider):
+    """Groq provider using its OpenAI-compatible chat completions API."""
+
+    BASE_URL = "https://api.groq.com/openai/v1"
+
+    def __init__(self, key_info: APIKeyInfo):
+        super().__init__(key_info)
+        if not OPENAI_AVAILABLE:
+            raise Exception("Groq provider requires the openai library")
+
+        self.client = openai.OpenAI(
+            api_key=self.api_key,
+            base_url=self.BASE_URL,
+            timeout=30.0,
+        )
+
+    def get_default_model(self) -> str:
+        return "openai/gpt-oss-20b"
+
+    def get_provider_name(self) -> str:
+        return "Groq"
+
+    def detect_language(self, text: str) -> Optional[str]:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "Detect the language. Reply with the language name only."},
+                {"role": "user", "content": text[:500]},
+            ],
+            max_completion_tokens=20,
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content
+        return content.strip().strip("\"'") if content else None
+
+    def translate_text(self, text: str, source_lang: str, target_lang: str) -> str:
+        if source_lang and source_lang.lower() == "mixed":
+            system_prompt = f"Translate the mixed-language text into {target_lang}. Return only the translation."
+        else:
+            system_prompt = f"Translate from {source_lang} to {target_lang}. Return only the translation."
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": text}],
+            max_completion_tokens=min(max(len(text) * 2, 64), 4096),
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content
+        if not content or not content.strip():
+            raise Exception("Groq returned an empty response")
+        return content.strip()
+
+    def generate_text(self, prompt: str) -> str:
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            max_completion_tokens=min(max(int(len(prompt) * 1.5), 64), 4096),
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content
+        if not content or not content.strip():
+            raise Exception("Groq returned an empty response")
+        return content.strip()
+
 
 class DeepSeekProvider(BaseAIProvider):
     """DeepSeek AI Provider"""
@@ -884,6 +889,7 @@ def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
     provider_map = {
         AIProvider.GEMINI: GeminiProvider,
         AIProvider.CHATGPT: ChatGPTProvider if OPENAI_AVAILABLE else None,
+        AIProvider.GROQ: GroqProvider if OPENAI_AVAILABLE else None,
         AIProvider.DEEPSEEK: DeepSeekProvider,
         AIProvider.CLAUDE: ClaudeProvider if ANTHROPIC_AVAILABLE else None,
         AIProvider.COPILOT: CopilotProvider if OPENAI_AVAILABLE else None,
@@ -894,6 +900,8 @@ def create_ai_provider(key_info: APIKeyInfo) -> BaseAIProvider:
     if not provider_class:
         if key_info.provider == AIProvider.CHATGPT and not OPENAI_AVAILABLE:
             raise ValueError("ChatGPT provider requires 'openai' library. Run: pip install openai")
+        elif key_info.provider == AIProvider.GROQ and not OPENAI_AVAILABLE:
+            raise ValueError("Groq provider requires 'openai' library. Run: pip install openai")
         elif key_info.provider == AIProvider.CLAUDE and not ANTHROPIC_AVAILABLE:
             raise ValueError("Claude provider requires 'anthropic' library. Run: pip install anthropic")
         elif key_info.provider == AIProvider.COPILOT and not OPENAI_AVAILABLE:

@@ -209,6 +209,12 @@ class HelpDialog:
                  padx=20, pady=12, relief='flat', cursor='hand2',
                  activebackground='#5b21b6', activeforeground='white')
         deepseek_btn.pack(side='left', padx=(0, 8))
+
+        groq_btn = tk.Button(parent_frame, text="⚡ Groq", command=self._open_groq_console,
+                 font=('Segoe UI', 10, 'bold'), bg='#f55036', fg='white',
+                 padx=20, pady=12, relief='flat', cursor='hand2',
+                 activebackground='#d9432c', activeforeground='white')
+        groq_btn.pack(side='left', padx=(0, 8))
         
         # GitHub Copilot button
         copilot_btn = tk.Button(parent_frame, text="🐙 GitHub Copilot", command=self._open_github_copilot,
@@ -250,6 +256,9 @@ class HelpDialog:
     
     def _open_deepseek_platform(self):
         webbrowser.open('https://platform.deepseek.com/')
+
+    def _open_groq_console(self):
+        webbrowser.open('https://console.groq.com/keys')
     
     def _open_github_copilot(self):
         webbrowser.open('https://github.com/settings/copilot')

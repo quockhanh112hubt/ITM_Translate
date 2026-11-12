@@ -19,7 +19,7 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn 
 - 🔤 **Dịch nhanh**: Chọn văn bản và nhấn phím tắt để dịch tức thì
 - 🔊 **Text-to-Speech**: Đọc bản dịch bằng giọng nói
 - 🎯 **Subtitle Sync**: Highlight từng từ khi đọc
-- 🤖 **Multi-AI**: Hỗ trợ Gemini, ChatGPT, Claude, DeepSeek và Google Translate với failover tự động
+- 🤖 **Multi-AI**: Hỗ trợ Gemini, ChatGPT, Groq, Claude, DeepSeek và Google Translate với failover tự động
 - 🌍 **Đa ngôn ngữ**: Tự động nhận diện và dịch sang nhiều ngôn ngữ
 - ⚡ **Hotkey**: Phím tắt tùy chỉnh (đề xuất Ctrl+Q, Ctrl+D hoặc Ctrl+1, Ctrl+2)
 
@@ -41,6 +41,7 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn 
    - **ChatGPT**: [OpenAI API](https://platform.openai.com/api-keys)
    - **Claude**: [Anthropic Console](https://console.anthropic.com/)
    - **DeepSeek**: [DeepSeek Platform](https://platform.deepseek.com/)
+   - **Groq**: Get an API key at [Groq Console](https://console.groq.com/keys), then select Groq and a model in API Key Management.
 
 Lưu ý: API keys chỉ lưu cục bộ trên máy. Nếu bạn khoá/thu hồi key, cập nhật trong app để tránh lỗi.
 

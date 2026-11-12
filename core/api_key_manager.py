@@ -7,6 +7,7 @@ from enum import Enum
 class AIProvider(Enum):
     GEMINI = "gemini"
     CHATGPT = "chatgpt"
+    GROQ = "groq"
     DEEPSEEK = "deepseek"
     CLAUDE = "claude"
     COPILOT = "copilot"
@@ -28,7 +29,7 @@ class APIKeyManager:
         self.keys_file = keys_file
         self.keys: List[APIKeyInfo] = []
         self.active_index = 0
-        self.provider_priority = [AIProvider.GEMINI, AIProvider.CHATGPT, AIProvider.GOOGLE_TRANSLATE, AIProvider.COPILOT, AIProvider.DEEPSEEK, AIProvider.CLAUDE]
+        self.provider_priority = [AIProvider.GEMINI, AIProvider.CHATGPT, AIProvider.GROQ, AIProvider.GOOGLE_TRANSLATE, AIProvider.COPILOT, AIProvider.DEEPSEEK, AIProvider.CLAUDE]
         self.load_keys()
     
     def load_keys(self):

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from .api_key_manager import api_key_manager
 from .translation_history import translation_history
 from .config_manager import config_manager
+from .gemini_client import DEFAULT_GEMINI_MODEL, generate_gemini_text
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ except ImportError as e:
     print(f"Warning: AI providers not fully available: {e}")
     AI_PROVIDERS_AVAILABLE = False
     # Fallback to Gemini only
-    import google.generativeai as genai
+    from .gemini_client import DEFAULT_GEMINI_MODEL, generate_gemini_text
 
 # Translation Cache System
 translation_cache = {}
@@ -124,8 +125,6 @@ def translate_text(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu_3, retu
             try:
                 if not AI_PROVIDERS_AVAILABLE:
                     # Fallback to Gemini only
-                    genai.configure(api_key=key_info.key)
-                    model = genai.GenerativeModel("gemini-2.0-flash-exp")
                     
                     # SIMPLIFIED SMART TRANSLATION: Single AI call, no separate detection
                     print(f"🧠 [SIMPLIFIED MODE] Using single smart AI call")
@@ -144,8 +143,7 @@ input text:
 {text}
 """
                     
-                    response = model.generate_content(smart_prompt)
-                    translated_text = response.text.strip()
+                    translated_text = generate_gemini_text(key_info.key, DEFAULT_GEMINI_MODEL, smart_prompt)
                     print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
                     
                     if return_language_info:
@@ -231,11 +229,7 @@ input text:
                         else:
                             # Fallback: use Gemini directly with smart prompt
                             print(f"🧠 [SIMPLIFIED] Provider lacks generate_text, using Gemini fallback")
-                            import google.generativeai as genai
-                            genai.configure(api_key=key_info.key)
-                            model = genai.GenerativeModel("gemini-2.0-flash-exp")
-                            response = model.generate_content(smart_prompt)
-                            translated_text = response.text.strip()
+                            translated_text = generate_gemini_text(key_info.key, DEFAULT_GEMINI_MODEL, smart_prompt)
                         
                         print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
                         
@@ -438,8 +432,6 @@ def translate_text_replace(text, Ngon_ngu_dau_tien, Ngon_ngu_thu_2, Ngon_ngu_thu
             try:
                 if not AI_PROVIDERS_AVAILABLE:
                     # Fallback to Gemini only
-                    genai.configure(api_key=key_info.key)
-                    model = genai.GenerativeModel("gemini-2.0-flash-exp")
                     
                     # SIMPLIFIED SMART TRANSLATION: Single AI call, no separate detection
                     print(f"🧠 [SIMPLIFIED MODE] Using single smart AI call")
@@ -458,8 +450,7 @@ input text:
 {text}
 """
                     
-                    response = model.generate_content(smart_prompt)
-                    translated_text = response.text.strip()
+                    translated_text = generate_gemini_text(key_info.key, DEFAULT_GEMINI_MODEL, smart_prompt)
                     print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
                     
                     if return_language_info:
@@ -545,11 +536,7 @@ input text:
                         else:
                             # Fallback: use Gemini directly with smart prompt
                             print(f"🧠 [SIMPLIFIED] Provider lacks generate_text, using Gemini fallback")
-                            import google.generativeai as genai
-                            genai.configure(api_key=key_info.key)
-                            model = genai.GenerativeModel("gemini-2.0-flash-exp")
-                            response = model.generate_content(smart_prompt)
-                            translated_text = response.text.strip()
+                            translated_text = generate_gemini_text(key_info.key, DEFAULT_GEMINI_MODEL, smart_prompt)
                         
                         print(f"✨ [SIMPLIFIED] Translation result: {translated_text[:50]}...")
                         
@@ -942,9 +929,6 @@ input text:
             
         else:
             # Fallback to Gemini if AI providers not available
-            import google.generativeai as genai
-            genai.configure(api_key=target_key.key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
             
             translation_rules = config_manager.get_translation_rules()
             smart_prompt_fallback = f"""
@@ -960,8 +944,7 @@ input text:
 """
             
             print(f"🧠 [SPECIFIC] {provider_name} using Gemini fallback with simplified prompt")
-            response = model.generate_content(smart_prompt_fallback)
-            translated_text = response.text.strip()
+            translated_text = generate_gemini_text(target_key.key, DEFAULT_GEMINI_MODEL, smart_prompt_fallback)
             
             print(f"✅ [SPECIFIC] {provider_name} translation: {translated_text[:50]}...")
             return (translated_text, Ngon_ngu_dau_tien, f"{Ngon_ngu_thu_2} → {Ngon_ngu_thu_3}")

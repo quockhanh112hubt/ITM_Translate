@@ -13,6 +13,7 @@ pywintypes_submodules = collect_submodules('pywintypes')
 
 # Google Cloud collection
 google_cloud_datas, google_cloud_binaries, google_cloud_hiddenimports = collect_all('google.cloud')
+google_genai_datas, google_genai_binaries, google_genai_hiddenimports = collect_all('google.genai')
 
 # Comprehensive pydantic collection
 pydantic_datas, pydantic_binaries, pydantic_hiddenimports = collect_all('pydantic')
@@ -37,7 +38,7 @@ except (ImportError, AttributeError):
 a = Analysis(
     ['ITM_Translate.py'],
     pathex=[],
-    binaries=[] + pydantic_binaries + pydantic_core_binaries + google_cloud_binaries,
+    binaries=[] + pydantic_binaries + pydantic_core_binaries + google_cloud_binaries + google_genai_binaries,
     datas=[
         ('Resource/icon.ico', 'Resource'),
         ('Resource/English.png', 'Resource'),
@@ -46,7 +47,7 @@ a = Analysis(
         ('Resource/Vietnam.png', 'Resource'),
         ('version.json', '.'),
         ('config.json', '.'),
-    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas + google_cloud_datas,
+    ] + ttkbootstrap_datas + pydantic_datas + pydantic_core_datas + ssl_datas + google_cloud_datas + google_genai_datas,
     hiddenimports=[
         # GUI frameworks
         'ttkbootstrap',
@@ -76,7 +77,8 @@ a = Analysis(
         'pynput.keyboard',
         'pynput.mouse',
         # AI and HTTP
-        'google.generativeai',
+        'google.genai',
+        'google.genai.types',
         'google.cloud',
         'google.cloud.translate',
         'google.cloud.translate_v2',
@@ -133,7 +135,7 @@ a = Analysis(
         'stat',
         'os',
         'sys',
-    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules + pydantic_hiddenimports + pydantic_core_hiddenimports + google_cloud_hiddenimports,
+    ] + win32_submodules + pythoncom_submodules + pywintypes_submodules + pydantic_hiddenimports + pydantic_core_hiddenimports + google_cloud_hiddenimports + google_genai_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
