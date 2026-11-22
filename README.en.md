@@ -25,8 +25,9 @@ Quickly translate text with hotkeys, supporting natural language translation.
 
 ## 🚀 Download & Installation
 
-- Download the Windows installer (.exe) from [GitHub Releases](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe)
-- After installation, launch the program and follow the instructions in the Advanced Tab > User Guide
+- **Latest Windows version:** Download [ITM_Translate.exe (v2.0.34)](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/v2.0.34/ITM_Translate.exe) and run it directly; no installation required.
+- **Windows installer (older version):** If you prefer to install the app, download [Setup v2.0.25](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe).
+- After launching the app, see **Advanced > User Guide**.
 
 ## 🖼️ Screenshots / Demo
 

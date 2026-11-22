@@ -25,8 +25,9 @@ Dịch văn bản nhanh chóng bằng phím tắt, hỗ trợ dịch các ngôn 
 
 ## 🚀 Tải về & Cài đặt
 
-- Download bản cài Windows (.exe) từ trang [GitHub Releases](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe)
-- Sau khi cài đặt, khởi chạy chương trình và làm theo hướng dẫn ở Tab Nâng Cao > Hướng dẫn sử dụng
+- **Bản mới nhất cho Windows:** Tải [ITM_Translate.exe (v2.0.34)](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/v2.0.34/ITM_Translate.exe) và chạy trực tiếp, không cần cài đặt.
+- **Bộ cài Windows (phiên bản cũ):** Nếu muốn cài đặt, tải [Setup v2.0.25](https://github.com/quockhanh112hubt/ITM_Translate/releases/download/Setup/ITM_Translate_Setup_v2.0.25.exe).
+- Sau khi mở chương trình, xem **Nâng Cao > Hướng dẫn sử dụng**.
 
 ## 🖼️ Ảnh chụp màn hình / Demo
 
